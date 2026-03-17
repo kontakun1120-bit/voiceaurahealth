@@ -268,13 +268,16 @@ html+=`
 Aura Color : ${data.ColorSector}
 </div>
 `
-
-html+=bar("活力（Energy）",data.Energy)
-html+=bar("感情（Emotion）",data.Emotion)
-html+=bar("集中（Focus）",data.Focus)
-html+=bar("社交（Social）",data.Social)
+<br>
 html+=bar("疲労（Fatigue）",data.Fatigue)
+html+=bar("集中（Focus）",data.Focus)
+html+=bar("活力（Energy）",data.Energy)
 html+=bar("覚醒（Arousal）",data.Arousal)
+
+<br>
+html+=bar("社交（Social）",data.Social)
+html+=bar("感情（Emotion）",data.Emotion)
+
 
 
 document.getElementById("result").innerHTML=html
