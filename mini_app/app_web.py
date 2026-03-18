@@ -1,9 +1,8 @@
 from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
-import sys
 
-from mini_app.voice_state_engine import VoiceStateEngine
+from voice_state_engine import VoiceStateEngine
 
 app = Flask(
     __name__,
@@ -36,6 +35,18 @@ def upload():
 
     except Exception as e:
         return jsonify({"error": str(e)})
+
+@app.route("/analyze", methods=["GET"])
+def analyze():
+    return jsonify({
+        "stress": 0.5,
+        "energy": 0.7,
+        "emotion": 0.6,
+        "focus": 0.8,
+        "social": 0.4,
+        "fatigue": 0.3,
+        "awareness": 0.9
+    })
 
 @app.route("/health")
 def health():
