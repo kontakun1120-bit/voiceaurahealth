@@ -2,7 +2,9 @@ from flask import Flask, render_template, request, jsonify
 from flask_cors import CORS
 import os
 
-from mini_app.voice_state_engine import VoiceStateEngine
+sys.path.append(os.path.dirname(__file__))
+
+from voice_state_engine import VoiceStateEngine
 
 app = Flask(
     __name__,
