@@ -25,22 +25,32 @@ def index():
 def upload():
     try:
         if "audio" not in request.files:
-            return jsonify({"error": "No audio file"})
+            return jsonify({"error": "No audio"})
 
         file = request.files["audio"]
         file.save(WAV_PATH)
 
         result = engine.analyze_from_file(WAV_PATH)
 
-        print("DEBUG RESULT:", result)  # ←追加🔥
+        print("DEBUG RESULT:", result)
 
-        if not result:
+        # 🔥 ここ追加
+        if result is None:
             result = {}
+
+        # 🔥 キー補完（重要）
+        result.setdefault("Stress", 0)
+        result.setdefault("Energy", 0)
+        result.setdefault("Emotion", 0)
+        result.setdefault("Focus", 0)
+        result.setdefault("Social", 0)
+        result.setdefault("Fatigue", 0)
+        result.setdefault("Arousal", 0)
 
         return jsonify(result)
 
     except Exception as e:
-        print("ERROR:", str(e))  # ←追加🔥
+        print("ERROR:", str(e))
         return jsonify({"error": str(e)})
 
 @app.route("/analyze", methods=["GET"])
