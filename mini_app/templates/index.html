@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceAuraHealth™ mini</title>
+
+<style>
+body {
+    font-family: Arial;
+    background: #f5f5f5;
+    text-align: center;
+}
+
+.container {
+    max-width: 420px;
+    margin: 20px auto;
+    background: white;
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.top-area {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+}
+
+.logo {
+    width: 150px;
+}
+
+button {
+    background: #4CAF50;
+    color: white;
+    border: none;
+    padding: 15px 25px;
+    font-size: 18px;
+    border-radius: 12px;
+}
+
+.bar {
+    width: 100%;
+    background: #ddd;
+    border-radius: 10px;
+    margin: 8px 0;
+}
+
+.bar-inner {
+    height: 20px;
+    border-radius: 10px;
+}
+
+.label {
+    margin-top: 10px;
+    font-weight: bold;
+}
+
+.footer {
+    margin-top: 20px;
+    font-size: 13px;
+    color: #555;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>VoiceAuraHealth™</h1>
+<p>Voice State Analyzer (5 sec)</p>
+
+<div class="top-area">
+    <img src="/static/main_logo.png" class="logo">
+    <button onclick="startAnalyze()">🎤 Speak</button>
+</div>
+
+<div id="status"></div>
+<div id="result"></div>
+
+<div class="footer">
+VoiceAuraHealth™ mini<br>
+Voice-based mental & health AI<br>
+― こんどう泌尿器科・内科クリニック ―
+</div>
+
+</div>
+
+<script>
+
+let mediaRecorder;
+let audioChunks = [];
+
+// ==============================
+// 録音スタート（スマホ対応）
+// ==============================
+async function startAnalyze() {
+
+    document.getElementById("status").innerText = "🎤 録音中...";
+
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+    mediaRecorder = new MediaRecorder(stream);
+
+    audioChunks = [];
+
+    mediaRecorder.start();
+
+    setTimeout(() => {
+        mediaRecorder.stop();
+    }, 5000);
+
+    mediaRecorder.ondataavailable = e => {
+        audioChunks.push(e.data);
+    };
+
+    mediaRecorder.onstop = async () => {
+
+        document.getElementById("status").innerText = "解析中...";
+
+        const blob = new Blob(audioChunks, { type: "audio/wav" });
+
+        const formData = new FormData();
+        formData.append("audio", blob, "record.wav");
+
+        const res = await fetch("/upload", {
+            method: "POST",
+            body: formData
+        });
+
+        const data = await res.json();
+
+        showResult(data);
+
+        document.getElementById("status").innerText = "✔ Done";
+    };
+}
+
+
+// ==============================
+// UI表示
+// ==============================
+function showResult(data) {
+
+    document.getElementById("result").innerHTML = `
+        <div class="label">ストレス: ${data.Stress}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Stress}%; background:red;"></div></div>
+
+        <div class="label">活力: ${data.Energy}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Energy}%; background:green;"></div></div>
+
+        <div class="label">感情: ${data.Emotion}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Emotion}%; background:#ccc;"></div></div>
+
+        <div class="label">集中: ${data.Focus}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Focus}%; background:purple;"></div></div>
+
+        <div class="label">社交: ${data.Social}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Social}%; background:orange;"></div></div>
+
+        <div class="label">疲労: ${data.Fatigue}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Fatigue}%; background:gray;"></div></div>
+
+        <div class="label">覚醒: ${data.Arousal}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Arousal}%; background:black;"></div></div>
+
+        <hr>
+
+        <div>${data.StressComment}</div>
+        <div>${data.Personality}</div>
+        <div>${data.ColorSector}</div>
+    `;
+}
+
+</script>
+
+</body>
+</html>
