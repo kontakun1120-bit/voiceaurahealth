@@ -31,9 +31,16 @@ def upload():
         file.save(WAV_PATH)
 
         result = engine.analyze_from_file(WAV_PATH)
+
+        print("DEBUG RESULT:", result)  # ←追加🔥
+
+        if not result:
+            result = {}
+
         return jsonify(result)
 
     except Exception as e:
+        print("ERROR:", str(e))  # ←追加🔥
         return jsonify({"error": str(e)})
 
 @app.route("/analyze", methods=["GET"])
