@@ -38,14 +38,16 @@ def upload():
 
 @app.route("/analyze", methods=["GET"])
 def analyze():
+    result = engine.analyze_from_file(WAV_PATH)
+
     return jsonify({
-        "stress": 0.5,
-        "energy": 0.7,
-        "emotion": 0.6,
-        "focus": 0.8,
-        "social": 0.4,
-        "fatigue": 0.3,
-        "awareness": 0.9
+        "stress": result.get("stress", 0),
+        "energy": result.get("energy", 0),
+        "emotion": result.get("emotion", 0),
+        "focus": result.get("focus", 0),
+        "social": result.get("social", 0),
+        "fatigue": result.get("fatigue", 0),
+        "awareness": result.get("awareness", 0)
     })
 
 @app.route("/health")
