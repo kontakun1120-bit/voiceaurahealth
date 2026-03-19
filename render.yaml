@@ -4,10 +4,7 @@ services:
     env: python
     plan: free
 
+    runtime: python-3.10.11
+
     buildCommand: pip install -r requirements.txt
-
     startCommand: gunicorn mini_app.core.app_web:app
-
-    envVars:
-      - key: PYTHON_VERSION
-        value: 3.10
