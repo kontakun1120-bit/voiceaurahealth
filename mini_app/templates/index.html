@@ -5,6 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoiceAuraHealth™ mini</title>
 
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#4CAF50">
+
 <style>
 body {
     font-family: Arial;
@@ -89,6 +92,7 @@ Voice-based mental & health AI<br>
 
 </div>
 
+
 <script>
 
 let mediaRecorder;
@@ -104,27 +108,39 @@ async function startAnalyze() {
     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
 
     mediaRecorder = new MediaRecorder(stream);
-
     audioChunks = [];
+
+    mediaRecorder.ondataavailable = e => {
+		console.log("data available", e.data.size);  // ←ここ追加
+	
+        if (e.data.size > 0) {
+            audioChunks.push(e.data);
+        }
+    };
 
     mediaRecorder.start();
 
+    // 🔥 強制停止
     setTimeout(() => {
         mediaRecorder.stop();
     }, 5000);
 
-    mediaRecorder.ondataavailable = e => {
-        audioChunks.push(e.data);
-    };
-
     mediaRecorder.onstop = async () => {
+
+		console.log("STOP called");                 // ←ここ
+		console.log("chunks:", audioChunks.length); // ←ここ
 
         document.getElementById("status").innerText = "解析中...";
 
-        const blob = new Blob(audioChunks, { type: "audio/wav" });
+        // 🔥 ここで少し待つ（重要）
+        //  await new Promise(resolve => setTimeout(resolve, 300));
+
+        const blob = new Blob(audioChunks, { type: "audio/webm" });
 
         const formData = new FormData();
-        formData.append("audio", blob, "record.wav");
+        formData.append("audio", blob, "record.webm");
+
+		console.log("sending request...");
 
         const res = await fetch("/upload", {
             method: "POST",
@@ -136,6 +152,9 @@ async function startAnalyze() {
         showResult(data);
 
         document.getElementById("status").innerText = "✔ Done";
+
+        // 🔥 マイク解放（超重要）
+        stream.getTracks().forEach(track => track.stop());
     };
 }
 
@@ -146,23 +165,23 @@ async function startAnalyze() {
 function showResult(data) {
 
     document.getElementById("result").innerHTML = `
+        <div class="label">集中: ${data.Focus}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Focus}%; background:purple;"></div></div>
+
+        <div class="label">疲労: ${data.Fatigue}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Fatigue}%; background:gray;"></div></div>
+
         <div class="label">ストレス: ${data.Stress}</div>
         <div class="bar"><div class="bar-inner" style="width:${data.Stress}%; background:red;"></div></div>
 
         <div class="label">活力: ${data.Energy}</div>
         <div class="bar"><div class="bar-inner" style="width:${data.Energy}%; background:green;"></div></div>
 
-        <div class="label">感情: ${data.Emotion}</div>
-        <div class="bar"><div class="bar-inner" style="width:${data.Emotion}%; background:#ccc;"></div></div>
-
-        <div class="label">集中: ${data.Focus}</div>
-        <div class="bar"><div class="bar-inner" style="width:${data.Focus}%; background:purple;"></div></div>
-
         <div class="label">社交: ${data.Social}</div>
         <div class="bar"><div class="bar-inner" style="width:${data.Social}%; background:orange;"></div></div>
 
-        <div class="label">疲労: ${data.Fatigue}</div>
-        <div class="bar"><div class="bar-inner" style="width:${data.Fatigue}%; background:gray;"></div></div>
+        <div class="label">感情: ${data.Emotion}</div>
+        <div class="bar"><div class="bar-inner" style="width:${data.Emotion}%; background:#ccc;"></div></div>
 
         <div class="label">覚醒: ${data.Arousal}</div>
         <div class="bar"><div class="bar-inner" style="width:${data.Arousal}%; background:black;"></div></div>
@@ -177,6 +196,13 @@ function showResult(data) {
 
 
 </script>
+
+<script>
+if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("/static/service_worker.js");
+}
+</script>
+
 
 </body>
 </html>
