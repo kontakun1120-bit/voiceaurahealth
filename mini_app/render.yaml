@@ -13,7 +13,7 @@ services:
     # =========================
     # 起動
     # =========================
-    startCommand: gunicorn core.app_web:app
+    startCommand: gunicorn mini_app.core.app_web:app
 
     # =========================
     # 環境
