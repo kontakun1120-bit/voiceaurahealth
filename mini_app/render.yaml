@@ -2,5 +2,27 @@ services:
   - type: web
     name: voiceaura-mini
     env: python
-    buildCommand: "pip install -r requirements.txt"
-    startCommand: "gunicorn core.app_web:app"
+
+    # =========================
+    # ビルド（FFmpeg含む）
+    # =========================
+    buildCommand: |
+      apt-get update && apt-get install -y ffmpeg
+      pip install -r requirements.txt
+
+    # =========================
+    # 起動
+    # =========================
+    startCommand: gunicorn core.app_web:app
+
+    # =========================
+    # 環境
+    # =========================
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.10
+
+    # =========================
+    # 自動デプロイ
+    # =========================
+    autoDeploy: true
