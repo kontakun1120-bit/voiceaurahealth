@@ -7,7 +7,7 @@ from flask_cors import CORS
 import os
 from pydub import AudioSegment
 
-from voice_state_engine import VoiceStateEngine
+from mini_app.core.voice_state_engine import VoiceStateEngine
 
 
 # ===============================
