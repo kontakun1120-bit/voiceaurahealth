@@ -1,0 +1,6 @@
+services:
+  - type: web
+    name: voiceaura-mini
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn core.app_web:app"
