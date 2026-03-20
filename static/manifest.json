@@ -1,0 +1,15 @@
+{
+  "name": "VoiceAuraHealth mini",
+  "short_name": "VoiceAuraHealth",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#4CAF50",
+  "icons": [
+    {
+      "src": "/static/mini_icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
