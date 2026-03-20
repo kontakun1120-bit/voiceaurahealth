@@ -1,172 +1,206 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VoiceAuraHealth</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceAuraHealth (TM)</title>
 
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background: #0f172a;
-            color: #e2e8f0;
-            text-align: center;
-            padding: 40px;
-        }
+<style>
+body {
+    margin:0;
+    font-family: Arial, sans-serif;
+    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+    color:#e2e8f0;
+    text-align:center;
+}
 
-        h1 {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
+.container {
+    max-width:700px;
+    margin:40px auto;
+    padding:20px;
+}
 
-        .card {
-            background: #1e293b;
-            padding: 30px;
-            border-radius: 20px;
-            display: inline-block;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
+.logo {
+    width:140px;
+    border-radius:50%;
+    box-shadow:0 0 40px #00f0ff;
+}
 
-        button {
-            margin-top: 20px;
-            padding: 12px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 10px;
-            background: #22c55e;
-            color: white;
-            cursor: pointer;
-        }
+h1 {
+    margin-top:15px;
+    font-size:32px;
+}
 
-        button:hover {
-            background: #16a34a;
-        }
-    </style>
+.tm {
+    font-size:14px;
+    opacity:0.7;
+}
+
+.card {
+    background:#1e293b;
+    padding:30px;
+    border-radius:20px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.4);
+    margin-top:25px;
+}
+
+.record-btn {
+    margin-top:20px;
+    padding:16px 36px;
+    font-size:18px;
+    border:none;
+    border-radius:40px;
+    background: linear-gradient(90deg,#00f0ff,#ff00c8);
+    color:white;
+    cursor:pointer;
+    box-shadow:0 0 25px rgba(0,255,255,0.6);
+    transition:0.3s;
+}
+
+.record-btn:hover {
+    transform:scale(1.05);
+}
+
+.bar {
+    margin:10px 0;
+    text-align:left;
+}
+
+.bar-bg {
+    background:#334155;
+    height:8px;
+    border-radius:4px;
+}
+
+.bar-fill {
+    background:#22c55e;
+    height:8px;
+    border-radius:4px;
+}
+
+.result-title {
+    padding:20px;
+    border-radius:12px;
+    color:white;
+    font-size:22px;
+    margin-top:20px;
+}
+
+.footer {
+    margin-top:40px;
+    font-size:12px;
+    opacity:0.6;
+}
+</style>
 </head>
 
 <body>
 
+<div class="container">
+
+    <img src="/static/main_logo.png" class="logo">
+
+    <h1>VoiceAuraHealth <span class="tm">(TM)</span></h1>
+    <p>あなたの声から人格エネルギーを可視化</p>
+
     <div class="card">
-        <h1>🎤 VoiceAura Health</h1>
-        <p>アプリ起動成功 🎉</p>
-
-		<button onclick="startRecording()">🎙 5秒録音</button>
-		<p id="status"></p>
-
-#        <button onclick="testAPI()">テストAPI</button>
-#
-#        <p id="result"></p>
+        <button class="record-btn" onclick="startRecording()">
+            🎙 5秒録音 → 自動判定
+        </button>
+        <p id="status"></p>
     </div>
 
+    <div id="resultBox"></div>
 
-	<h2>🎤 音声アップロード</h2>
+    <div class="footer">
+        © 2026 VoiceAuraHealth (TM)
+    </div>
 
-	<input type="file" id="audioFile" accept="audio/*" capture="microphone">
-	<button onclick="uploadAudio()">送信</button>
+</div>
 
-	<div id="resultBox" style="margin-top:20px;"></div>
+<script>
 
-	<script>
+function renderBar(label, value) {
+    const stars = Math.round(value / 20);
 
-	// ===== 共通UI =====
-	function renderBar(label, value) {
-		const stars = Math.round(value / 20);
+    return `
+    <div class="bar">
+        <div>${label} : ${value}</div>
+        <div class="bar-bg">
+            <div class="bar-fill" style="width:${value}%"></div>
+        </div>
+        <div>${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
+    </div>
+    `;
+}
 
-		return `
-		<div style="margin:10px 0; text-align:left;">
-			<div style="font-size:14px;">${label} : ${value}</div>
+function renderResult(data) {
+    const box = document.getElementById("resultBox");
+    if (!data.result) return;
 
-			<div style="
-				background:#334155;
-				height:8px;
-				border-radius:4px;
-			">
-				<div style="
-					width:${value}%;
-					background:#22c55e;
-					height:8px;
-				"></div>
-			</div>
+    const r = data.result;
+    const s = r.scores;
 
-			<div>${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
-		</div>
-		`;
-	}
+    let html = `
+    <div class="result-title" style="background:${r.color};">
+        あなたは ${r.type} (${r.sector}) です
+    </div>
+    <div class="card">
+    `;
 
-	// ===== メイン =====
-	async function uploadAudio() {
-		const fileInput = document.getElementById("audioFile");
-		const file = fileInput.files[0];
+    r.comments.forEach(c=>{
+        html += `<div>・${c}</div>`;
+    });
 
-		if (!file) {
-			alert("ファイル選択してね");
-			return;
-		}
+    html += `
+        ${renderBar("Energy", s.Energy)}
+        ${renderBar("Emotion", s.Emotion)}
+        ${renderBar("Focus", s.Focus)}
+        ${renderBar("Social", s.Social)}
+        ${renderBar("Calm", s.Calm)}
+    </div>
+    `;
 
-		const formData = new FormData();
-		formData.append("audio", file);
+    box.innerHTML = html;
+}
 
-		const res = await fetch("/api/upload", {
-			method: "POST",
-			body: formData
-		});
+async function startRecording() {
+    const status = document.getElementById("status");
+    status.innerText = "録音中...";
 
-		const data = await res.json();
-		const box = document.getElementById("resultBox");
+    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    const recorder = new MediaRecorder(stream);
 
-		if (data.result) {
-			const r = data.result;
-			const s = r.scores;
+    let chunks = [];
 
-			let html = `
-			<div style="
-				padding:20px;
-				border-radius:12px;
-				background:${r.color};
-				color:white;
-				font-size:20px;
-			">
-				あなたは ${r.type} (${r.sector}) です
-			</div>
-			`;
+    recorder.ondataavailable = e => chunks.push(e.data);
 
-			// コメント
-			html += `<div style="margin-top:15px;">`;
-			r.comments.forEach(c => {
-				html += `<div>・${c}</div>`;
-			});
-			html += `</div>`;
+    recorder.onstop = async () => {
+        const blob = new Blob(chunks,{ type:"audio/webm" });
 
-			// バー
-			html += `
-			<div style="
-				margin-top:20px;
-				padding:15px;
-				background:#1e293b;
-				border-radius:12px;
-			">
-				${renderBar("Energy", s.Energy)}
-				${renderBar("Emotion", s.Emotion)}
-				${renderBar("Focus", s.Focus)}
-				${renderBar("Social", s.Social)}
-				${renderBar("Calm", s.Calm)}
-			</div>
-			`;
+        const formData = new FormData();
+        formData.append("audio", blob);
 
-			box.innerHTML = html;
-		}
-	}
+        const res = await fetch("/api/upload",{
+            method:"POST",
+            body:formData
+        });
 
-	// ===== テスト =====
-	async function testAPI() {
-		const res = await fetch("/api/test");
-		const data = await res.json();
-		document.getElementById("result").innerText = data.message;
-	}
+        const data = await res.json();
+        renderResult(data);
 
-	</script>
+        status.innerText = "判定完了";
+    };
 
+    recorder.start();
 
+    setTimeout(()=>{
+        recorder.stop();
+        stream.getTracks().forEach(track=>track.stop());
+    },5000);
+}
+
+</script>
 
 </body>
 </html>
