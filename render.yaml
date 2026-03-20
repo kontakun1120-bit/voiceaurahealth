@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: voiceaurahealth-api
+    env: python
+    plan: free
+
+    runtime: python-3.12.3
+
+    buildCommand: |
+      apt-get update && apt-get install -y ffmpeg
+      pip install -r requirements.txt
+
+    startCommand: gunicorn mini_app.app_web:app
