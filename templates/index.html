@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoiceAuraHealth</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #0f172a;
+            color: #e2e8f0;
+            text-align: center;
+            padding: 40px;
+        }
+
+        h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+
+        .card {
+            background: #1e293b;
+            padding: 30px;
+            border-radius: 20px;
+            display: inline-block;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        button {
+            margin-top: 20px;
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 10px;
+            background: #22c55e;
+            color: white;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background: #16a34a;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="card">
+        <h1>🎤 VoiceAura Health</h1>
+        <p>アプリ起動成功 🎉</p>
+
+		<button onclick="startRecording()">🎙 5秒録音</button>
+		<p id="status"></p>
+
+#        <button onclick="testAPI()">テストAPI</button>
+#
+#        <p id="result"></p>
+    </div>
+
+
+	<h2>🎤 音声アップロード</h2>
+
+	<input type="file" id="audioFile" accept="audio/*" capture="microphone">
+	<button onclick="uploadAudio()">送信</button>
+
+	<div id="resultBox" style="margin-top:20px;"></div>
+
+	<script>
+
+	// ===== 共通UI =====
+	function renderBar(label, value) {
+		const stars = Math.round(value / 20);
+
+		return `
+		<div style="margin:10px 0; text-align:left;">
+			<div style="font-size:14px;">${label} : ${value}</div>
+
+			<div style="
+				background:#334155;
+				height:8px;
+				border-radius:4px;
+			">
+				<div style="
+					width:${value}%;
+					background:#22c55e;
+					height:8px;
+				"></div>
+			</div>
+
+			<div>${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
+		</div>
+		`;
+	}
+
+	// ===== メイン =====
+	async function uploadAudio() {
+		const fileInput = document.getElementById("audioFile");
+		const file = fileInput.files[0];
+
+		if (!file) {
+			alert("ファイル選択してね");
+			return;
+		}
+
+		const formData = new FormData();
+		formData.append("audio", file);
+
+		const res = await fetch("/api/upload", {
+			method: "POST",
+			body: formData
+		});
+
+		const data = await res.json();
+		const box = document.getElementById("resultBox");
+
+		if (data.result) {
+			const r = data.result;
+			const s = r.scores;
+
+			let html = `
+			<div style="
+				padding:20px;
+				border-radius:12px;
+				background:${r.color};
+				color:white;
+				font-size:20px;
+			">
+				あなたは ${r.type} (${r.sector}) です
+			</div>
+			`;
+
+			// コメント
+			html += `<div style="margin-top:15px;">`;
+			r.comments.forEach(c => {
+				html += `<div>・${c}</div>`;
+			});
+			html += `</div>`;
+
+			// バー
+			html += `
+			<div style="
+				margin-top:20px;
+				padding:15px;
+				background:#1e293b;
+				border-radius:12px;
+			">
+				${renderBar("Energy", s.Energy)}
+				${renderBar("Emotion", s.Emotion)}
+				${renderBar("Focus", s.Focus)}
+				${renderBar("Social", s.Social)}
+				${renderBar("Calm", s.Calm)}
+			</div>
+			`;
+
+			box.innerHTML = html;
+		}
+	}
+
+	// ===== テスト =====
+	async function testAPI() {
+		const res = await fetch("/api/test");
+		const data = await res.json();
+		document.getElementById("result").innerText = data.message;
+	}
+
+	</script>
+
+
+
+</body>
+</html>
