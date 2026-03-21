@@ -168,6 +168,15 @@ if ('serviceWorker' in navigator) {
 }
 
 
+document.addEventListener("DOMContentLoaded", function() {
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register(
+      "{{ url_for('static', filename='service_worker.js') }}"
+    );
+  }
+});
+
+
 function renderBar(label, value) {
     const stars = Math.round(value / 20);
 
@@ -247,6 +256,8 @@ async function startRecording() {
         stream.getTracks().forEach(track=>track.stop());
     },5000);
 }
+
+
 
 </script>
 
