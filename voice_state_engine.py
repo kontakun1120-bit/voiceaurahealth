@@ -1,6 +1,6 @@
 # ==========================================================
-# VoiceAura VoiceState Engine（本物版）
-# patient6/core/voice_state_engine.py
+# VoiceAura VoiceState Engine（predict一本化・正規化版）
+# mini_app/voice_state_engine.py
 # ==========================================================
 
 import wave
@@ -8,29 +8,23 @@ import numpy as np
 
 
 class VoiceStateEngine:
-
     # ------------------------------------------------------
-    # 1 init
+    # 1.0 init
     # ------------------------------------------------------
     def __init__(self):
         self.scale = 100
 
     # ------------------------------------------------------
-    # 2 外部API（ファイル）
+    # 2.0 外部API（ファイル）
     # ------------------------------------------------------
-    def analyze_from_file(self, path):
-        audio = self._load_wav_mono(path)
-        feat = self.extract_features(audio)
-
+    def analyze_from_file(self, path: str) -> dict:
         return self.analyze_with_time(path)
-#        return self.calc_scores(feat)       #  追加
 
-
-    # =====================================================
+    # ------------------------------------------------------
     # 3.0 wav読み込み
-    # =====================================================
-    def load_wav(self, path):
-        with wave.open(path, 'rb') as wf:
+    # ------------------------------------------------------
+    def load_wav(self, path: str):
+        with wave.open(path, "rb") as wf:
             n_channels = wf.getnchannels()
             framerate = wf.getframerate()
             frames = wf.readframes(wf.getnframes())
@@ -41,18 +35,16 @@ class VoiceStateEngine:
             audio = audio.reshape(-1, 2).mean(axis=1)
 
         audio /= 32768.0
-
         return audio, framerate
 
     # ------------------------------------------------------
-    # 3.1 WAV読み込み
+    # 3.1 WAV読み込み（mono）
     # ------------------------------------------------------
-    def _load_wav_mono(self, path):
+    def _load_wav_mono(self, path: str) -> np.ndarray:
         with wave.open(path, "rb") as wf:
             n_channels = wf.getnchannels()
             sampwidth = wf.getsampwidth()
             n_frames = wf.getnframes()
-            framerate = wf.getframerate()
             raw = wf.readframes(n_frames)
 
         if sampwidth != 2:
@@ -63,46 +55,64 @@ class VoiceStateEngine:
         if n_channels == 2:
             audio = audio.reshape(-1, 2).mean(axis=1)
 
-        # -1.0 ～ 1.0 に正規化
         audio = audio / 32768.0
-
         return audio
 
     # ------------------------------------------------------
     # 3.2 分割処理
     # ------------------------------------------------------
-    def _split_audio(self, audio, num_segments=5):
+    def _split_audio(self, audio: np.ndarray, num_segments: int = 5):
         length = len(audio)
-        segment_size = length // num_segments
+
+        if length == 0:
+            return [np.zeros(1, dtype=np.float32) for _ in range(num_segments)]
+
+        segment_size = max(1, length // num_segments)
 
         segments = []
         for i in range(num_segments):
             start = i * segment_size
-            end = (i + 1) * segment_size
-            segments.append(audio[start:end])
+
+            if i == num_segments - 1:
+                end = length
+            else:
+                end = min((i + 1) * segment_size, length)
+
+            seg = audio[start:end]
+
+            if len(seg) == 0:
+                seg = np.zeros(1, dtype=np.float32)
+
+            segments.append(seg)
 
         return segments
 
     # ------------------------------------------------------
-    # 3.3 時系列解析
-    # -----------------------------------------------------
-    def analyze_with_time(self, path):
+    # 3.3 時系列解析（predict一本化）
+    # ------------------------------------------------------
+    def analyze_with_time(self, path: str) -> dict:
         audio = self._load_wav_mono(path)
-
         segments = self._split_audio(audio, 5)
 
         results = []
         for seg in segments:
-            feat = self.extract_features(seg)
-            score = self.calc_scores(feat)
+            score = self.predict(seg)
             results.append(score)
 
-        # 平均
+        score_keys = [
+            "Energy",
+            "Stress",
+            "Emotion",
+            "Focus",
+            "Social",
+            "Fatigue",
+            "Arousal",
+        ]
+
         final = {}
-        for key in results[0].keys():
+        for key in score_keys:
             final[key] = int(np.mean([r[key] for r in results]))
 
-        # 🔥 ここ追加（最重要）
         stress_comment, personality, color = self.generate_comment(final)
 
         final["StressComment"] = stress_comment
@@ -112,135 +122,27 @@ class VoiceStateEngine:
         return final
 
 
-    # =====================================================
-    # 4 特徴量抽出
-    # =====================================================
-    def extract_features(self, audio):
-
-        rms = np.sqrt(np.mean(audio**2))
-        zcr = np.mean(np.abs(np.diff(np.sign(audio))))
-        std = np.std(audio)
-        peak = np.max(np.abs(audio))
-        dynamic = peak - rms
-
-        return {
-            "rms": float(rms),
-            "zcr": float(zcr),
-            "std": float(std),
-            "peak": float(peak),
-            "dynamic": float(dynamic)
-        }
-
-#    # =====================================================
-#    # 1.2.0 特徴量抽出（最小）
-#    # =====================================================
-#    def extract_features(self, audio):
-#
-#        rms = np.sqrt(np.mean(audio**2))              # 音量
-#        zcr = np.mean(np.abs(np.diff(np.sign(audio)))) # ノイズ/活発度
-#
-#        return {
-#            "rms": float(rms),
-#            "zcr": float(zcr)
-#        }
-
-
-#    # =====================================================
-#    # 5 スコア変換
-#    # =====================================================
-    def calc_scores(self, feat):
-
-        energy = (feat["rms"] * 120 + feat["std"] * 80)
-        stress = (feat["std"] * 120 + feat["zcr"] * 80)
-        emotion = (feat["zcr"] * 120 + feat["dynamic"] * 100)
-        focus = (1 - feat["zcr"]) * 100
-        social = (feat["rms"] * 100 + feat["peak"] * 50)
-        fatigue = (1 - feat["rms"]) * 100 + feat["std"] * 50
-        arousal = (feat["peak"] * 100 + feat["zcr"] * 50)
-
-        return {
-            "Energy": int(np.clip(energy, 0, 100)),
-            "Stress": int(np.clip(stress, 0, 100)),
-            "Emotion": int(np.clip(emotion, 0, 100)),
-            "Focus": int(np.clip(focus, 0, 100)),
-            "Social": int(np.clip(social, 0, 100)),
-            "Fatigue": int(np.clip(fatigue, 0, 100)),
-            "Arousal": int(np.clip(arousal, 0, 100))
-        }
-
-#    # =====================================================
-#    # 1.3.0 スコア変換（簡易モデル）
-#    # =====================================================
-#    def calc_scores(self, feat):
-#
-#        stress = int(np.clip((1 - feat["rms"]) * 100, 0, 100))
-#        energy = int(np.clip(feat["rms"] * 150, 0, 100))
-#        emotion = int(np.clip(feat["zcr"] * 100, 0, 100))
-#        focus = int(np.clip((1 - feat["zcr"]) * 100, 0, 100))
-#        social = int(np.clip(feat["rms"] * 120, 0, 100))
-#        fatigue = int(np.clip((1 - feat["rms"]) * 120, 0, 100))
-#        arousal = int(np.clip(feat["zcr"] * 80, 0, 100))
-#
-#        return {
-#            "stress": stress,
-#            "energy": energy,
-#            "emotion": emotion,
-#            "focus": focus,
-#            "social": social,
-#            "fatigue": fatigue,
-#            "arousal": arousal
-#        }
-
-    # =====================================================
-    # 6.0 メイン
-    # =====================================================
-    def analyze(self, wav_path):
-
-        audio, sr = self.load_wav(wav_path)
-        feat = self.extract_features(audio)
-        scores = self.calc_scores(feat)
-
-        # 👇追加
-        stress_comment, personality, color = self.generate_comment(scores)
-
-        scores["StressComment"] = stress_comment
-        scores["Personality"] = personality
-        scores["ColorSector"] = color
-
-        return scores
-
     # ------------------------------------------------------
-    # 7.0 コア処理
+    # 5.0 音声 → 簡易192次元
     # ------------------------------------------------------
-    def _analyze_core(self, audio):
-        vector192 = self._audio_to_vector192(audio)
-        return self.predict(vector192)
-
-    # ------------------------------------------------------
-    # 7.1 音声 → 簡易192次元
-    # ------------------------------------------------------
-    def _audio_to_vector192(self, audio):
+    def _audio_to_vector192(self, audio: np.ndarray) -> np.ndarray:
         if len(audio) == 0:
             return np.zeros(192, dtype=np.float32)
 
-        # 音量の極端値を少し抑える
         audio = np.clip(audio, -1.0, 1.0)
 
-        # 長さを192に揃える
         src_x = np.linspace(0.0, 1.0, num=len(audio), dtype=np.float32)
         dst_x = np.linspace(0.0, 1.0, num=192, dtype=np.float32)
         vec = np.interp(dst_x, src_x, audio).astype(np.float32)
 
-        # DC成分を除去
         vec = vec - np.mean(vec)
-
         return vec
 
     # ------------------------------------------------------
-    # 7.2 normalize
+    # 5.1 normalize（ベクトル正規化）
     # ------------------------------------------------------
-    def _normalize(self, v):
-        v = np.asarray(v, dtype=float)
+    def _normalize(self, v: np.ndarray) -> np.ndarray:
+        v = np.asarray(v, dtype=np.float32)
         norm = np.linalg.norm(v)
 
         if norm == 0:
@@ -249,95 +151,131 @@ class VoiceStateEngine:
         return v / norm
 
     # ------------------------------------------------------
-    # 8.0 Energy
+    # 5.2 0-1 正規化
     # ------------------------------------------------------
-    def _energy(self, v):
-        val = np.mean(np.abs(v)) * 800
-        return val
+    def _norm01(self, x: float, min_v: float, max_v: float) -> float:
+        if max_v <= min_v:
+            return 0.0
+
+        x = max(min_v, min(float(x), max_v))
+        return (x - min_v) / (max_v - min_v)
 
     # ------------------------------------------------------
-    # 8.1 Stress
+    # 5.3 0-100 clamp
     # ------------------------------------------------------
-    def _stress(self, v):
-        val = np.std(v) * 600
-        return val
+    def _clamp(self, x: float) -> int:
+        x = max(0.0, min(float(self.scale), float(x)))
+        return int(round(x))
 
     # ------------------------------------------------------
-    # 8.2 Emotion
+    # 6.0 コア特徴量抽出
     # ------------------------------------------------------
-    def _emotion(self, v):
-        val = abs(np.mean(v)) * 1200
-        return val
+    def _extract_core_features(self, v: np.ndarray) -> dict:
+        if len(v) == 0:
+            v = np.zeros(1, dtype=np.float32)
+
+        abs_v = np.abs(v)
+
+        rms = np.sqrt(np.mean(v ** 2))
+        std = np.std(v)
+        peak = np.max(abs_v)
+        dynamic = peak - rms
+        zcr = np.mean(np.abs(np.diff(np.sign(v)))) if len(v) > 1 else 0.0
+        var = np.var(v)
+        mean_abs = np.mean(abs_v)
+
+        return {
+            "rms": float(rms),
+            "std": float(std),
+            "peak": float(peak),
+            "dynamic": float(dynamic),
+            "zcr": float(zcr),
+            "var": float(var),
+            "mean_abs": float(mean_abs),
+        }
 
     # ------------------------------------------------------
-    # 8.3 Focus
+    # 7.0 重み付きスコア計算（本体）
     # ------------------------------------------------------
-    def _focus(self, v):
-        val = (1.0 / (1.0 + np.var(v))) * 100
-        return val
+    def _calculate_scores(self, f: dict) -> dict:
+        # --------------------------------------------------
+        # 0-1 正規化
+        # 5秒程度の短音声を想定した暫定レンジ
+        # 実測に応じて今後微調整
+        # --------------------------------------------------
+        rms_n = self._norm01(f["rms"], 0.02, 0.35)
+        std_n = self._norm01(f["std"], 0.01, 0.25)
+        peak_n = self._norm01(f["peak"], 0.05, 0.90)
+        dyn_n = self._norm01(f["dynamic"], 0.01, 0.60)
+        zcr_n = self._norm01(f["zcr"], 0.01, 0.60)
+        var_n = self._norm01(f["var"], 0.0001, 0.08)
+        mean_abs_n = self._norm01(f["mean_abs"], 0.01, 0.30)
+
+        # --------------------------------------------------
+        # 重み付き合成
+        # --------------------------------------------------
+        energy = (
+            0.45 * rms_n +
+            0.35 * dyn_n +
+            0.20 * mean_abs_n
+        )
+
+        stress = (
+            0.40 * std_n +
+            0.35 * zcr_n +
+            0.25 * var_n
+        )
+
+        emotion = (
+            0.45 * dyn_n +
+            0.35 * zcr_n +
+            0.20 * peak_n
+        )
+
+        focus = (
+            0.55 * (1.0 - zcr_n) +
+            0.45 * (1.0 - std_n)
+        )
+
+        social = (
+            0.35 * rms_n +
+            0.35 * peak_n +
+            0.30 * dyn_n
+        )
+
+        fatigue = (
+            0.55 * (1.0 - rms_n) +
+            0.25 * std_n +
+            0.20 * (1.0 - mean_abs_n)
+        )
+
+        arousal = (
+            0.40 * peak_n +
+            0.35 * std_n +
+            0.25 * zcr_n
+        )
+
+        return {
+            "Energy": self._clamp(energy * 100),
+            "Stress": self._clamp(stress * 100),
+            "Emotion": self._clamp(emotion * 100),
+            "Focus": self._clamp(focus * 100),
+            "Social": self._clamp(social * 100),
+            "Fatigue": self._clamp(fatigue * 100),
+            "Arousal": self._clamp(arousal * 100),
+        }
 
     # ------------------------------------------------------
-    # 8.4 Social
+    # 8.0 personality type
     # ------------------------------------------------------
-    def _social(self, v):
-        val = (np.max(v) - np.min(v)) * 200
-        return val
-
-    # ------------------------------------------------------
-    # 8.5 clamp
-    # ------------------------------------------------------
-    def _clamp(self, x):
-        x = max(0, min(self.scale, x))
-        return int(x)
-
-
-    # ------------------------------------------------------
-    # 9.0 総合コメント
-    # ------------------------------------------------------
-    def generate_comment(self, scores):
-
-        stress = scores["Stress"]
-        energy = scores["Energy"]
-        fatigue = scores["Fatigue"]
-
-        # =========================
-        # ストレスコメント
-        # =========================
-        if stress > 70:
-            stress_comment = "⚠ ストレス高め。休息推奨"
-        elif stress > 40:
-            stress_comment = "ややストレスあり"
-        else:
-            stress_comment = "ストレス安定"
-
-        # =========================
-        # 人格タイプ（簡易版）
-        # =========================
-        if energy > 70:
-            personality = "🔥 リーダー型 タイプ"
-        elif fatigue > 70:
-            personality = "🌱 内省型 タイプ"
-        elif scores["Emotion"] > 60:
-            personality = "🎨 創造型 タイプ"
-        else:
-            personality = "🔬 分析型 タイプ"
-
-        # =========================
-        # カラーセクター（簡易）
-        # =========================
-        if scores["Arousal"] > 70:
-            color = "🔴 高覚醒状態"
-        elif scores["Arousal"] < 30:
-            color = "🔵 低覚醒状態"
-        else:
-            color = "🟢 安定状態"
-
-        return stress_comment, personality, color
-
-    # ------------------------------------------------------
-    # 9.0 personality type
-    # ------------------------------------------------------
-    def _personality_type(self, energy, emotion, focus, social, stress):
+    def _personality_type(
+        self,
+        energy: int,
+        emotion: int,
+        focus: int,
+        social: int,
+        stress: int
+    ) -> str:
         if focus > 70:
             return "🔬 Analyst"
         elif social > 70:
@@ -352,10 +290,17 @@ class VoiceStateEngine:
             return "🧭 Explorer"
 
     # ------------------------------------------------------
-    # 9.1 color sector
+    # 8.1 color sector
     # ------------------------------------------------------
-    def _color_sector(self, energy, emotion, focus, social, stress):
-        score = (energy + emotion + focus + social) / 4
+    def _color_sector(
+        self,
+        energy: int,
+        emotion: int,
+        focus: int,
+        social: int,
+        stress: int
+    ) -> str:
+        score = (energy + emotion + focus + social) / 4.0
 
         sectors = [
             ("#8F00FF", "violet", "直感・ビジョン・想像"),
@@ -379,42 +324,9 @@ class VoiceStateEngine:
         return f"{name} : {desc}"
 
     # ------------------------------------------------------
-    # 10.0 predict
+    # 8.2 stress comment
     # ------------------------------------------------------
-    def predict(self, vector192):
-        v = self._normalize(vector192)
-
-        energy = self._energy(v)
-        stress = self._stress(v)
-        emotion = self._emotion(v)
-        focus = self._focus(v)
-        social = self._social(v)
-
-        ptype = self._personality_type(energy, emotion, focus, social, stress)
-        pcolor = self._color_sector(energy, emotion, focus, social, stress)
-
-        fatigue = (100 - energy + stress) / 2
-        arousal = (energy + emotion) / 2
-
-        stress_clamped = self._clamp(stress)
-
-        return {
-            "Energy": self._clamp(energy),
-            "Stress": stress_clamped,
-            "Emotion": self._clamp(emotion),
-            "Focus": self._clamp(focus),
-            "Social": self._clamp(social),
-            "Fatigue": self._clamp(fatigue),
-            "Arousal": self._clamp(arousal),
-            "Personality": ptype,
-            "ColorSector": pcolor,
-            "StressComment": self.stress_comment(stress_clamped),
-        }
-
-    # ------------------------------------------------------
-    # 10.2 stress comment
-    # ------------------------------------------------------
-    def stress_comment(self, stress):
+    def stress_comment(self, stress: int) -> str:
         stress = int(stress)
 
         if stress < 20:
@@ -428,6 +340,85 @@ class VoiceStateEngine:
         else:
             return "強いストレス状態です。"
 
+    # ------------------------------------------------------
+    # 9.0 predict（完全一本化）
+    # ------------------------------------------------------
+    def predict(self, audio: np.ndarray) -> dict:
+        if len(audio) == 0:
+            return {
+                "Energy": 0,
+                "Stress": 0,
+                "Emotion": 0,
+                "Focus": 0,
+                "Social": 0,
+                "Fatigue": 0,
+                "Arousal": 0,
+                "Personality": "🧭 Explorer",
+                "ColorSector": "navy : 思考・分析",
+                "StressComment": "音声が短すぎます。"
+            }
+
+        vector192 = self._audio_to_vector192(audio)
+        v = self._normalize(vector192)
+
+        feat = self._extract_core_features(v)
+        scores = self._calculate_scores(feat)
+
+        ptype = self._personality_type(
+            scores["Energy"],
+            scores["Emotion"],
+            scores["Focus"],
+            scores["Social"],
+            scores["Stress"],
+        )
+
+        pcolor = self._color_sector(
+            scores["Energy"],
+            scores["Emotion"],
+            scores["Focus"],
+            scores["Social"],
+            scores["Stress"],
+        )
+
+        scores["Personality"] = ptype
+        scores["ColorSector"] = pcolor
+        scores["StressComment"] = self.stress_comment(scores["Stress"])
+
+        return scores
+
+    # ------------------------------------------------------
+    # 10.0 総合コメント
+    # ------------------------------------------------------
+    def generate_comment(self, scores: dict):
+        stress = scores["Stress"]
+        energy = scores["Energy"]
+        fatigue = scores["Fatigue"]
+
+        if stress > 70:
+            stress_comment = "⚠ ストレス高め。休息推奨"
+        elif stress > 40:
+            stress_comment = "ややストレスあり"
+        else:
+            stress_comment = "ストレス安定"
+
+        if energy > 70:
+            personality = "🔥 リーダー型 タイプ"
+        elif fatigue > 70:
+            personality = "🌱 内省型 タイプ"
+        elif scores["Emotion"] > 60:
+            personality = "🎨 創造型 タイプ"
+        else:
+            personality = "🔬 分析型 タイプ"
+
+        if scores["Arousal"] > 70:
+            color = "🔴 高覚醒状態"
+        elif scores["Arousal"] < 30:
+            color = "🔵 低覚醒状態"
+        else:
+            color = "🟢 安定状態"
+
+        return stress_comment, personality, color
+
 
 # ==========================================================
 # 11.0 test
@@ -439,3 +430,4 @@ if __name__ == "__main__":
     print("\nVoice State\n")
     for k, v in state.items():
         print(f"{k:12} {v}")
+        
