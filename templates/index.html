@@ -161,13 +161,6 @@ h1 {
 
 <script>
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register(
-    "{{ url_for('static', filename='service_worker.js') }}"
-  );
-}
-
-
 document.addEventListener("DOMContentLoaded", function() {
   if ('serviceWorker' in navigator) {
     navigator.serviceWorker.register(
