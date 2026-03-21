@@ -1,6 +1,9 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+<link rel="apple-touch-icon" href="{{ url_for('static', filename='mini_icon.png') }}">
+<meta name="theme-color" content="#0f172a">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VoiceAuraHealth (TM)</title>
@@ -51,7 +54,7 @@ h1 {
     flex-direction:column;
     align-items:center;
 	
-    max-width:300px;
+    max-width:380px;
     margin:25px auto 0 auto;
 }
 
@@ -131,7 +134,7 @@ h1 {
 
 <div class="container">
 
-    <img src="main_logo.png" class="main-hero-logo">
+    <img src="{{ url_for('static', filename='main_logo.png') }}" class="main-hero-logo">
 
     <h1>VoiceAuraHealth 
 	<span class="tm"><font color="#000000">(TM)</font>
@@ -140,9 +143,10 @@ h1 {
 
     <div class="card">
 	<button class="record-btn" onclick="startRecording()">
-		🎙 5秒録音 → 自動判定
+		🎙 今日のAuraチェック
 	</button>
         <p id="status"></p>
+		<span class="tm">( 5秒で測定 )</span>
     </div>
 
     <div id="resultBox"></div>
@@ -156,6 +160,13 @@ h1 {
 </div>
 
 <script>
+
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register(
+    "{{ url_for('static', filename='service_worker.js') }}"
+  );
+}
+
 
 function renderBar(label, value) {
     const stars = Math.round(value / 20);
