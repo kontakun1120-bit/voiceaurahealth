@@ -20,11 +20,15 @@ body {
     padding:20px;
 }
 
-.logo {
-    width:140px;
-    border-radius:50%;
-    box-shadow:0 0 40px #00f0ff;
+
+.main-hero-logo {
+    width:200px;
+    margin-top:10px;
+    margin-bottom:15px;
+    border-radius:30%;
+    box-shadow:0 0 60px rgba(0,255,255,0.8);
 }
+
 
 h1 {
     margin-top:15px;
@@ -32,7 +36,7 @@ h1 {
 }
 
 .tm {
-    font-size:14px;
+    font-size:12px;
     opacity:0.7;
 }
 
@@ -42,6 +46,13 @@ h1 {
     border-radius:20px;
     box-shadow:0 10px 30px rgba(0,0,0,0.4);
     margin-top:25px;
+	
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+	
+    max-width:300px;
+    margin:25px auto 0 auto;
 }
 
 .record-btn {
@@ -55,6 +66,10 @@ h1 {
     cursor:pointer;
     box-shadow:0 0 25px rgba(0,255,255,0.6);
     transition:0.3s;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
 }
 
 .record-btn:hover {
@@ -91,6 +106,24 @@ h1 {
     font-size:12px;
     opacity:0.6;
 }
+
+.tm2 {
+    font-size:9px;
+    opacity:0.7;
+}
+
+.btn-logo {
+    width:100px;
+    height:100px;
+    margin-right:10px;
+    vertical-align:middle;
+    border-radius:35%;
+    box-shadow:0 0 10px rgba(0,255,255,0.7);
+	animation: spin 6s linear infinite;
+}
+
+
+
 </style>
 </head>
 
@@ -98,22 +131,26 @@ h1 {
 
 <div class="container">
 
-    <img src="/static/main_logo.png" class="logo">
+    <img src="main_logo.png" class="main-hero-logo">
 
-    <h1>VoiceAuraHealth <span class="tm">(TM)</span></h1>
+    <h1>VoiceAuraHealth 
+	<span class="tm"><font color="#000000">(TM)</font>
+	</span><br>mini</h1>
     <p>あなたの声から人格エネルギーを可視化</p>
 
     <div class="card">
-        <button class="record-btn" onclick="startRecording()">
-            🎙 5秒録音 → 自動判定
-        </button>
+	<button class="record-btn" onclick="startRecording()">
+		🎙 5秒録音 → 自動判定
+	</button>
         <p id="status"></p>
     </div>
 
     <div id="resultBox"></div>
 
     <div class="footer">
-        © 2026 VoiceAuraHealth (TM)
+	<font color="#7FFF00"><b>こんどう泌尿器科・内科クリニック</b></font><br><br>
+        <font color="#000000">©</font> 2026 VoiceAuraHealth 
+		<span class="tm2"><font color="#000000">(TM)</font></span>
     </div>
 
 </div>
