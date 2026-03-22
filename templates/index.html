@@ -247,6 +247,7 @@ function renderBar(label, value) {
 function renderResult(data) {
     const box = document.getElementById("resultBox");
     if (!data.result) return;
+    if (!r.score_comments) return;
 
     const r = data.result;
     const s = r.scores;
@@ -273,8 +274,6 @@ function renderResult(data) {
 
 		${renderBar("自律神経", s.Calm)}
 		<div class="mini-comment">${r.score_comments.Calm}</div>
-	`;
-
     </div>
     `;
 
