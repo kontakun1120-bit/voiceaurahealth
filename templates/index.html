@@ -130,7 +130,10 @@ h1 {
 	animation: spin 6s linear infinite;
 }
 
-
+.record-btn:disabled {
+    cursor: not-allowed;
+    box-shadow: none;
+}
 
 </style>
 </head>
@@ -264,43 +267,71 @@ function renderResult(data) {
 
 async function startRecording() {
     const status = document.getElementById("status");
+    const resultBox = document.getElementById("resultBox");
+    const btn = document.querySelector(".record-btn");
+
+    // 👇 前回結果クリア
+    resultBox.innerHTML = "";
+
+    // 👇 ボタンロック
+    btn.disabled = true;
+    btn.style.opacity = "0.5";
+
     status.innerText = "録音中...";
 
-	try {
-		const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
-	} catch (e) {
-		alert("マイク許可が必要です");
-		return;
-	}
+    let stream;
+
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+    } catch (e) {
+        alert("マイク許可が必要です");
+		btn.disabled = false;
+        btn.style.opacity = "1";
+        return;
+    }
 
     const recorder = new MediaRecorder(stream);
-
     let chunks = [];
 
     recorder.ondataavailable = e => chunks.push(e.data);
 
     recorder.onstop = async () => {
+
+        status.innerText = "解析中...";
+
         const blob = new Blob(chunks,{ type:"audio/webm" });
 
         const formData = new FormData();
         formData.append("audio", blob);
 
-        const res = await fetch("/api/upload",{
-            method:"POST",
-            body:formData
-        });
+        try {
+            const res = await fetch("/api/upload",{
+                method:"POST",
+                body:formData
+            });
 
-        const data = await res.json();
-        renderResult(data);
+            const data = await res.json();
 
-        status.innerText = "判定完了";
+            renderResult(data);
+
+            status.innerText = "判定完了";
+        } catch(e) {
+            status.innerText = "エラー発生";
+        }
+
+        // 👇 ここ重要（録音停止）
+        stream.getTracks().forEach(track=>track.stop());
+
+        // 👇 ボタン復活
+        btn.disabled = false;
+        btn.style.opacity = "1";
+
     };
 
     recorder.start();
 
     setTimeout(()=>{
         recorder.stop();
-        stream.getTracks().forEach(track=>track.stop());
     },5000);
 }
 
