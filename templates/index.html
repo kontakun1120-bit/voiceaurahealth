@@ -135,6 +135,14 @@ h1 {
     box-shadow: none;
 }
 
+.mini-comment {
+    font-size:14px;
+    color:#9fdcff;
+    margin-top:-5px;
+    margin-bottom:10px;
+    opacity:0.9;
+}
+
 </style>
 </head>
 
@@ -249,16 +257,23 @@ function renderResult(data) {
     <div class="card">
     `;
 
-    r.comments.forEach(c=>{
-        html += `<div>・${c}</div>`;
-    });
+	html += `
+		${renderBar("エネルギー", s.Energy)}
+		<div class="mini-comment">${r.score_comments.Energy}</div>
 
-    html += `
-        ${renderBar("エネルギー", s.Energy)}
-        ${renderBar("感情", s.Emotion)}
-        ${renderBar("集中", s.Focus)}
-        ${renderBar("社交", s.Social)}
-        ${renderBar("自律神経", s.Calm)}
+		${renderBar("感情", s.Emotion)}
+		<div class="mini-comment">${r.score_comments.Emotion}</div>
+
+		${renderBar("集中", s.Focus)}
+		<div class="mini-comment">${r.score_comments.Focus}</div>
+
+		${renderBar("社交", s.Social)}
+		<div class="mini-comment">${r.score_comments.Social}</div>
+
+		${renderBar("自律神経", s.Calm)}
+		<div class="mini-comment">${r.score_comments.Calm}</div>
+	`;
+
     </div>
     `;
 
