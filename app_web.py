@@ -18,6 +18,13 @@ engine = VoiceStateEngine()
 
 
 # ----------------------------------------------------------
+# 0.0 サーバー準備中→起動 app開始
+# ----------------------------------------------------------
+@app.route("/api/ping")
+def ping():
+    return "ok"
+
+# ----------------------------------------------------------
 # 1.0 index
 # ----------------------------------------------------------
 @app.route("/")
@@ -35,6 +42,9 @@ def upload_audio():
         return jsonify({"error": "no audio file"})
 
     file = request.files["audio"]
+
+    if file.filename == "":
+        return jsonify({"error": "empty file"})
 
     filename = f"{uuid.uuid4()}.wav"
     path = os.path.join(UPLOAD_FOLDER, filename)
@@ -56,15 +66,18 @@ def upload_audio():
 
 
     # ----------------------------------------
-    # 解析
+    # 解析 ファイル削除
     # ----------------------------------------
-    result = engine.analyze_from_file(wav_path)
-#    result = engine.analyze_from_file(path)
-
-    # ----------------------------------------
-    # UI用に整形（ここが重要）
-    # ----------------------------------------
-    response = format_result(result)
+    try:
+        result = engine.analyze_from_file(wav_path)
+        response = format_result(result)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+    finally:
+        if os.path.exists(path):
+            os.remove(path)
+        if os.path.exists(wav_path):
+            os.remove(wav_path)
 
     return jsonify({"result": response})
 
@@ -95,12 +108,15 @@ def format_result(r):
     elif "green" in r["ColorSector"]:
         color = "#00A86B"
 
+    # 院長専用・医療コメント
+    comments = build_medical_comments(r)  # 3.1 UI変換ロジック サブdef
+
     # コメント
-    comments = [
-        r["StressComment"],
-        f"Fatigue: {r['Fatigue']}",
-        f"Arousal: {r['Arousal']}"
-    ]
+#    comments = [
+#        r["StressComment"],
+#        f"Fatigue: {r['Fatigue']}",
+#        f"Arousal: {r['Arousal']}"
+#    ]
 
     return {
         "type": type_name,
@@ -110,6 +126,61 @@ def format_result(r):
         "comments": comments
     }
 
+# ----------------------------------------------------------
+# 3.1 UI変換ロジック（3.0の医療ロジック変更）
+# ----------------------------------------------------------
+def build_medical_comments(r):
+
+    comments = []
+
+    stress = r["Stress"]
+    fatigue = r["Fatigue"]
+    energy = r["Energy"]
+    calm = 100 - stress
+
+    # ----------------------------------------
+    # ① ストレス判定
+    # ----------------------------------------
+    if stress > 70:
+        comments.append("⚠ 強いストレス状態です")
+        comments.append("休養を優先してください")
+    elif stress > 50:
+        comments.append("ややストレスあり")
+    else:
+        comments.append("安定状態です")
+
+    # ----------------------------------------
+    # ② 疲労
+    # ----------------------------------------
+    if fatigue > 70:
+        comments.append("疲労が蓄積しています")
+    elif fatigue > 50:
+        comments.append("やや疲労あり")
+
+    # ----------------------------------------
+    # ③ エネルギー
+    # ----------------------------------------
+    if energy < 30:
+        comments.append("エネルギー低下")
+        comments.append("無理をしないでください")
+    elif energy > 70:
+        comments.append("活力あり")
+
+    # ----------------------------------------
+    # ④ Calm（自律神経）
+    # ----------------------------------------
+    if calm < 40:
+        comments.append("交感神経優位の可能性")
+    elif calm > 70:
+        comments.append("リラックス状態")
+
+    # ----------------------------------------
+    # ⑤ 医療コメント（院長ワード🔥）
+    # ----------------------------------------
+    if stress > 70 or fatigue > 70:
+        comments.append("休養して下さいね。お大事に。")
+
+    return comments
 
 # ----------------------------------------------------------
 # 4.0 run
