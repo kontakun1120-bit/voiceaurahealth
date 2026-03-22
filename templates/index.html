@@ -189,8 +189,6 @@ h1 {
 
     <div id="resultBox"></div>
 
-    <div><span id="view_time"></span></div>
-
     <div class="footer">
 	<font color="#7FFF00"><b>こんどう泌尿器科・内科クリニック</b></font><br><br>
         <font color="#000000">©</font> 2026 VoiceAuraHealth 
@@ -270,6 +268,7 @@ function renderBar(label, value) {
     `;
 }
 
+
 function renderResult(data) {
     const box = document.getElementById("resultBox");
 
@@ -280,28 +279,46 @@ function renderResult(data) {
 
     if (!r.score_comments) return;
 
+    // 🔥 時刻生成
+    const now = new Date();
+    const timeStr = now.getFullYear() + "年" +
+                    (now.getMonth()+1) + "月" +
+                    now.getDate() + "日 " +
+                    now.getHours() + ":" +
+                    now.getMinutes();
+
     let html = `
     <div class="result-title" style="background:${r.color};">
         あなたは ${r.type} (${r.sector}) です
     </div>
+
+    <div style="
+        font-size:12px;
+        opacity:0.6;
+        margin-top:5px;
+        letter-spacing:1px;
+    ">
+        🕒 ${timeStr}
+    </div>
+
     <div class="card">
     `;
 
-	html += `
-		${renderBar("元気", s.Energy)}
-		<div class="mini-comment">${r.score_comments.Energy}</div>
+    html += `
+        ${renderBar("元気", s.Energy)}
+        <div class="mini-comment">${r.score_comments.Energy}</div>
 
-		${renderBar("感情", s.Emotion)}
-		<div class="mini-comment">${r.score_comments.Emotion}</div>
+        ${renderBar("感情", s.Emotion)}
+        <div class="mini-comment">${r.score_comments.Emotion}</div>
 
-		${renderBar("集中", s.Focus)}
-		<div class="mini-comment">${r.score_comments.Focus}</div>
+        ${renderBar("集中", s.Focus)}
+        <div class="mini-comment">${r.score_comments.Focus}</div>
 
-		${renderBar("社交", s.Social)}
-		<div class="mini-comment">${r.score_comments.Social}</div>
+        ${renderBar("社交", s.Social)}
+        <div class="mini-comment">${r.score_comments.Social}</div>
 
-		${renderBar("調律", s.Calm)}
-		<div class="mini-comment">${r.score_comments.Calm}</div>
+        ${renderBar("調律", s.Calm)}
+        <div class="mini-comment">${r.score_comments.Calm}</div>
     </div>
     `;
 
@@ -405,19 +422,7 @@ async function startRecording() {
     }, 5000);
 }
 
-document.getElementById("view_time").innerHTML = getNow();
-
-function getNow() {
-  const now = new Date();
-  const year = now.getFullYear();
-  const mon = now.getMonth() + 1;
-  const day = now.getDate();
-  const hour = now.getHours();
-  const min = now.getMinutes();
-  const sec = now.getSeconds();
-  const s = year + "年" + mon + "月" + day + "日" + hour + "時" + min + "分" + sec + "秒"; 
-  return s;
-}
+		
 
 </script>
 
