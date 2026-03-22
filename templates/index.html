@@ -265,74 +265,89 @@ function renderResult(data) {
     box.innerHTML = html;
 }
 
+
 async function startRecording() {
+
+    console.log("startRecording開始");
+
     const status = document.getElementById("status");
     const resultBox = document.getElementById("resultBox");
     const btn = document.querySelector(".record-btn");
 
-    // 👇 前回結果クリア
     resultBox.innerHTML = "";
 
-    // 👇 ボタンロック
     btn.disabled = true;
     btn.style.opacity = "0.5";
 
-    status.innerText = "録音中...";
+    status.innerText = "録音準備中...";
 
     let stream;
 
     try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        console.log("マイク取得OK");
     } catch (e) {
         alert("マイク許可が必要です");
-		btn.disabled = false;
+        btn.disabled = false;
         btn.style.opacity = "1";
         return;
     }
 
+    status.innerText = "録音中...";
+
     const recorder = new MediaRecorder(stream);
     let chunks = [];
 
-    recorder.ondataavailable = e => chunks.push(e.data);
+    recorder.ondataavailable = e => {
+        console.log("データ取得");
+        chunks.push(e.data);
+    };
+
+    recorder.onerror = e => {
+        console.error("録音エラー", e);
+        status.innerText = "録音エラー";
+    };
 
     recorder.onstop = async () => {
 
+        console.log("録音終了");
+
         status.innerText = "解析中...";
 
-        const blob = new Blob(chunks,{ type:"audio/webm" });
+        const blob = new Blob(chunks, { type: "audio/webm" });
 
         const formData = new FormData();
         formData.append("audio", blob);
 
         try {
-            const res = await fetch("/api/upload",{
-                method:"POST",
-                body:formData
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
             });
 
             const data = await res.json();
 
+            console.log("API結果", data);
+
             renderResult(data);
 
             status.innerText = "判定完了";
-        } catch(e) {
-            status.innerText = "エラー発生";
+        } catch (e) {
+            console.error(e);
+            status.innerText = "通信エラー";
         }
 
-        // 👇 ここ重要（録音停止）
-        stream.getTracks().forEach(track=>track.stop());
+        stream.getTracks().forEach(track => track.stop());
 
-        // 👇 ボタン復活
         btn.disabled = false;
         btn.style.opacity = "1";
-
     };
 
     recorder.start();
 
-    setTimeout(()=>{
+    setTimeout(() => {
         recorder.stop();
-    },5000);
+    }, 5000);
 }
 
 
