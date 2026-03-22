@@ -189,6 +189,8 @@ h1 {
 
     <div id="resultBox"></div>
 
+    <div><span id="view_time"></span></div>
+
     <div class="footer">
 	<font color="#7FFF00"><b>こんどう泌尿器科・内科クリニック</b></font><br><br>
         <font color="#000000">©</font> 2026 VoiceAuraHealth 
@@ -403,7 +405,19 @@ async function startRecording() {
     }, 5000);
 }
 
+document.getElementById("view_time").innerHTML = getNow();
 
+function getNow() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const mon = now.getMonth() + 1;
+  const day = now.getDate();
+  const hour = now.getHours();
+  const min = now.getMinutes();
+  const sec = now.getSeconds();
+  const s = year + "年" + mon + "月" + day + "日" + hour + "時" + min + "分" + sec + "秒"; 
+  return s;
+}
 
 </script>
 
