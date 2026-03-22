@@ -109,7 +109,8 @@ def format_result(r):
         color = "#00A86B"
 
     # 院長専用・医療コメント
-    comments = build_medical_comments(r)  # 3.1 UI変換ロジック サブdef
+    score_comments = build_score_comments(scores)
+#    comments = build_medical_comments(r)  # 3.1 UI変換ロジック サブdef
 
     # コメント
 #    comments = [
@@ -123,7 +124,8 @@ def format_result(r):
         "sector": r["ColorSector"],
         "color": color,
         "scores": scores,
-        "comments": comments
+        "score_comments": score_comments
+#        "comments": comments
     }
 
 # ----------------------------------------------------------
@@ -181,6 +183,59 @@ def build_medical_comments(r):
         comments.append("休養して下さいね。お大事に。")
 
     return comments
+
+# ----------------------------------------------------------
+# 3.1 指標ごとの医療コメント（院長スタイル🔥）
+# ----------------------------------------------------------
+def build_score_comments(scores):
+
+    def energy(v):
+        if v < 30:
+            return "エネルギー低下（疲労傾向）"
+        elif v < 60:
+            return "エネルギーやや低め"
+        else:
+            return "エネルギー良好"
+
+    def emotion(v):
+        if v < 30:
+            return "感情抑制気味"
+        elif v < 60:
+            return "感情安定"
+        else:
+            return "感情やや活性"
+
+    def focus(v):
+        if v < 30:
+            return "集中力低下"
+        elif v < 60:
+            return "集中やや不安定"
+        else:
+            return "集中良好"
+
+    def social(v):
+        if v < 30:
+            return "社交性低下"
+        elif v < 60:
+            return "やや控えめ"
+        else:
+            return "社交性良好"
+
+    def calm(v):
+        if v < 30:
+            return "ストレス高"
+        elif v < 60:
+            return "ややストレスあり"
+        else:
+            return "安定状態"
+
+    return {
+        "Energy": energy(scores["Energy"]),
+        "Emotion": emotion(scores["Emotion"]),
+        "Focus": focus(scores["Focus"]),
+        "Social": social(scores["Social"]),
+        "Calm": calm(scores["Calm"]),
+    }
 
 # ----------------------------------------------------------
 # 4.0 run
