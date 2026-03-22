@@ -246,11 +246,13 @@ function renderBar(label, value) {
 
 function renderResult(data) {
     const box = document.getElementById("resultBox");
+
     if (!data.result) return;
-    if (!r.score_comments) return;
 
     const r = data.result;
     const s = r.scores;
+
+    if (!r.score_comments) return;
 
     let html = `
     <div class="result-title" style="background:${r.color};">
@@ -341,6 +343,18 @@ async function startRecording() {
             });
 
             const data = await res.json();
+
+			if (!data || !data.result) {
+				status.innerText = "データ不正";
+				console.error("Invalid response:", data);
+				return;
+			}
+
+			if (data.error) {
+				status.innerText = "解析エラー";
+				console.error(data.error);
+				return;
+			}
 
             console.log("API結果", data);
 
