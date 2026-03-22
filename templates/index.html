@@ -143,6 +143,18 @@ h1 {
     opacity:0.9;
 }
 
+.star-low {
+    color: #ef4444;   /* 赤 */
+}
+
+.star-mid {
+    color: #facc15;   /* 黄 */
+}
+
+.star-high {
+    color: #22c55e;   /* 緑 */
+}
+
 </style>
 </head>
 
@@ -233,13 +245,21 @@ document.addEventListener("DOMContentLoaded", function() {
 function renderBar(label, value) {
     const stars = Math.round(value / 20);
 
+    let starClass = "";
+    if (value <= 30) starClass = "star-low";
+    else if (value <= 60) starClass = "star-mid";
+    else starClass = "star-high";
+
     return `
     <div class="bar">
         <div style="display:flex; justify-content:space-between;">
             <span>${label}</span>
-            <span>
-                ${"★".repeat(stars)}${"☆".repeat(5 - stars)} ${value}
-            </span>
+			<span>
+				<span class="${starClass}">
+					${"★".repeat(stars)}${"☆".repeat(5 - stars)} 
+				</span>
+				${value}
+			</span>
         </div>
         <div class="bar-bg">
             <div class="bar-fill" style="width:${value}%"></div>
