@@ -141,9 +141,19 @@ h1 {
 
     <img src="{{ url_for('static', filename='main_logo.png') }}" class="main-hero-logo">
 
+
+	<div id="loading-screen">
+		<h2>VoiceAuraHealth (TM)</h2>
+		<p>🧠 AIエンジン起動中...</p>
+		<p>🎙 音声解析準備中...</p>
+	</div>
+	
+	<div id="main-app" style="display:none;">
+	
     <h1>VoiceAuraHealth 
 	<span class="tm-black">(TM)</span>mini</h1>
     <p>あなたの声から人格エネルギーを可視化</p>
+
 
     <div class="card">
 	<button class="record-btn" onclick="startRecording()">
@@ -161,9 +171,42 @@ h1 {
 		<span class="tm2"><font color="#000000">(TM)</font></span>
     </div>
 
+	</div>
+
 </div>
 
 <script>
+
+async function checkServer() {
+  try {
+    const res = await fetch("/api/ping");
+    if (res.ok) {
+      document.getElementById("loading-screen").style.display = "none";
+      document.getElementById("main-app").style.display = "block";
+    } else {
+      retry();
+    }
+  } catch (e) {
+    retry();
+  }
+}
+
+let retryCount = 0;
+
+function retry() {
+  retryCount++;
+
+  if (retryCount > 20) {
+    document.getElementById("loading-screen").innerHTML =
+      "<p>⚠ サーバーが起動していません<br>再読み込みしてください</p>";
+    return;
+  }
+
+  setTimeout(checkServer, 3000);
+}
+
+// 起動時
+checkServer();
 
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -223,7 +266,13 @@ async function startRecording() {
     const status = document.getElementById("status");
     status.innerText = "録音中...";
 
-    const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+	try {
+		const stream = await navigator.mediaDevices.getUserMedia({ audio:true });
+	} catch (e) {
+		alert("マイク許可が必要です");
+		return;
+	}
+
     const recorder = new MediaRecorder(stream);
 
     let chunks = [];
