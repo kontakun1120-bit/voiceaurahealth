@@ -235,11 +235,15 @@ function renderBar(label, value) {
 
     return `
     <div class="bar">
-        <div>${label} : ${value}</div>
+        <div style="display:flex; justify-content:space-between;">
+            <span>${label}</span>
+            <span>
+                ${"★".repeat(stars)}${"☆".repeat(5 - stars)} ${value}
+            </span>
+        </div>
         <div class="bar-bg">
             <div class="bar-fill" style="width:${value}%"></div>
         </div>
-        <div>${"★".repeat(stars)}${"☆".repeat(5 - stars)}</div>
     </div>
     `;
 }
@@ -262,7 +266,7 @@ function renderResult(data) {
     `;
 
 	html += `
-		${renderBar("エネルギー", s.Energy)}
+		${renderBar("元気", s.Energy)}
 		<div class="mini-comment">${r.score_comments.Energy}</div>
 
 		${renderBar("感情", s.Emotion)}
@@ -274,7 +278,7 @@ function renderResult(data) {
 		${renderBar("社交", s.Social)}
 		<div class="mini-comment">${r.score_comments.Social}</div>
 
-		${renderBar("自律神経", s.Calm)}
+		${renderBar("調律", s.Calm)}
 		<div class="mini-comment">${r.score_comments.Calm}</div>
     </div>
     `;
