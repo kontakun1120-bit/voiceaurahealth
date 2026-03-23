@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: voiceaurahealth-mini_app
+    name: voiceaurahealth-mini
     env: python
     plan: free
 
