@@ -7,7 +7,7 @@ import os
 import uuid
 
 from voice_state_engine import VoiceStateEngine
-# from pydub import AudioSegment
+from pydub import AudioSegment
 
 app = Flask(__name__)
 
@@ -18,11 +18,12 @@ engine = VoiceStateEngine()
 
 
 # ----------------------------------------------------------
-# 0.0 サーバー準備中→起動 app開始
+# 0.0 サーバー準備確認
 # ----------------------------------------------------------
 @app.route("/api/ping")
 def ping():
     return "ok"
+
 
 # ----------------------------------------------------------
 # 1.0 index
@@ -33,73 +34,66 @@ def index():
 
 
 # ----------------------------------------------------------
-# 2.0 音声アップロードAPI
+# 2.0 音声アップロードAPI（Railway安定版）
 # ----------------------------------------------------------
 @app.route("/api/upload", methods=["POST"])
 def upload_audio():
 
-    if "audio" not in request.files:
-        return jsonify({"error": "no audio file"})
-
-    file = request.files["audio"]
-
-    if file.filename == "":
-        return jsonify({"error": "empty file"})
-
-    filename = f"{uuid.uuid4()}.wav"
-    path = os.path.join(UPLOAD_FOLDER, filename)
-
-    file.save(path)
-
-
-
-    # 👇ここ追加
-    wav_path = path.replace(".wav", "_conv.wav")
-
-    audio = AudioSegment.from_file(path)
-    
-    audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
-
-    audio.export(wav_path, format="wav")
-
-
-
-
-    # ----------------------------------------
-    # 解析 ファイル削除
-    # ----------------------------------------
     try:
+        if "audio" not in request.files:
+            return jsonify({"error": "no audio file"}), 400
+
+        file = request.files["audio"]
+
+        if file.filename == "":
+            return jsonify({"error": "empty file"}), 400
+
+        # 🔥 Railway対策：/tmp固定
+        filename = f"{uuid.uuid4()}.wav"
+        path = os.path.join("/tmp", filename)
+        file.save(path)
+
+        wav_path = path.replace(".wav", "_conv.wav")
+
+        # 🔥 音声変換
+        audio = AudioSegment.from_file(path)
+        audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
+        audio.export(wav_path, format="wav")
+
+        # 🔥 解析
         result = engine.analyze_from_file(wav_path)
         response = format_result(result)
+
+        return jsonify({"result": response})
+
     except Exception as e:
-        return jsonify({"error": str(e)})
+        print("🔥 ERROR:", e)  # Railwayログ用
+        return jsonify({"error": str(e)}), 500
+
     finally:
-        if os.path.exists(path):
-            os.remove(path)
-        if os.path.exists(wav_path):
-            os.remove(wav_path)
-
-    return jsonify({"result": response})
-
+        try:
+            if os.path.exists(path):
+                os.remove(path)
+            if os.path.exists(wav_path):
+                os.remove(wav_path)
+        except:
+            pass
 
 # ----------------------------------------------------------
-# 3.0 UI変換ロジック（超重要）
+# 3.0 UI変換ロジック
 # ----------------------------------------------------------
 def format_result(r):
 
-    # UIで使うスコア
     scores = {
         "Energy": r["Energy"],
         "Emotion": r["Emotion"],
         "Focus": r["Focus"],
         "Social": r["Social"],
-        "Calm": 100 - r["Stress"],   # ←ここがポイント
+        "Calm": 100 - r["Stress"],
     }
 
-    # タイプ
     type_name = r["Personality"]
 
-    # カラー（簡易変換）
     color = "#00B7C2"
     if "red" in r["ColorSector"]:
         color = "#FF0000"
@@ -108,16 +102,7 @@ def format_result(r):
     elif "green" in r["ColorSector"]:
         color = "#00A86B"
 
-    # 院長専用・医療コメント
     score_comments = build_score_comments(scores)
-#    comments = build_medical_comments(r)  # 3.1 UI変換ロジック サブdef
-
-    # コメント
-#    comments = [
-#        r["StressComment"],
-#        f"Fatigue: {r['Fatigue']}",
-#        f"Arousal: {r['Arousal']}"
-#    ]
 
     return {
         "type": type_name,
@@ -125,67 +110,11 @@ def format_result(r):
         "color": color,
         "scores": scores,
         "score_comments": score_comments
-#        "comments": comments
     }
 
-# ----------------------------------------------------------
-# 3.1 UI変換ロジック（3.0の医療ロジック変更）
-# ----------------------------------------------------------
-def build_medical_comments(r):
-
-    comments = []
-
-    stress = r["Stress"]
-    fatigue = r["Fatigue"]
-    energy = r["Energy"]
-    calm = 100 - stress
-
-    # ----------------------------------------
-    # ① ストレス判定
-    # ----------------------------------------
-    if stress > 70:
-        comments.append("⚠ 強いストレス状態です")
-        comments.append("休養を優先してください")
-    elif stress > 50:
-        comments.append("ややストレスあり")
-    else:
-        comments.append("安定状態です")
-
-    # ----------------------------------------
-    # ② 疲労
-    # ----------------------------------------
-    if fatigue > 70:
-        comments.append("疲労が蓄積しています")
-    elif fatigue > 50:
-        comments.append("やや疲労あり")
-
-    # ----------------------------------------
-    # ③ エネルギー
-    # ----------------------------------------
-    if energy < 30:
-        comments.append("エネルギー低下")
-        comments.append("無理をしないでください")
-    elif energy > 70:
-        comments.append("活力あり")
-
-    # ----------------------------------------
-    # ④ Calm（自律神経）
-    # ----------------------------------------
-    if calm < 40:
-        comments.append("交感神経優位の可能性")
-    elif calm > 70:
-        comments.append("リラックス状態")
-
-    # ----------------------------------------
-    # ⑤ 医療コメント（院長ワード🔥）
-    # ----------------------------------------
-    if stress > 70 or fatigue > 70:
-        comments.append("休養して下さいね。お大事に。")
-
-    return comments
 
 # ----------------------------------------------------------
-# 3.1 指標ごとの医療コメント（院長スタイル🔥）
+# 3.1 指標ごとのコメント
 # ----------------------------------------------------------
 def build_score_comments(scores):
 
@@ -236,6 +165,7 @@ def build_score_comments(scores):
         "Social": social(scores["Social"]),
         "Calm": calm(scores["Calm"]),
     }
+
 
 # ----------------------------------------------------------
 # 4.0 run
