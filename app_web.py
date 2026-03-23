@@ -7,7 +7,7 @@ import os
 import uuid
 
 from mini_app.voice_state_engine import VoiceStateEngine
-from pydub import AudioSegment
+# from pydub import AudioSegment
 
 app = Flask(__name__)
 
