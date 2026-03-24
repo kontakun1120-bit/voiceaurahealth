@@ -107,7 +107,7 @@ h1{
 <p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
 
 <div class="card">
-    <button class="btn" onclick="start()">🎙 5秒チェック</button>
+    <button class="btn" onclick="startRecording()">🎙 5秒チェック</button>
     <p id="status"></p>
 </div>
 
@@ -117,18 +117,70 @@ h1{
 
 <script>
 
-async function start(){
+async function startRecording() {
+
     const status = document.getElementById("status");
     const result = document.getElementById("result");
 
-    status.innerText = "録音中...";
+    status.innerText = "録音準備中...";
     result.innerHTML = "";
 
-    const res = await fetch("/api/upload",{method:"POST"});
-    const data = await res.json();
+    let stream;
 
-    render(data);
-    status.innerText = "完了";
+    try {
+        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    } catch (e) {
+        alert("マイク許可が必要です");
+        return;
+    }
+
+    status.innerText = "録音中...";
+
+    const recorder = new MediaRecorder(stream);
+    let chunks = [];
+
+    recorder.ondataavailable = e => {
+        chunks.push(e.data);
+    };
+
+    recorder.onstop = async () => {
+
+        status.innerText = "解析中...";
+
+        const blob = new Blob(chunks, { type: "audio/webm" });
+        const formData = new FormData();
+        formData.append("audio", blob);
+
+        try {
+            const res = await fetch("/api/upload", {
+                method: "POST",
+                body: formData
+            });
+
+            const data = await res.json();
+
+            if (!data.result) {
+                status.innerText = "エラー";
+                console.log(data);
+                return;
+            }
+
+            render(data);
+            status.innerText = "完了";
+
+        } catch (e) {
+            console.error(e);
+            status.innerText = "通信エラー";
+        }
+
+        stream.getTracks().forEach(track => track.stop());
+    };
+
+    recorder.start();
+
+    setTimeout(() => {
+        recorder.stop();
+    }, 5000);
 }
 
 function render(data){
