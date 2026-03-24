@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoiceAura for You 🌸</title>
+<title>VoiceAuraHealth for You 🌸</title>
 
 <style>
 body{
@@ -22,7 +22,7 @@ body{
 
 /* ロゴ */
 .logo{
-    width:120px;
+    width:180px;
     margin-top:30px;
     border-radius:20px;
     box-shadow:0 10px 30px rgba(0,0,0,0.15);
@@ -103,7 +103,7 @@ h1{
 
 <img src="static/main_logo.png" class="logo">
 
-<h1>VoiceAura for You 🌸</h1>
+<h1>VoiceAuraHealth for You 🌸</h1>
 <p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
 
 <div class="card">
@@ -187,8 +187,15 @@ function render(data){
     const r = data.result;
     const s = r.scores;
 
-    const now = new Date();
-    const time = now.getHours()+":"+now.getMinutes();
+	const now = new Date();
+
+	const yyyy = now.getFullYear();
+	const mm = String(now.getMonth() + 1).padStart(2, "0");
+	const dd = String(now.getDate()).padStart(2, "0");
+	const hh = String(now.getHours()).padStart(2, "0");
+	const mi = String(now.getMinutes()).padStart(2, "0");
+
+	const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
 
     let html = `
     <div class="card">
