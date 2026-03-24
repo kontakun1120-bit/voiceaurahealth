@@ -79,6 +79,7 @@ def upload_audio():
         except:
             pass
 
+
 # ----------------------------------------------------------
 # 3.0 UI変換ロジック
 # ----------------------------------------------------------
@@ -103,13 +104,17 @@ def format_result(r):
         color = "#00A86B"
 
     score_comments = build_score_comments(scores)
+    daily = engine.generate_daily_message()
+    summary = engine.generate_empathy_summary(scores)
 
     return {
         "type": type_name,
         "sector": r["ColorSector"],
         "color": color,
         "scores": scores,
-        "score_comments": score_comments
+        "score_comments": score_comments,
+        "daily_message": daily,
+        "summary": summary
     }
 
 
@@ -168,7 +173,7 @@ def build_score_comments(scores):
 
 
 # ----------------------------------------------------------
-# 4.0 run
+# 5.0 run
 # ----------------------------------------------------------
 if __name__ == "__main__":
     app.run(debug=True)
