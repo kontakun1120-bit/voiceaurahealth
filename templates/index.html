@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <title>VoiceAuraHealth for You 🌸</title>
+
 
 <style>
 body{
@@ -113,11 +115,17 @@ h1{
 
 <div id="result"></div>
 
+<div class="card">
+	<button class="btn" onclick="loadChart()">📈 Energy推移</button>
+	<canvas id="energyChart" height="200"></canvas>
+</div>
+
 </div>
 
 <script>
 
-async function startRecording() {
+// -------------------- 録音 --------------------
+async function startRecording(){
 
     const status = document.getElementById("status");
     const result = document.getElementById("result");
@@ -127,9 +135,9 @@ async function startRecording() {
 
     let stream;
 
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    } catch (e) {
+    try{
+        stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    }catch(e){
         alert("マイク許可が必要です");
         return;
     }
@@ -139,51 +147,43 @@ async function startRecording() {
     const recorder = new MediaRecorder(stream);
     let chunks = [];
 
-    recorder.ondataavailable = e => {
-        chunks.push(e.data);
-    };
+    recorder.ondataavailable = e => chunks.push(e.data);
 
-    recorder.onstop = async () => {
+    recorder.onstop = async ()=>{
 
         status.innerText = "解析中...";
 
-        const blob = new Blob(chunks, { type: "audio/webm" });
+        const blob = new Blob(chunks,{type:"audio/webm"});
         const formData = new FormData();
         formData.append("audio", blob);
 
-        try {
-            const res = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-            });
+        const comment = document.getElementById("user_comment")?.value || "";
+        formData.append("comment", comment);
 
-            const data = await res.json();
+        const res = await fetch("/api/upload",{method:"POST", body:formData});
+        const data = await res.json();
 
-            if (!data.result) {
-                status.innerText = "エラー";
-                console.log(data);
-                return;
-            }
-
-            render(data);
-            status.innerText = "完了";
-
-        } catch (e) {
-            console.error(e);
-            status.innerText = "通信エラー";
+        if(!data.result){
+            status.innerText = "エラー";
+            return;
         }
 
-        stream.getTracks().forEach(track => track.stop());
+        render(data);
+        status.innerText = "完了";
+
+        stream.getTracks().forEach(t=>t.stop());
     };
 
     recorder.start();
-
-    setTimeout(() => {
-        recorder.stop();
-    }, 5000);
+    setTimeout(()=>recorder.stop(),5000);
 }
 
+// -------------------- 表示 --------------------
+let lastResult = null;
+
 function render(data){
+    lastResult = data.result;  // 👈ここ重要
+
     const r = data.result;
     const s = r.scores;
 
@@ -194,42 +194,138 @@ function render(data){
 	const dd = String(now.getDate()).padStart(2, "0");
 	const hh = String(now.getHours()).padStart(2, "0");
 	const mi = String(now.getMinutes()).padStart(2, "0");
-
 	const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
+
+    const diffText = await loadDiff();      // 🔥 追加 差分
 
     let html = `
     <div class="card">
-    <b>あなたの今の状態 🌿</b>
-    <div class="time">${time}</div>
-    `;
+        <b>あなたの今の状態 🌿</b>
+        <div class="time">${time}</div>
+        <div class="comment">元気：${s.Energy}</div>
+        <div class="comment">気持ち：${s.Emotion}</div>
+        <div class="comment">集中：${s.Focus}</div>
+    </div>
 
-	let prev = localStorage.getItem("energy_prev");
+    <div class="card">
+        💭 今のあなたへ
+        <div class="comment">${r.summary}</div>
 
-	if(prev){
-		let diff = s.Energy - prev;
-		html += `<div class="comment">昨日より ${diff}</div>`;
-	}
+        <input id="user_comment" maxlength="20"
+        placeholder="ひとことメモ（任意）"
+        style="margin-top:10px;width:90%;padding:10px;border-radius:10px;border:none;background:#f3f4f6;">
 
-	localStorage.setItem("energy_prev", s.Energy);
+        <button class="btn" onclick="saveComment()" style="margin-top:10px;">
+            💾 保存
+        </button>
+    </div>
 
-    html += metric("元気",s.Energy,r.score_comments.Energy);
-    html += metric("気持ち",s.Emotion,r.score_comments.Emotion);
-    html += metric("集中",s.Focus,r.score_comments.Focus);
-    html += metric("つながり",s.Social,r.score_comments.Social);
-    html += metric("リラックス",s.Calm,r.score_comments.Calm);
 
-    html += `</div>`;
-
-	html += `
 	<div class="card">
-		💭 今のあなたへ
-		<div class="comment">${r.summary}</div>
+		<button class="btn" onclick="loadHistory()">📖 履歴を見る</button>
+		<div id="history"></div>
 	</div>
-	`;
+
+	<div id="detail"></div>
+
+	
+    `;
 
     document.getElementById("result").innerHTML = html;
 }
 
+
+// -------------------- 保存処理 --------------------
+async function saveComment(){
+
+    const comment = document.getElementById("user_comment").value;
+
+    if(!lastResult){
+        alert("先に測定してください");
+        return;
+    }
+
+    // 👇追加（ここが神UX）
+    if(comment.trim() === ""){
+        if(!confirm("コメント無しで保存しますか？")){
+            return;
+        }
+    }
+
+    await fetch("/api/save_comment",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            scores:lastResult.scores,
+            vector192:lastResult.vector192,
+            summary:lastResult.summary,
+            comment:comment
+        })
+    });
+
+    alert("保存しました✨");
+	
+	// 👇追加
+	loadChart();
+}
+
+
+// -------------------- 履歴--------------------
+async function loadHistory(){
+
+    const res = await fetch("/api/sessions");
+    const json = await res.json();
+
+    let html = "<div><b>📖 履歴</b></div>";
+
+    json.data.forEach(d => {
+
+        let emoji = "🌿";
+        if(d.energy > 60) emoji = "😊";
+        if(d.energy < 30) emoji = "😴";
+
+        html += `
+        <div onclick="loadDetail('${d.id}')" 
+             style="padding:8px;cursor:pointer;border-bottom:1px solid #eee;">
+            ${emoji} ${d.time}
+        </div>
+        `;
+    });
+
+    document.getElementById("history").innerHTML = html;
+}
+
+
+// -------------------- 詳細表示--------------------
+async function loadDetail(id){
+
+    const res = await fetch("/api/session/" + id);
+    const json = await res.json();
+
+    const d = json.data;
+
+    let html = `
+    <div class="card">
+        <b>🧠 詳細</b><br>
+        🕒 ${d.timestamp}<br><br>
+
+        元気：${d.scores.Energy}<br>
+        気持ち：${d.scores.Emotion}<br>
+        集中：${d.scores.Focus}<br><br>
+
+        💬 ${d.user_comment || "（コメントなし）"}
+
+        <canvas id="detailChart" height="200"></canvas>
+    </div>
+    `;
+
+    document.getElementById("detail").innerHTML = html;
+
+    drawDetailChart(d);
+}
+
+
+// -------------------- グラフ 1 --------------------
 function metric(name,v,comment){
 
     const stars = Math.round(v/20);
@@ -266,6 +362,111 @@ function soft(text){
     .replace("高","ちょっと高め")
     + "🌿";
 }
+
+// -------------------- グラフ 2--------------------
+let chart = null;
+
+async function loadChart(){
+
+    const res = await fetch("/api/energy_trend");
+    const json = await res.json();
+
+	const labels = json.data.map(d => {
+		const t = new Date(d.time);
+		return `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
+	});
+		
+    const values = json.data.map(d=>d.energy);
+
+    const ctx = document.getElementById("energyChart");
+
+    // 👇追加
+    if(chart){
+        chart.destroy();
+    }
+
+    chart = new Chart(ctx,{
+        type:"line",
+        data:{
+            labels:labels,
+            datasets:[{
+                data:values,
+				tension:0.0
+                             // ベジェ曲線は0.4				
+            }]
+        },
+        options:{
+            plugins:{legend:{display:false}}
+        }
+    });
+}
+
+
+// -------------------- グラフ描画関数--------------------
+let detailChart = null;
+
+function drawDetailChart(d){
+
+    const ctx = document.getElementById("detailChart");
+
+    const labels = ["Energy","Emotion","Focus","Social","Calm"];
+    const values = [
+        d.scores.Energy,
+        d.scores.Emotion,
+        d.scores.Focus,
+        d.scores.Social,
+        d.scores.Calm
+    ];
+
+    // 既存破棄
+    if(detailChart){
+        detailChart.destroy();
+    }
+
+    detailChart = new Chart(ctx,{
+        type:"radar",
+        data:{
+            labels:labels,
+            datasets:[{
+                data:values
+            }]
+        },
+        options:{
+            scales:{
+                r:{
+                    suggestedMin:0,
+                    suggestedMax:100
+                }
+            }
+        }
+    });
+}
+
+
+// -------------------- 差分　表示--------------------
+async function loadDiff(){
+
+    const res = await fetch("/api/diff");
+    const json = await res.json();
+
+    const d = json.diff;
+
+    let text = "変化なし";
+    let emoji = "🌿";
+
+    if(d > 0){
+        text = `昨日より +${d}`;
+        emoji = "😊";
+    }
+    else if(d < 0){
+        text = `昨日より ${d}`;
+        emoji = "😴";
+    }
+
+    return `${text} ${emoji}`;
+}
+
+
 
 </script>
 
