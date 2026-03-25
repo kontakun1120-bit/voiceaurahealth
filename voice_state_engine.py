@@ -391,6 +391,7 @@ class VoiceStateEngine:
         scores["Personality"] = ptype
         scores["ColorSector"] = pcolor
         scores["StressComment"] = self.stress_comment(scores["Stress"])
+        scores["vector192"] = vector192.tolist()
 
         return scores
 
