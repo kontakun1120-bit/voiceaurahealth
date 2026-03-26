@@ -46,8 +46,8 @@ h1{
 .card{
     background:white;
     border-radius:20px;
-    padding:20px;
-    margin-top:20px;
+    padding:10px;
+    margin-top:10px;
     box-shadow:0 10px 20px rgba(0,0,0,0.08);
 }
 
@@ -482,7 +482,6 @@ function drawDetailChart(d){
 function drawAuraRing(vector){
 
     if(!vector || vector.length === 0){
-        console.log("vector empty");
         return;
     }
 
@@ -492,49 +491,127 @@ function drawAuraRing(vector){
     const cx = canvas.width / 2;
     const cy = canvas.height / 2;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-    const innerBase = 55;   // 線の始点半径
-    const scale = 120;      // ベクトルの拡大量
+    // =========================
+    // 🔥 ここに追加（補間）
+    // =========================
+    function interpolateVector(vector, targetLength){
 
-//    ctx.strokeStyle = "red";
-    ctx.lineWidth = 1;     // 一本の線の太さ 基準1 太く1.5
+        const result = [];
 
-    for(let i = 0; i < vector.length; i++){
+        for(let i=0;i<targetLength;i++){
 
-        // 192本を360度に均等配置
-        const angle = (i / vector.length) * Math.PI * 2 - Math.PI / 2;
+            const t = i / targetLength * vector.length;
 
-        // ベクトル値を長さに反映
-        const v = vector[i];
-        const outerR = innerBase + 40 + Math.abs(v) * scale;    // 円の半径 40
+            const i0 = Math.floor(t);
+            const i1 = (i0 + 1) % vector.length;
 
-        // 始点
+            const frac = t - i0;
+
+            const v = vector[i0] * (1 - frac) + vector[i1] * frac;
+
+            result.push(v);
+        }
+
+        return result;
+    }
+
+    // 🔥 ここで補間実行
+    vector = interpolateVector(vector, 720);　　   // 360  → 十分綺麗　720  → かなり滑らか
+
+    // =========================
+    // 🔥 ① 大きくする
+    // =========================
+    const innerBase = 94;   // ←元55 → 拡大
+    const outerMax = 125;   // ←リング最大半径  140
+
+    // =========================
+    // 🔥 ③ 正規化（超重要）
+    // =========================
+    const min = Math.min(...vector);
+    const max = Math.max(...vector);
+
+    const norm = vector.map(v=>{
+        if(max - min === 0) return 0.5;
+        return (v - min) / (max - min); // 0〜1
+    });
+
+    // =========================
+    // 描画
+    // =========================
+    for(let i=0;i<norm.length;i++){
+
+        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
+
+        // 🔥 長さを相対強調
+		
+		const boost = 4.0;  // ←ここで強さ調整（1.5〜2.5がおすすめ）
+		const r = innerBase + Math.pow(norm[i], boost) * (outerMax - innerBase);
+
+
+//        const r = innerBase + norm[i] * (outerMax - innerBase);
+
         const x1 = cx + innerBase * Math.cos(angle);
         const y1 = cy + innerBase * Math.sin(angle);
 
-        // 終点
-        const x2 = cx + outerR * Math.cos(angle);
-        const y2 = cy + outerR * Math.sin(angle);
+        const x2 = cx + r * Math.cos(angle);
+        const y2 = cy + r * Math.sin(angle);
 
-		// 🌈 虹色（ここが核心）
-		const hue = (i / vector.length) * 360;
-		
-		ctx.strokeStyle = `hsl(${hue}, 80%, 60%)`;
+        // 🌈 虹色
+        const hue = (i / norm.length) * 360;
+        ctx.strokeStyle = `hsl(${hue}, 80%, 60%)`;
+
+		// 🌟 Glow
+		ctx.shadowBlur = 1;         // 元10
+		ctx.shadowColor = ctx.strokeStyle;
 
         ctx.beginPath();
-        ctx.moveTo(x1, y1);
-        ctx.lineTo(x2, y2);
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
         ctx.stroke();
     }
 
-    // 中心の薄いガイド円（任意）
+    // 中心円
     ctx.beginPath();
-    ctx.arc(cx, cy, innerBase, 0, Math.PI * 2);
-    ctx.strokeStyle = "#fca5a5";
-    ctx.lineWidth = 1;
+    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
+    ctx.strokeStyle = "#eee";
     ctx.stroke();
+
+    // =========================
+    // 🔥 ② 凡例（外へ）
+    // =========================
+    drawLegend(ctx, cx, cy, outerMax + 6);   // ←元30 → 拡大
 }
+
+
+// -------------------- リング 凡例（外周ラベル）描画--------------------
+// 🌈 凡例（外周ラベル）
+function drawLegend(ctx, cx, cy, radius){
+
+    const labels = [
+        "創造","思考","冷静","対人","共感","自信",
+        "存在","満足","身体","行動","情熱","直感"
+    ];
+
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for(let i=0;i<labels.length;i++){
+
+        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
+
+        const x = cx + radius * Math.cos(angle);
+        const y = cy + radius * Math.sin(angle);
+
+        const hue = (i / labels.length) * 360;
+        ctx.fillStyle = `hsl(${hue}, 80%, 50%)`;
+
+        ctx.fillText(labels[i], x, y);
+    }
+}
+
 
 
 
