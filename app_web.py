@@ -50,7 +50,7 @@ def upload_audio():
         # 🔥 OS対応（ここが神ポイント）
         temp_dir = tempfile.gettempdir()
 
-        path = os.path.join(temp_dir, f"{uuid.uuid4()}.wav")
+        path = os.path.join(temp_dir, f"{uuid.uuid4()}.webm")
         file.save(path)
 
         wav_path = path.replace(".wav","_c.wav")
@@ -112,7 +112,10 @@ def trend():
         if not os.path.exists("sessions"):
             return jsonify({"data":[]})
 
-        files = sorted([f for f in os.listdir("sessions") if f.endswith(".json")])
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")],
+            reverse=True
+        )
 
         for f in files:
             try:
@@ -218,6 +221,45 @@ def get_session_detail(sid):
     except Exception as e:
         print("detail error:", e)
         return jsonify({"error": str(e)})
+
+
+# ----------------------------------------------------------
+# 2.2.3 日記sessions　Flask 詳細API 追加
+# ----------------------------------------------------------
+@app.route("/api/session_diff/<sid>")
+def get_session_diff(sid):
+
+    try:
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")],
+            reverse=True
+        )
+
+        if len(files) < 2:
+            return jsonify({"diff": {}})
+
+        # 対象ファイル位置
+        idx = files.index(sid)
+        if idx == len(files) - 1:
+            return jsonify({"diff": {}})
+
+        def load(f):
+            with open(f"sessions/{f}", encoding="utf-8") as file:
+                return json.load(file)
+
+        current = load(files[idx])
+        prev = load(files[idx + 1])
+
+        diff = {}
+
+        for k in current["scores"]:
+            diff[k] = current["scores"][k] - prev["scores"][k]
+
+        return jsonify({"diff": diff})
+
+    except Exception as e:
+        print("detail diff error:", e)
+        return jsonify({"diff": {}})
 
 
 # ----------------------------------------------------------
