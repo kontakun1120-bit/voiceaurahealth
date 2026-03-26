@@ -321,35 +321,7 @@ async function loadDetail(id){
 
 
 // -------------------- グラフ 1 ???--------------------
-function metric(name,v,comment){
 
-    const stars = Math.round(v/20);
-
-    let c="";
-    let bar="#86efac";
-
-    if(v<=30){ c="star-low"; bar="#fda4af"; }
-    else if(v<=60){ c="star-mid"; bar="#fde68a"; }
-    else{ c="star-high"; }
-
-    return `
-    <div class="metric">
-        <div>
-            ${name}：
-            <span class="${c}">
-            ${"★".repeat(stars)}${"☆".repeat(5-stars)}
-            </span>
-            ${v}
-        </div>
-
-        <div class="bar">
-            <div class="fill" style="width:${v}%;background:${bar}"></div>
-        </div>
-
-        <div class="comment">${soft(comment)}</div>
-    </div>
-    `;
-}
 
 function soft(text){
     return text
