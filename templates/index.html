@@ -181,31 +181,35 @@ async function startRecording(){
 // -------------------- 表示 --------------------
 let lastResult = null;
 
-function render(data){
-    lastResult = data.result;  // 👈ここ重要
+async function render(data){
+
+    lastResult = data.result;
 
     const r = data.result;
     const s = r.scores;
 
-	const now = new Date();
+    const now = new Date();
 
-	const yyyy = now.getFullYear();
-	const mm = String(now.getMonth() + 1).padStart(2, "0");
-	const dd = String(now.getDate()).padStart(2, "0");
-	const hh = String(now.getHours()).padStart(2, "0");
-	const mi = String(now.getMinutes()).padStart(2, "0");
-	const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
 
-    const diffText = await loadDiff();      // 🔥 追加 差分
+    // 🔥 これが動くようになる
+    const diffText = await loadDiff();
 
     let html = `
     <div class="card">
         <b>あなたの今の状態 🌿</b>
         <div class="time">${time}</div>
+        <div class="comment">${diffText}</div>
         <div class="comment">元気：${s.Energy}</div>
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
     </div>
+    `;
 
     <div class="card">
         💭 今のあなたへ
