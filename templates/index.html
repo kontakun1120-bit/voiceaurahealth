@@ -168,7 +168,7 @@ async function startRecording(){
             return;
         }
 
-        render(data);
+        await render(data);
         status.innerText = "完了";
 
         stream.getTracks().forEach(t=>t.stop());
@@ -189,7 +189,6 @@ async function render(data){
     const s = r.scores;
 
     const now = new Date();
-
     const yyyy = now.getFullYear();
     const mm = String(now.getMonth() + 1).padStart(2, "0");
     const dd = String(now.getDate()).padStart(2, "0");
@@ -197,7 +196,6 @@ async function render(data){
     const mi = String(now.getMinutes()).padStart(2, "0");
     const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
 
-    // 🔥 これが動くようになる
     const diffText = await loadDiff();
 
     let html = `
@@ -209,7 +207,6 @@ async function render(data){
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
     </div>
-    `;
 
     <div class="card">
         💭 今のあなたへ
@@ -224,15 +221,12 @@ async function render(data){
         </button>
     </div>
 
+    <div class="card">
+        <button class="btn" onclick="loadHistory()">📖 履歴を見る</button>
+        <div id="history"></div>
+    </div>
 
-	<div class="card">
-		<button class="btn" onclick="loadHistory()">📖 履歴を見る</button>
-		<div id="history"></div>
-	</div>
-
-	<div id="detail"></div>
-
-	
+    <div id="detail"></div>
     `;
 
     document.getElementById("result").innerHTML = html;
@@ -249,7 +243,6 @@ async function saveComment(){
         return;
     }
 
-    // 👇追加（ここが神UX）
     if(comment.trim() === ""){
         if(!confirm("コメント無しで保存しますか？")){
             return;
@@ -268,9 +261,7 @@ async function saveComment(){
     });
 
     alert("保存しました✨");
-	
-	// 👇追加
-	loadChart();
+    loadChart();
 }
 
 
@@ -329,7 +320,7 @@ async function loadDetail(id){
 }
 
 
-// -------------------- グラフ 1 --------------------
+// -------------------- グラフ 1 ???--------------------
 function metric(name,v,comment){
 
     const stars = Math.round(v/20);
@@ -375,16 +366,15 @@ async function loadChart(){
     const res = await fetch("/api/energy_trend");
     const json = await res.json();
 
-	const labels = json.data.map(d => {
-		const t = new Date(d.time);
-		return `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
-	});
-		
+    const labels = json.data.map(d => {
+        const t = new Date(d.time);
+        return `${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
+    });
+
     const values = json.data.map(d=>d.energy);
 
     const ctx = document.getElementById("energyChart");
 
-    // 👇追加
     if(chart){
         chart.destroy();
     }
@@ -395,8 +385,7 @@ async function loadChart(){
             labels:labels,
             datasets:[{
                 data:values,
-				tension:0.0
-                             // ベジェ曲線は0.4				
+                tension:0.0
             }]
         },
         options:{
@@ -422,7 +411,6 @@ function drawDetailChart(d){
         d.scores.Calm
     ];
 
-    // 既存破棄
     if(detailChart){
         detailChart.destroy();
     }
@@ -461,15 +449,13 @@ async function loadDiff(){
     if(d > 0){
         text = `昨日より +${d}`;
         emoji = "😊";
-    }
-    else if(d < 0){
+    }else if(d < 0){
         text = `昨日より ${d}`;
         emoji = "😴";
     }
 
     return `${text} ${emoji}`;
 }
-
 
 
 </script>
