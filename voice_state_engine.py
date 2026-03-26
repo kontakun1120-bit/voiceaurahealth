@@ -127,8 +127,18 @@ class VoiceStateEngine:
         ]
 
         final = {}
+        
         for key in score_keys:
             final[key] = int(np.mean([r[key] for r in results]))
+
+        # 🔥 vector192を平均して追加
+        vectors = [r["vector192"] for r in results if "vector192" in r]
+
+        if len(vectors) > 0:
+            v_mean = np.mean(np.array(vectors), axis=0)
+            final["vector192"] = v_mean.tolist()
+        else:
+            final["vector192"] = [0.0]*192
 
         stress_comment, personality, color = self.generate_comment(final)
 
@@ -137,6 +147,8 @@ class VoiceStateEngine:
         final["ColorSector"] = color
 
         return final
+        
+
 
     # ------------------------------------------------------
     # 4.0 audio -> 192 vector
