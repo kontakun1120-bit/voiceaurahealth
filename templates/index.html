@@ -105,6 +105,11 @@ h1{
 
 <img src="static/main_logo.png" class="logo">
 
+<div class="card">
+    <b>🌈 VoiceAuraリング</b>
+    <canvas id="auraRing" width="300" height="300"></canvas>
+</div>
+
 <h1>VoiceAuraHealth for You 🌸</h1>
 <p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
 
@@ -230,6 +235,10 @@ async function render(data){
     `;
 
     document.getElementById("result").innerHTML = html;
+	
+	// 👇これを追加
+	drawAuraRing(r.vector192);
+
 }
 
 
@@ -291,6 +300,30 @@ async function loadHistory(){
 }
 
 
+// -------------------- 差分　表示--------------------
+async function loadDiff(){
+
+    const res = await fetch("/api/diff");
+    const json = await res.json();
+
+    const d = json.diff;
+
+    let text = "変化なし";
+    let emoji = "🌿";
+
+    if(d > 0){
+        text = `昨日より +${d}`;
+        emoji = "😊";
+    }else if(d < 0){
+        text = `昨日より ${d}`;
+        emoji = "😴";
+    }
+
+    return `${text} ${emoji}`;
+}
+
+
+
 // -------------------- 詳細表示--------------------
 async function loadDetail(id){
 
@@ -299,15 +332,21 @@ async function loadDetail(id){
 
     const d = json.data;
 
+    // 🔥 差分取得
+    const diff = await loadDetailDiff(id);
+
     let html = `
     <div class="card">
         <b>🧠 詳細</b><br>
         🕒 ${d.timestamp}<br><br>
 
-        元気：${d.scores.Energy}<br>
-        気持ち：${d.scores.Emotion}<br>
-        集中：${d.scores.Focus}<br><br>
+		${metric("元気", d.scores.Energy, diff?.Energy || 0)}
+		${metric("気持ち", d.scores.Emotion, diff?.Emotion || 0)}
+		${metric("集中", d.scores.Focus, diff?.Focus || 0)}
+		${metric("つながり", d.scores.Social, diff?.Social || 0)}
+		${metric("リラックス", d.scores.Calm, diff?.Calm || 0)}
 
+        <br>
         💬 ${d.user_comment || "（コメントなし）"}
 
         <canvas id="detailChart" height="200"></canvas>
@@ -320,15 +359,47 @@ async function loadDetail(id){
 }
 
 
-// -------------------- グラフ 1 ???--------------------
+// -------------------- 詳細表示 その2--------------------
+async function loadDetailDiff(id){
 
+    const res = await fetch("/api/session_diff/" + id);
+    const json = await res.json();
 
-function soft(text){
-    return text
-    .replace("低下","少し低めかも")
-    .replace("高","ちょっと高め")
-    + "🌿";
+    return json.diff || {};
 }
+
+// -------------------- グラフ 1 --------------------
+function metric(name, v, d=0){
+
+    const stars = Math.round(v/20);
+
+    let color = "#86efac";
+    if(v <= 30) color = "#fda4af";
+    else if(v <= 60) color = "#fde68a";
+
+    let diffText = "";
+    if(d > 0) diffText = ` (+${d} 😊)`;
+    else if(d < 0) diffText = ` (${d} 😴)`;
+
+    return `
+    <div style="margin-top:10px;text-align:left;">
+        <b>${name}</b><br>
+
+        <span style="color:${color};font-size:16px;">
+            ${"★".repeat(stars)}${"☆".repeat(5-stars)}
+        </span>
+
+        <span style="font-size:12px;color:#888;margin-left:5px;">
+            ${v}${diffText}
+        </span>
+
+        <div style="height:6px;background:#eee;border-radius:10px;margin-top:5px;">
+            <div style="width:${v}%;background:${color};height:6px;border-radius:10px;"></div>
+        </div>
+    </div>
+    `;
+}
+
 
 // -------------------- グラフ 2--------------------
 let chart = null;
@@ -407,27 +478,64 @@ function drawDetailChart(d){
 }
 
 
-// -------------------- 差分　表示--------------------
-async function loadDiff(){
+// -------------------- リング描画関数--------------------
+function drawAuraRing(vector){
 
-    const res = await fetch("/api/diff");
-    const json = await res.json();
-
-    const d = json.diff;
-
-    let text = "変化なし";
-    let emoji = "🌿";
-
-    if(d > 0){
-        text = `昨日より +${d}`;
-        emoji = "😊";
-    }else if(d < 0){
-        text = `昨日より ${d}`;
-        emoji = "😴";
+    if(!vector || vector.length === 0){
+        console.log("vector empty");
+        return;
     }
 
-    return `${text} ${emoji}`;
+    const canvas = document.getElementById("auraRing");
+    const ctx = canvas.getContext("2d");
+
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    const innerBase = 55;   // 線の始点半径
+    const scale = 120;      // ベクトルの拡大量
+
+//    ctx.strokeStyle = "red";
+    ctx.lineWidth = 1;     // 一本の線の太さ 基準1 太く1.5
+
+    for(let i = 0; i < vector.length; i++){
+
+        // 192本を360度に均等配置
+        const angle = (i / vector.length) * Math.PI * 2 - Math.PI / 2;
+
+        // ベクトル値を長さに反映
+        const v = vector[i];
+        const outerR = innerBase + 40 + Math.abs(v) * scale;    // 円の半径 40
+
+        // 始点
+        const x1 = cx + innerBase * Math.cos(angle);
+        const y1 = cy + innerBase * Math.sin(angle);
+
+        // 終点
+        const x2 = cx + outerR * Math.cos(angle);
+        const y2 = cy + outerR * Math.sin(angle);
+
+		// 🌈 虹色（ここが核心）
+		const hue = (i / vector.length) * 360;
+		
+		ctx.strokeStyle = `hsl(${hue}, 80%, 60%)`;
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+    }
+
+    // 中心の薄いガイド円（任意）
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerBase, 0, Math.PI * 2);
+    ctx.strokeStyle = "#fca5a5";
+    ctx.lineWidth = 1;
+    ctx.stroke();
 }
+
 
 
 </script>
