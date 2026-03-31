@@ -1,163 +1,264 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
-<link rel="apple-touch-icon" href="{{ url_for('static', filename='mini_icon.png') }}">
-<meta name="theme-color" content="#0f172a">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>VoiceAuraHealth (TM)</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<title>VoiceAuraHealth for You 🌸</title>
+
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
-    color: #e2e8f0;
+body{
+    margin:0;
+    font-family: "Hiragino Maru Gothic ProN", sans-serif;
+    background: linear-gradient(180deg,#fff1f2,#f0fdf4);
+    color:#444;
+    text-align:center;
+}
+
+.container{
+    max-width:400px;
+    margin:auto;
+    padding:10px;
+}
+
+.container2{
+    max-width:400px;
+    margin:auto;
+    padding:10px;
+}
+
+/* タイトル */
+h1{
+    font-size:22px;
+    margin-top:10px;
+}
+
+.title{
+    font-size: 24px;
+    font-weight: 600;
     text-align: center;
+    line-height: 1.4;
 }
 
-.container {
-    max-width: 700px;
-    margin: 40px auto;
-    padding: 20px;
-}
-
-.main-hero-logo {
-    width: 200px;
-    margin-top: 10px;
-    margin-bottom: 15px;
-    border-radius: 30%;
-    box-shadow: 0 0 60px rgba(0,255,255,0.8);
-}
-
-h1 {
-    margin-top: 15px;
-    font-size: 32px;
-}
-
-h2 {
-    margin-top: 0;
-}
-
-.tm {
-    font-size: 12px;
-    opacity: 0.7;
-}
-
-.tm2 {
-    font-size: 9px;
-    opacity: 0.7;
-}
-
-.tm-black {
-    color: #000;
-    font-size: 12px;
-}
-
-.card {
-    background: #1e293b;
-    padding: 30px;
-    border-radius: 20px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    max-width: 380px;
-    margin: 25px auto 0 auto;
-}
-
-.record-btn {
-    margin-top: 20px;
-    padding: 16px 36px;
-    font-size: 18px;
-    border: none;
-    border-radius: 40px;
-    background: linear-gradient(90deg, #00f0ff, #ff00c8);
-    color: white;
-    cursor: pointer;
-    box-shadow: 0 0 25px rgba(0,255,255,0.6);
-    transition: 0.3s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.record-btn:hover {
-    transform: scale(1.05);
-}
-
-.record-btn:disabled {
-    cursor: not-allowed;
-    box-shadow: none;
-    opacity: 0.5;
-}
-
-.result-title {
-    padding: 20px;
-    border-radius: 12px;
-    color: white;
-    font-size: 22px;
-    margin-top: 20px;
-}
-
-.result-time {
-    font-size: 12px;
-    opacity: 0.6;
-    margin-top: 5px;
-    letter-spacing: 1px;
-}
-
-.bar {
-    margin: 10px 0 16px 0;
-    text-align: left;
-    width: 100%;
-}
-
-.bar-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.bar-bg {
-    background: #334155;
-    height: 8px;
-    border-radius: 4px;
-    margin-top: 6px;
-}
-
-.bar-fill {
-    background: #22c55e;
-    height: 8px;
-    border-radius: 4px;
-}
-
-.mini-comment {
+/* TMを小さく＆上に */
+.tm{
     font-size: 14px;
-    color: #9fdcff;
-    margin-top: 8px;
-    margin-bottom: 6px;
-    opacity: 0.95;
+    vertical-align: super;
+    margin-left: 2px;
 }
 
-.footer {
-    margin-top: 40px;
-    font-size: 12px;
-    opacity: 0.6;
+/* サブタイトル */
+.subtitle{
+    display:block;
+    font-size:16px;
+    font-style:italic;   /* ←イタリック */
+    font-weight:400;
+    color:#888;
+    margin-top:4px;
+	letter-spacing:1px;
 }
 
-.star-low {
-    color: #ef4444;
+.sub{
+    font-size:13px;
+    color:#888;
+    margin-bottom:20px;
 }
 
-.star-mid {
-    color: #facc15;
+/* メインカード */
+.card{
+    background:#eeffee;    /* ピンク　#FFCCDD */
+    border-radius:20px;
+    padding:10px;
+    margin-top:20px;
+    box-shadow:0 10px 20px rgba(0,0,0,0.08);
 }
 
-.star-high {
-    color: #22c55e;
+/* サブカード */
+.card2{
+    background:#FFFFFF;    /* ピンク　#FFCCDD */
+    border-radius:20px;
+    padding:10px;
+    margin:20px auto 0 auto;
+    box-shadow:0 10px 20px rgba(0,0,0,0.08);
+
+    width:90%;
+    max-width:360px;
+
+    text-align:center;
 }
+
+.card2 > *{
+    width:100%;
+}
+
+.card-main{
+    background:#ffffff;   /* ←白🔥 */
+}
+
+.chart-card{
+    width:90%;
+    max-width:360px;
+    margin:20px auto 0 auto;
+    text-align:center;
+}
+
+#energyChart{
+    display:block;
+    width:100% !important;
+    max-width:320px;
+    margin:12px auto 0 auto;
+}
+
+/* =========================
+   🔥 ビジュアルエリア（最重要）
+========================= */
+#visualBox{
+    height:auto;
+    position:relative;
+	top: 10px;
+	aspect-ratio:1 / 1;
+    overflow:hidden;
+}
+
+/* 波形 */
+#waveCanvas{
+    position:absolute;
+	margin: 0 auto;
+    top:0;
+    width:100%;
+    height:100%;
+    opacity:0.7;
+	left: 0; right: 0;
+	display:none;
+    pointer-events:none;
+}
+
+/* リング */
+#ringContainer{
+    position:absolute;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    z-index:1;
+}
+
+#auraRing{
+    width:100%;
+    height:100%;
+    pointer-events:none; /* 🔥クリック透過 */
+}
+
+/* メイン画像 */
+#mainImage{
+    position:absolute;
+	margin: 0 auto;
+    top:20%;
+    left:0;
+    width:70%;
+    height:70%;
+	left: 0; right: 0;
+    object-fit:contain;
+}
+
+
+/* =========================
+   🔥 下（リングボタン）
+========================= */
+#ringButtons{
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    margin-top:10px;
+}
+
+#ringButtons b{
+    writing-mode: vertical-rl;
+    text-orientation: upright;
+    font-size:12px;
+}
+
+#ringButtons button{
+    padding:6px 10px;
+    border:none;
+    border-radius:20px;
+    background:#fff;
+    font-size:12px;
+    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 例ボタン */
+.btn-example{
+    background:#bbf7d0;
+    color:#166534;
+}
+
+/* =========================
+   🔥 凡例
+========================= */
+#legendBox{
+    margin-top:30px;
+    background:#ffffff;
+    border-radius:15px;
+    padding:1px;
+}
+
+/* =========================
+   🔥 メインボタン
+========================= */
+.btn{
+    padding:14px 14px;
+    border:none;
+    border-radius:30px;
+    background: linear-gradient(90deg,#fda4af,#fbcfe8);
+    color:white;
+    font-size:15px;
+    width:90%;       /* 🔥統一 */
+    max-width:none;   /* 🔥制限解除 */
+}
+
+/* コメント */
+.comment{
+    font-size:13px;
+    margin-top:6px;
+    color:#666;
+}
+
+.time{
+    font-size:12px;
+    color:#aaa;
+    margin-top:5px;
+}
+
+/* 設定画面 */
+#settingsBox{
+    transition: all 0.3s;
+	text-align:center;   /* 🔥追加 */
+}
+
+.radio-group{
+    display:flex;
+    justify-content:center;
+    gap:12px;
+    flex-wrap:wrap; /* スマホ対応 */
+}
+
+.radio-group label{
+    display:flex;
+    align-items:center;
+    gap:4px;
+    font-size:13px;
+}
+
+/* フッター */
+.footer{
+    margin-top:30px;
+    font-size:12px;
+    color:#888;
+    text-align:center;
+}
+
 </style>
 </head>
 
@@ -165,256 +266,1644 @@ h2 {
 
 <div class="container">
 
-    <img src="{{ url_for('static', filename='main_logo.png') }}" class="main-hero-logo">
+<!--  img src="static/main_logo.png" class="logo" -->
 
-    <div id="loading-screen">
-        <h2>VoiceAuraHealth (TM)</h2>
-        <p>🧠 AIエンジン起動中...</p>
-        <p>🎙 音声解析準備中...</p>
-    </div>
+<h1 class="title">
+  VoiceAuraHealth<span class="tm">™</span><br>
+  <span class="subtitle">for You 🌸</span>
+</h1>
+<p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
 
-    <div id="main-app" style="display:none;">
-        <h1>VoiceAuraHealth <span class="tm-black">(TM)</span></h1>
-        <h2>mini（Beta version）</h2>
-        <p>あなたの声から人格エネルギーを可視化</p>
+	<div class="card">
+		<b>🌈 VoiceAuraリング</b>
 
-        <div class="card">
-            <button class="record-btn" onclick="startRecording()">
-                🎙 今日のAuraチェック
-            </button>
-            <span class="tm">( 5秒で測定 )</span>
-            <p id="status"></p>
-        </div>
+		<!-- 🔥 ここ追加 -->
+		<div id="visualBox">
 
-        <div id="resultBox"></div>
+			<canvas id="waveCanvas"></canvas>
 
-        <div class="footer">
-            <font color="#7FFF00"><b>こんどう泌尿器科・内科クリニック</b></font><br><br>
-            <font color="#000000">©</font> 2026 VoiceAuraHealth
-            <span class="tm2"><font color="#000000">(TM)</font></span>
-        </div>
-    </div>
+			<div id="ringContainer" style="display:none;">
+				<canvas id="auraRing"></canvas>
+			</div>
+
+			<img id="mainImage" src="static/main_logo.png" class="logo">
+
+		</div>
+
+		<div id="ringButtons">
+			<b>リング</b>	
+			<button onclick="toggleOuter()">外</button>
+			<button onclick="toggleMiddle()">中</button>
+			<button onclick="toggleInner()">内</button>
+			<b></b>
+			<button onclick="showLegend('commentword')" class="btn-example">例題</button>
+
+		</div>
+
+		<div id="legendBox" class="card" style="font-size:12px;"></div>
+		
+		<div>
+			<button class="btn" onclick="startRecording()">🎙 5秒チェック</button>
+		<p id="status"></p>
+		
+		<div id="result" class="card"></div>
+		
+	</div>
+</div>
+
+<div class="container2">
+
+	<div class="card2">
+		<button class="btn" onclick="loadHistory()">📖 履歴を見る</button>
+		<div id="history" style="display:none;"></div>
+	</div>
+
+	<div class="card2 chart-card">
+		<button class="btn" onclick="loadChart()">📈 Energy推移</button>
+		<canvas id="energyChart" height="200" style="display:none;"></canvas>
+	</div>
+
+	<div class="card2">
+		<button class="btn" onclick="toggleSettings()">⚙️ 設定</button>
+		<div id="specialsetting" style="display:none;"></div>
+	</div>
+</div>
+
+<div class="footer">
+    © 2026 VoiceAuraHealth TM
 </div>
 
 <script>
-async function checkServer() {
-    try {
-        const res = await fetch("/api/ping");
-        if (res.ok) {
-            document.getElementById("loading-screen").style.display = "none";
-            document.getElementById("main-app").style.display = "block";
-        } else {
-            retry();
-        }
-    } catch (e) {
-        retry();
-    }
+
+// 🔥 ここに追加（超重要）
+let currentLegend = "";
+
+let showRing = false;
+let showOuterLabel = true;
+let showMiddleLabel = true;
+let showInnerLabel = true;
+let isDirty = false;
+
+let appSettings = {
+
+    quality: "low",     //  low, mid, high
+    resolution: 360,    // 解像度（角度ステップ）low=360, mid=720, high=1440
+    lineScale: 2.0,     // ベクトル棒のシャープ化
+
+    boost: 1.5,    // ←ここで強さ調整（1.5〜2.5がおすすめ）
+    breath: 1,     // 🔥 呼吸
+    effect: 1,	   // 🔥 強さ
+    glow: 1	       // 🔥 光のゆらぎ
+
+};
+
+// -------------------- 解像度の変換 --------------------
+function getResolution(){
+
+    if(appSettings.quality === "low") return 360;
+    if(appSettings.quality === "mid") return 720;
+    if(appSettings.quality === "high") return 1440;
+
+    return 360;
 }
 
-let retryCount = 0;
-
-function retry() {
-    retryCount++;
-
-    if (retryCount > 20) {
-        document.getElementById("loading-screen").innerHTML =
-            "<p>⚠ サーバーが起動していません<br>再読み込みしてください</p>";
-        return;
-    }
-
-    setTimeout(checkServer, 3000);
-}
-
-checkServer();
-
-document.addEventListener("DOMContentLoaded", function() {
-    if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register(
-            "{{ url_for('static', filename='service_worker.js') }}"
-        );
-    }
-});
-
-function renderBar(label, value) {
-    const stars = Math.round(value / 20);
-
-    let starClass = "";
-    let barColor = "#22c55e";
-
-    if (value <= 30) {
-        starClass = "star-low";
-        barColor = "#ef4444";
-    } else if (value <= 60) {
-        starClass = "star-mid";
-        barColor = "#facc15";
-    } else {
-        starClass = "star-high";
-        barColor = "#22c55e";
-    }
-
-    return `
-    <div class="bar">
-        <div class="bar-header">
-            <span>${label}</span>
-            <span>
-                <span class="${starClass}">
-                    ${"★".repeat(stars)}${"☆".repeat(5 - stars)}
-                </span>
-                ${value}
-            </span>
-        </div>
-        <div class="bar-bg">
-            <div class="bar-fill" style="width:${value}%; background:${barColor};"></div>
-        </div>
-    </div>
-    `;
-}
-
-function renderResult(data) {
-    const box = document.getElementById("resultBox");
-
-    if (!data.result) return;
-
-    const r = data.result;
-    const s = r.scores;
-
-    if (!r.score_comments) return;
-
-    const now = new Date();
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mm = String(now.getMinutes()).padStart(2, "0");
-    const timeStr = now.getFullYear() + "年" +
-                    (now.getMonth() + 1) + "月" +
-                    now.getDate() + "日 " +
-                    hh + ":" + mm;
-
-    let html = `
-    <div class="result-title" style="background:${r.color};">
-        あなたは ${r.type} (${r.sector}) です
-    </div>
-
-    <div class="result-time">
-        🕒 ${timeStr}
-    </div>
-
-    <div class="card">
-        ${renderBar("元気", s.Energy)}
-        <div class="mini-comment">${r.score_comments.Energy}</div>
-
-        ${renderBar("感情", s.Emotion)}
-        <div class="mini-comment">${r.score_comments.Emotion}</div>
-
-        ${renderBar("集中", s.Focus)}
-        <div class="mini-comment">${r.score_comments.Focus}</div>
-
-        ${renderBar("社交", s.Social)}
-        <div class="mini-comment">${r.score_comments.Social}</div>
-
-        ${renderBar("調律", s.Calm)}
-        <div class="mini-comment">${r.score_comments.Calm}</div>
-    </div>
-    `;
-
-    box.innerHTML = html;
-}
-
-async function startRecording() {
-    console.log("startRecording開始");
+// -------------------- 録音 --------------------
+async function startRecording(){
 
     const status = document.getElementById("status");
-    const resultBox = document.getElementById("resultBox");
-    const btn = document.querySelector(".record-btn");
+    const result = document.getElementById("result");
 
-    resultBox.innerHTML = "";
-    btn.disabled = true;
-    btn.style.opacity = "0.5";
     status.innerText = "録音準備中...";
+    result.innerHTML = "";
 
     let stream;
 
-    try {
-        stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        console.log("マイク取得OK");
-    } catch (e) {
+    try{
+        stream = await navigator.mediaDevices.getUserMedia({audio:true});
+    }catch(e){
         alert("マイク許可が必要です");
-        btn.disabled = false;
-        btn.style.opacity = "1";
         return;
     }
+
+    // =========================
+    // 🔥 ① 波形スタート（ここだけ追加）
+    // =========================
+    const audioContext = new AudioContext();
+    const source = audioContext.createMediaStreamSource(stream);
+    const analyser = audioContext.createAnalyser();
+
+    source.connect(analyser);
+
+    analyser.fftSize = 256;
+    const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+    document.getElementById("waveCanvas").style.display = "block";
+    document.getElementById("mainImage").style.display = "none";
+    document.getElementById("ringContainer").style.display = "none";
+
+    isRecording = true;
+	
+	const canvas = document.getElementById("waveCanvas");
+
+	canvas.width  = canvas.offsetWidth;
+	canvas.height = canvas.offsetHeight;
+	
+    drawWave(analyser, dataArray);
+    // =========================
 
     status.innerText = "録音中...";
 
     const recorder = new MediaRecorder(stream);
     let chunks = [];
 
-    recorder.ondataavailable = e => {
-        console.log("データ取得");
-        chunks.push(e.data);
-    };
+    recorder.ondataavailable = e => chunks.push(e.data);
 
-    recorder.onerror = e => {
-        console.error("録音エラー", e);
-        status.innerText = "録音エラー";
-    };
+    recorder.onstop = async ()=>{
 
-    recorder.onstop = async () => {
-        console.log("録音終了");
+        // =========================
+        // 🔥 ② 波形ストップ
+        // =========================
+        isRecording = false;
+        cancelAnimationFrame(waveAnimationId);
+        document.getElementById("waveCanvas").style.display = "none";
+        // =========================
 
         status.innerText = "解析中...";
 
-        const blob = new Blob(chunks, { type: "audio/webm" });
+        const blob = new Blob(chunks,{type:"audio/webm"});
         const formData = new FormData();
         formData.append("audio", blob);
 
-        try {
-            const res = await fetch("/api/upload", {
-                method: "POST",
-                body: formData
-            });
+        const res = await fetch("/api/upload",{method:"POST", body:formData});
+        const data = await res.json();
 
-			if (!res.ok) {
-				const text = await res.text();
-				console.error("サーバーエラー:", text);
-				status.innerText = "サーバーエラー";
-				return;
-			}
-
-            const data = await res.json();
-
-            if (data.error) {
-                status.innerText = "解析エラー";
-                console.error(data.error);
-                return;
-            }
-
-            renderResult(data);
-
-            if (!data || !data.result) {
-                status.innerText = "データ不正";
-                console.error("Invalid response:", data);
-                return;
-            }
-
-            console.log("API結果", data);
-            renderResult(data);
-            status.innerText = "判定完了";
-
-        } catch (e) {
-            console.error(e);
-            status.innerText = "通信エラー";
+        if(!data.result){
+            status.innerText = "エラー";
+            return;
         }
 
-        stream.getTracks().forEach(track => track.stop());
-        btn.disabled = false;
-        btn.style.opacity = "1";
+        await render(data);
+
+        status.innerText = "完了";
+
+        stream.getTracks().forEach(t=>t.stop());
     };
 
     recorder.start();
-
-    setTimeout(() => {
-        recorder.stop();
-    }, 5000);
+    setTimeout(()=>recorder.stop(),5000);
 }
+
+// -------------------- 表示 --------------------
+let lastResult = null;
+
+async function render(data){
+
+    lastResult = data.result;
+
+    const r = data.result;
+    const s = r.scores;
+
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const hh = String(now.getHours()).padStart(2, "0");
+    const mi = String(now.getMinutes()).padStart(2, "0");
+    const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
+
+    const diffText = await loadDiff();
+
+    let html = `
+    <div class="card card-main">
+        <b>あなたの今の状態 🌿</b>
+        <div class="time">${time}</div>
+        <div class="comment">${diffText}</div>
+        <div class="comment">元気：${s.Energy}</div>
+        <div class="comment">気持ち：${s.Emotion}</div>
+        <div class="comment">集中：${s.Focus}</div>
+    </div>
+
+    <div class="card card-main">
+        💭 今のあなたへ
+        <div class="comment">${r.summary}</div>
+
+        <input id="user_comment" maxlength="20"
+        placeholder="ひとことメモ（任意）"
+        style="margin-top:10px;width:90%;padding:10px;border-radius:10px;border:none;background:#f3f4f6;">
+
+        <button class="btn" onclick="saveComment()" style="margin-top:10px;">
+            💾 保存
+        </button>
+    </div>
+
+    <div id="detail"></div>
+    `;
+
+    document.getElementById("result").innerHTML = html;
+	
+	// 👇これを追加
+	window.lastScores = r.scores;
+	window.ringMeta = r.ring_meta;
+
+	// 🔥 ここ追加（超重要）
+	window.lastVector = r.vector192;
+	
+	drawAllAura(r.vector192);
+	
+	// 🔥 リング表示
+	document.getElementById("ringContainer").style.display = "block";
+	document.getElementById("mainImage").style.display = "none";
+	
+}
+
+
+// -------------------- 保存処理 --------------------
+async function saveComment(){
+
+    const comment = document.getElementById("user_comment").value;
+
+    if(!lastResult){
+        alert("先に測定してください");
+        return;
+    }
+
+    if(comment.trim() === ""){
+        if(!confirm("コメント無しで保存しますか？")){
+            return;
+        }
+    }
+
+    await fetch("/api/save_comment",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+            scores:lastResult.scores,
+            vector192:lastResult.vector192,
+            summary:lastResult.summary,
+            comment:comment
+        })
+    });
+
+    alert("保存しました✨");
+    loadChart();
+}
+
+
+// -------------------- 履歴--------------------
+async function loadHistory(){
+
+    const box = document.getElementById("history");
+
+    if(box.style.display === "block"){
+        box.style.display = "none";
+        return;
+    }
+
+    box.style.display = "block";
+
+	let html = `
+	<div style="margin-bottom:10px;">
+		<button onclick="deleteAll()" 
+			style="background:#fecaca;border:none;border-radius:10px;padding:6px 10px;">
+			🗑 全削除
+		</button>
+	</div>
+
+	<div><b>📖 履歴</b></div>
+	`;
+
+    // 既存処理
+
+    const res = await fetch("/api/sessions");
+    const json = await res.json();
+
+    json.data.forEach(d => {
+
+        let emoji = "🌿";
+        if(d.energy > 60) emoji = "😊";
+        if(d.energy < 30) emoji = "😴";
+
+        html += `
+		<div style="display:flex;justify-content:space-between;align-items:center;
+					padding:8px;border-bottom:1px solid #eee;">
+
+			<div onclick="loadDetail('${d.id}')" style="cursor:pointer;">
+				${emoji} ${d.time}
+			</div>
+
+			<button onclick="deleteOne('${d.id}')" 
+				style="background:#fee2e2;border:none;border-radius:10px;padding:4px 8px;">
+				✕
+			</button>
+
+		</div>
+		
+        `;
+    });
+
+    document.getElementById("history").innerHTML = html;
+}
+
+// -------------------- 履歴　1行削除　------------------
+async function deleteOne(id){
+
+    if(!confirm("この履歴を削除しますか？")) return;
+
+    await fetch("/api/delete_session/" + id, {
+        method:"DELETE"
+    });
+
+    loadHistory(); // 🔥 再読み込み
+}
+
+
+// -------------------- 履歴　全削除　------------------
+async function deleteAll(){
+
+    if(!confirm("すべて削除しますか？")) return;
+
+    await fetch("/api/delete_all_sessions", {
+        method:"DELETE"
+    });
+
+    document.getElementById("history").innerHTML = "";
+}
+
+
+// -------------------- 差分　表示--------------------
+async function loadDiff(){
+
+    const res = await fetch("/api/diff");
+    const json = await res.json();
+
+    const d = json.diff;
+
+    let text = "変化なし";
+    let emoji = "🌿";
+
+    if(d > 0){
+        text = `昨日より +${d}`;
+        emoji = "😊";
+    }else if(d < 0){
+        text = `昨日より ${d}`;
+        emoji = "😴";
+    }
+
+    return `${text} ${emoji}`;
+}
+
+
+
+// -------------------- 詳細表示--------------------
+async function loadDetail(id){
+
+    const canvas = document.getElementById("energyChart");
+
+    if(canvas.style.display === "block"){
+        canvas.style.display = "none";
+        return;
+    }
+
+    canvas.style.display = "block";
+
+    // 既存処理
+
+    const res = await fetch("/api/session/" + id);
+    const json = await res.json();
+
+    const d = json.data;
+
+    // 🔥 差分取得
+    const diff = await loadDetailDiff(id);
+
+    let html = `
+    <div class="card">
+        <b>🧠 詳細</b><br>
+        🕒 ${d.timestamp}<br><br>
+
+		${metric("元気", d.scores.Energy, diff?.Energy || 0)}
+		${metric("気持ち", d.scores.Emotion, diff?.Emotion || 0)}
+		${metric("集中", d.scores.Focus, diff?.Focus || 0)}
+		${metric("つながり", d.scores.Social, diff?.Social || 0)}
+		${metric("リラックス", d.scores.Calm, diff?.Calm || 0)}
+
+        <br>
+        💬 ${d.user_comment || "（コメントなし）"}
+
+        <canvas id="detailChart" height="200"></canvas>
+    </div>
+    `;
+
+    document.getElementById("detail").innerHTML = html;
+
+    drawDetailChart(d);
+}
+
+
+// -------------------- 詳細表示 その2--------------------
+async function loadDetailDiff(id){
+
+    const res = await fetch("/api/session_diff/" + id);
+    const json = await res.json();
+
+    return json.diff || {};
+}
+
+
+// -------------------- グラフ 1 --------------------
+function metric(name, v, d=0){
+
+    const stars = Math.round(v/20);
+
+    let color = "#86efac";
+    if(v <= 30) color = "#fda4af";
+    else if(v <= 60) color = "#fde68a";
+
+    let diffText = "";
+    if(d > 0) diffText = ` (+${d} 😊)`;
+    else if(d < 0) diffText = ` (${d} 😴)`;
+
+    return `
+    <div style="margin-top:10px;text-align:left;">
+        <b>${name}</b><br>
+
+        <span style="color:${color};font-size:16px;">
+            ${"★".repeat(stars)}${"☆".repeat(5-stars)}
+        </span>
+
+        <span style="font-size:12px;color:#888;margin-left:5px;">
+            ${v}${diffText}
+        </span>
+
+        <div style="height:6px;background:#eee;border-radius:10px;margin-top:5px;">
+            <div style="width:${v}%;background:${color};height:6px;border-radius:10px;"></div>
+        </div>
+    </div>
+    `;
+}
+
+
+// -------------------- グラフ 2--------------------
+let chart = null;
+
+async function loadChart(){
+
+    const canvas = document.getElementById("energyChart");
+
+    // 🔥 ここ追加（トグル）
+    if(canvas.style.display === "block"){
+        canvas.style.display = "none";
+        return;
+    }
+
+    canvas.style.display = "block";
+
+    // 🔥 これ追加
+    canvas.width = canvas.offsetWidth;
+    canvas.height = 200;
+
+    const res = await fetch("/api/energy_trend");
+    const json = await res.json();
+
+    const labels = json.data.map(d => {
+        const t = new Date(d.time);
+        return `${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
+    });
+
+    const values = json.data.map(d=>d.energy);
+
+    const ctx = canvas;
+
+    if(chart){
+        chart.destroy();
+    }
+
+    chart = new Chart(ctx,{
+        type:"line",
+        data:{
+            labels:labels,
+            datasets:[{
+                data:values,
+                tension:0.0
+            }]
+        },
+        options:{
+            plugins:{legend:{display:false}}
+        }
+    });
+}
+
+
+// -------------------- グラフ描画関数--------------------
+let detailChart = null;
+
+function drawDetailChart(d){
+
+    const ctx = document.getElementById("detailChart");
+
+    const labels = ["Energy","Emotion","Focus","Social","Calm"];
+    const values = [
+        d.scores.Energy,
+        d.scores.Emotion,
+        d.scores.Focus,
+        d.scores.Social,
+        d.scores.Calm
+    ];
+
+    if(detailChart){
+        detailChart.destroy();
+    }
+
+    detailChart = new Chart(ctx,{
+        type:"radar",
+        data:{
+            labels:labels,
+            datasets:[{
+                data:values
+            }]
+        },
+        options:{
+            scales:{
+                r:{
+                    suggestedMin:0,
+                    suggestedMax:100
+                }
+            }
+        }
+    });
+}
+
+
+// -------------------- リング 中核関数 no1--------------------
+function interpolate360(values){
+
+    const result = [];
+    const n = values.length;
+
+	const resolution = getResolution(); 
+
+    for(let i=0;i<resolution;i++){
+
+        const t = i / resolution * n;
+
+        const i0 = Math.floor(t);
+        const i1 = (i0 + 1) % n;
+
+        const frac = t - i0;
+
+        const v = values[i0]*(1-frac) + values[i1]*frac;
+
+        result.push(v);
+    }
+
+    return result;
+}
+
+
+// -------------------- リング 中核関数 no2--------------------
+function smoothArray(values){
+
+    const result = [];
+    const len = values.length;
+
+    for(let i=0;i<len;i++){
+
+		const noise = (Math.random() - 0.5) * 0.02;
+		const v = values[i] + noise;
+
+        const v0 = values[(i-2+len)%len];
+        const v1 = values[(i-1+len)%len];
+        const v2 = values[i];
+        const v3 = values[(i+1)%len];
+        const v4 = values[(i+2)%len];
+
+        // 🔥 重み付き（ここが違う）
+        const smooth = (v0 + 2*v1 + 3*v2 + 2*v3 + v4) / 9;
+
+        result.push(smooth);
+    }
+
+    return result;
+}
+
+
+// -------------------- リング 中核関数 no3--------------------
+function buildAura(vector){
+
+    // ========= 外リング =========
+    const dna = smoothArray(interpolate360(vector));
+
+    // ========= 中リング（12心理🔥） =========
+    const psy = [];
+
+    const groupSize = Math.floor(vector.length / 12);
+
+    for(let i=0;i<12;i++){
+
+        const start = i * groupSize;
+        const end   = start + groupSize;
+
+        const slice = vector.slice(start, end);
+
+        const avg = slice.reduce((a,b)=>a+b,0) / slice.length;
+
+        psy.push(avg);
+    }
+
+    // 🔥 12 → 360へ拡張
+    const psy360 = smoothArray(interpolate360(psy));
+
+    // ========= 内リング =========
+    const aura = smoothArray(interpolate360(psy));
+
+    return {
+        dna: dna,
+        psy: psy360,
+        aura: aura
+    };
+}
+
+
+// -------------------- リング 中核関数 no4--------------------
+function applySettingsAndRedraw(){
+
+    if(!isDirty){
+        alert("変更はありません");
+        return;
+    }
+
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+
+    isDirty = false;
+
+    // 🔥 表示更新
+    updateDirtyUI();
+}
+
+// -------------------- リング 中核関数 no4.2 状態表示関数----------------
+function updateDirtyUI(){
+
+    const el = document.getElementById("dirtyStatus");
+
+    if(!el) return;
+
+    if(isDirty){
+        el.innerHTML = "● 未反映";
+        el.style.color = "red";
+    }else{
+        el.innerHTML = "✔ 反映済み";
+        el.style.color = "#999";
+    }
+}
+
+// -------------------- リング 中核関数 no5--------------------
+function applyQuality(q){
+
+    appSettings.quality = q;
+	isDirty = true;  // 🔥ここ
+
+    // 🔥 ここ削除（再描画しない）　redraw();
+}
+
+
+// -------------------- 外リング　描画関数--------------------
+function drawAllAura(vector){
+
+    if(!vector || vector.length === 0){
+        return;
+    }
+
+	const { dna, psy, aura } = buildAura(vector);
+	const normData = dna;   // ←これに置き換え
+
+    const canvas = document.getElementById("auraRing");
+    const ctx = canvas.getContext("2d");
+
+	const size = canvas.offsetWidth;
+
+	canvas.width = size;
+	canvas.height = size;
+
+    const cx = canvas.width / 2 + 0;   // 👉 右に10
+    const cy = canvas.height / 2 + 0;  // 👉 下に15
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+
+    // =========================
+    // 🔥 ① 大きくする
+    // =========================
+    const innerBase = 140;   // ←元55 → 拡大
+    const outerMax = 170;   // ←リング最大半径  140
+
+    // =========================
+    // 🔥 ③ 正規化（超重要）
+    // =========================
+	const min = Math.min(...normData);
+	const max = Math.max(...normData);
+
+    const norm = normData.map(v=>{
+        if(max - min === 0) return 0.5;
+        return (v - min) / (max - min); // 0〜1
+    });
+
+	const scale = appSettings.lineScale || 1.5;
+
+    // =========================
+    // 描画
+    // =========================
+    for(let i=0;i<norm.length;i++){
+
+        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
+
+        // 🔥 長さを相対強調
+		const boost = appSettings.boost;
+		
+		// 🔥 呼吸
+		const breath = appSettings.breath * 0.1 * Math.sin(Date.now() / 400);
+
+		// 🔥 強さ
+		const intensity = norm[i];
+		
+		const effect = appSettings.effect;
+
+		ctx.lineWidth = (1 + intensity * 2 * effect) * scale;
+
+		// 🔥 光のゆらぎ
+		const glow = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
+
+		// 🔥 半径
+		const r = innerBase 
+			+ Math.pow(norm[i], boost) * (outerMax - innerBase)
+			+ breath * 20;
+
+        const x1 = cx + innerBase * Math.cos(angle);
+        const y1 = cy + innerBase * Math.sin(angle);
+
+        const x2 = cx + r * Math.cos(angle);
+        const y2 = cy + r * Math.sin(angle);
+
+        // 🌈 虹色
+		const hue = (i / norm.length) * 360;
+		const light = 50 + intensity * 20;
+
+		ctx.strokeStyle = `hsl(${hue}, 80%, ${light}%)`;
+
+
+		// 🔥 グロー　ここだけで全部決める
+		ctx.shadowBlur = (5 + intensity * 15 + glow * 10) * scale;
+
+		ctx.shadowColor = ctx.strokeStyle;
+
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+    }
+
+    // 中心円
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
+    ctx.strokeStyle = "#eee";
+    ctx.stroke();
+
+
+    // =========================
+    // 🔥 ② 凡例（外へ）
+    // =========================
+
+	drawMiddleAura(ctx, cx, cy, vector);     // 中のリング
+
+	drawInnerAura(ctx, cx, cy, vector);     // 内のリング
+
+	if(showOuterLabel){
+		drawLegend(ctx, cx, cy, outerMax + 7);  // ←元30 → 拡大
+	}
+
+	if(showMiddleLabel){
+		drawMiddleLegend(ctx, cx, cy, 120);
+	}
+	
+	if(showInnerLabel){
+		drawInnerLegend(ctx, cx, cy, 60);
+	}
+
+}
+
+
+// -------------------- リング 凡例（外周ラベル）描画--------------------
+// 🌈 凡例（外周ラベル）
+function drawLegend(ctx, cx, cy, radius){
+
+    const labels = [
+        "創造","思考","冷静","対人","共感","自信",
+        "存在","満足","身体","行動","情熱","直感"
+    ];
+
+    ctx.font = "12px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    for(let i=0;i<labels.length;i++){
+
+        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
+
+        const x = cx + radius * Math.cos(angle);
+        const y = cy + radius * Math.sin(angle);
+
+        const hue = (i / labels.length) * 360;
+		
+		ctx.lineWidth = 3;
+		ctx.strokeStyle = "#000";   // 黒縁
+
+		ctx.strokeText(labels[i], x, y);  // 先に縁
+		ctx.fillStyle = `hsl(${hue}, 90%, 90%)`;
+
+        ctx.fillText(labels[i], x, y);
+    }
+}
+
+// 🌈 凡例（外周ラベル）のon/off
+function toggleOuterLabel(){
+
+    showOuterLabel = !showOuterLabel;
+
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+// 🌈 凡例とコメント（外周ラベル）のon/off
+function toggleOuter(){
+
+    // 🔥 状態反転
+    showOuterLabel = !showOuterLabel;
+
+    const legendBox = document.getElementById("legendBox");
+
+    // =========================
+    // 🔥 凡例と連動
+    // =========================
+    if(showOuterLabel){
+
+        legendBox.innerHTML = `
+        外リング（音）<br>
+        　・声の微細特徴（192次元ベクトル）<br>
+        　・周波数・リズム・強弱などの情報<br>
+        `;
+
+    }else{
+
+        legendBox.innerHTML = "";
+    }
+
+    // =========================
+    // 🔥 リング再描画
+    // =========================
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+
+// =========================
+// 🔥 中リング（心理リング）
+// =========================
+function drawMiddleAura(ctx, cx, cy, vector){
+
+    // =========================
+    // 🔥 データ取得
+    // =========================
+    const { dna, psy, aura } = buildAura(vector);
+
+    const normData = psy;   // ←12心理（ここ重要）
+
+    // =========================
+    // 🔥 半径設定
+    // =========================
+    const innerBase = 105;
+    const outerMax  = 135;
+
+    // =========================
+    // 🔥 正規化
+    // =========================
+    const min = Math.min(...normData);
+    const max = Math.max(...normData);
+
+    const norm = normData.map(v=>{
+        if(max - min === 0) return 0.5;
+        return (v - min) / (max - min);
+    });
+
+    const scale = appSettings.lineScale || 1.5;
+
+    // =========================
+    // 🔥 12心理カラー
+    // =========================
+    const psyColors = [
+        "#8F00FF", "#001F54", "#0077FF", "#00B7C2",
+        "#7FFF00", "#FFD300", "#FFD700", "#FF8C00",
+        "#FF6F61", "#FF0000", "#FF00FF", "#00A86B"
+    ];
+
+    const sectorSize = Math.floor(norm.length / 12);
+
+    // =========================
+    // 🔥 描画
+    // =========================
+    for(let i=0;i<norm.length;i++){
+
+        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
+
+        // 🔥 パラメータ
+        const boost  = appSettings.boost;
+        const breath = appSettings.breath * 0.05 * Math.sin(Date.now() / 400);
+        const effect = appSettings.effect;
+        const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
+
+        const intensity = norm[i];
+
+        // =========================
+        // 🔥 半径計算
+        // =========================
+        const r = innerBase 
+            + Math.pow(intensity, boost) * (outerMax - innerBase)
+            + breath * 10;
+
+        const x1 = cx + innerBase * Math.cos(angle);
+        const y1 = cy + innerBase * Math.sin(angle);
+
+        const x2 = cx + r * Math.cos(angle);
+        const y2 = cy + r * Math.sin(angle);
+
+        // =========================
+        // 🔥 色（12分割）
+        // =========================
+        const sectorIndex = Math.floor(i / sectorSize) % 12;
+        const color = psyColors[sectorIndex];
+
+        ctx.strokeStyle = color;
+
+        // =========================
+        // 🔥 太さ・光
+        // =========================
+        ctx.lineWidth = (1 + intensity * 2 * effect) * scale;
+
+        ctx.shadowBlur = (3 + intensity * 10 + glow * 5) * scale;
+        ctx.shadowColor = color;
+
+        // =========================
+        // 🔥 描画
+        // =========================
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+    }
+
+    // =========================
+    // 🔥 中心円
+    // =========================
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
+    ctx.strokeStyle = "#ddd";
+    ctx.stroke();
+}
+
+
+// -------------------- リング 凡例（中周ラベル）描画 new--------------------
+// 🌈 凡例（中周ラベル）
+function drawMiddleLegend(ctx, cx, cy, radius){
+
+    // =========================
+    // 🔥 12心理ラベル
+    // =========================
+    const labels = [
+        "直感","分析","冷静","対人",
+        "共感","自信","存在感","満足",
+        "身体","行動","情熱","想像"
+    ];
+
+    // =========================
+    // 🔥 12心理カラー（中リングと一致）
+    // =========================
+    const colors = [
+        "#8F00FF", "#001F54", "#0077FF", "#00B7C2",
+        "#7FFF00", "#FFD300", "#FFD700", "#FF8C00",
+        "#FF6F61", "#FF0000", "#FF00FF", "#00A86B"
+    ];
+
+    ctx.font = "11px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // =========================
+    // 🔥 描画
+    // =========================
+    for(let i=0;i<labels.length;i++){
+
+        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
+
+        const x = cx + radius * Math.cos(angle);
+        const y = cy + radius * Math.sin(angle);
+
+        // =========================
+        // 🔥 縁取り（見やすさ）
+        // =========================
+        ctx.lineWidth = 3;
+        ctx.strokeStyle = "#000";
+        ctx.strokeText(labels[i], x, y);
+
+        // =========================
+        // 🔥 本体カラー
+        // =========================
+        ctx.fillStyle = colors[i];
+        ctx.fillText(labels[i], x, y);
+    }
+}
+
+
+// 🌈 凡例（中周ラベル）のon/off
+function toggleMiddleLabel(){
+
+    showMiddleLabel = !showMiddleLabel;
+
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+// 🌈 凡例とコメント（中周ラベル）のon/off
+function toggleMiddle(){
+
+    // 🔥 状態反転
+    showMiddleLabel = !showMiddleLabel;
+
+    const legendBox = document.getElementById("legendBox");
+
+    // =========================
+    // 🔥 凡例と連動
+    // =========================
+    if(showMiddleLabel){
+
+        legendBox.innerHTML = `
+		中リング（心理）<br>
+		　・声から推定された心理状態（12分類）<br>
+		　・感情・集中・対人・ストレスなどの傾向<br>
+        `;
+
+    }else{
+
+        legendBox.innerHTML = "";
+    }
+
+    // =========================
+    // 🔥 リング再描画
+    // =========================
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+
+// =========================
+// 🔥 小リング（意味リング）
+// =========================
+function drawInnerAura(ctx, cx, cy, vector){
+
+    const { dna, psy, aura } = buildAura(vector);
+
+    const normData = aura;
+
+    const innerBase = 60;
+    const outerMax  = 90;
+
+    const min = Math.min(...normData);
+    const max = Math.max(...normData);
+
+    const norm = normData.map(v=>{
+        if(max - min === 0) return 0.5;
+        return (v - min) / (max - min);
+    });
+
+    const scale = appSettings.lineScale || 1.5;
+
+    for(let i=0;i<norm.length;i++){
+
+        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
+
+        const boost  = appSettings.boost * 0.8;  // 少し弱め
+        const breath = appSettings.breath * 0.03 * Math.sin(Date.now()/400);
+        const effect = appSettings.effect;
+        const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
+
+        const intensity = norm[i];
+
+        const r = innerBase
+            + Math.pow(intensity, boost) * (outerMax - innerBase)
+            + breath * 8;
+
+        const x1 = cx + innerBase * Math.cos(angle);
+        const y1 = cy + innerBase * Math.sin(angle);
+
+        const x2 = cx + r * Math.cos(angle);
+        const y2 = cy + r * Math.sin(angle);
+
+        // 🌿 （人格）
+		const hue = (i / norm.length) * 360;
+
+		// 🌿 内リング用：やさしい虹
+		const sat = 60;     // 彩度少し低め
+		const light = 60 + intensity * 10;
+
+		ctx.strokeStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
+
+        ctx.lineWidth = (1 + intensity * 1.5 * effect) * scale;
+
+        ctx.shadowBlur = (2 + intensity * 8 + glow * 5) * scale;
+        ctx.shadowColor = ctx.strokeStyle;
+
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+    }
+
+    // 中心円
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
+    ctx.strokeStyle = "#eee";
+    ctx.stroke();
+}
+
+
+// -------------------- リング 凡例（内周ラベル）描画--------------------
+// 🌈 凡例（内周ラベル）
+function drawInnerLegend(ctx, cx, cy, radius){
+
+    // =========================
+    // 🔥 12心理ラベル
+    // =========================
+    const labels = [
+        "直感","分析","冷静","対人",
+        "共感","自信","存在感","満足",
+        "身体","行動","情熱","想像"
+    ];
+
+    // =========================
+    // 🔥 カラー（内リングと統一）
+    // =========================
+    const colors = [
+        "#8F00FF", "#001F54", "#0077FF", "#00B7C2",
+        "#7FFF00", "#FFD300", "#FFD700", "#FF8C00",
+        "#FF6F61", "#FF0000", "#FF00FF", "#00A86B"
+    ];
+
+    ctx.font = "10px sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+
+    // =========================
+    // 🔥 描画
+    // =========================
+    for(let i=0;i<labels.length;i++){
+
+        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
+
+        // 🔥 少し内側に配置
+        const r = radius - 10;
+
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+
+        // =========================
+        // 🔥 縁取り（白で見やすく）
+        // =========================
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = "#fff";
+        ctx.strokeText(labels[i], x, y);
+
+        // =========================
+        // 🔥 本体
+        // =========================
+        ctx.fillStyle = colors[i];
+        ctx.fillText(labels[i], x, y);
+    }
+}
+
+
+// 🌈 凡例（中周ラベル）のon/off
+function toggleInnerLabel(){
+
+    showInnerLabel = !showInnerLabel;
+
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+// 🌈 凡例とコメント（中周ラベル）のon/off
+function toggleInner(){
+
+    // 🔥 状態反転
+    showInnerLabel = !showInnerLabel;
+
+    const legendBox = document.getElementById("legendBox");
+
+    // =========================
+    // 🔥 凡例と連動
+    // =========================
+    if(showInnerLabel){
+
+        legendBox.innerHTML = `
+		内リング（人格）<br>
+		　・あなたの内面の特徴（人格プロファイル）<br>
+		　・思考・行動・共感などの軸<br>
+		　・あなたの本来のタイプ<br>
+        `;
+
+    }else{
+
+        legendBox.innerHTML = "";
+    }
+
+    // =========================
+    // 🔥 リング再描画
+    // =========================
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+// =========================
+// 🔥 12セクター計算（外に出す）
+// =========================
+function compute12Sector(data){
+
+    const sectors = [];
+
+    const size = Math.max(1, Math.floor(data.length / 12));
+
+    for(let i=0;i<12;i++){
+
+        let sum = 0;
+        let count = 0;
+
+        for(let j=0;j<size;j++){
+            const idx = i*size + j;
+            if(idx < data.length){
+                sum += data[idx];
+                count++;
+            }
+        }
+
+        sectors.push(count > 0 ? sum / count : 0);
+    }
+
+    return sectors;
+}
+
+
+// =========================
+// 🔥 ボタン　ホーバー凡例
+// =========================
+function showLegend(type){
+
+    // 🔥 同じボタンならOFF
+    if(currentLegend === type){
+        document.getElementById("legendBox").innerHTML = "";
+        currentLegend = "";
+        return;
+    }
+
+    currentLegend = type;
+
+    let html = "";
+
+    if(type === "commentword"){
+        html = `
+		🗣 例題<br><br>
+		・おはようございます、今日は少し疲れています<br>
+		・こんにちは、今日は気分がいいです<br>
+		・今日はちょっとしんどいですが頑張ります<br>
+		・私は元気です、いつも通りです<br>
+		・昨日はよく眠れました、体調は普通です
+        `;
+    }
+
+
+    if(type === "outer"){
+        html = `
+        外リング<br>
+        声の微細特徴（192次元ベクトル）
+        `;
+    }
+
+    if(type === "middle"){
+        html = `
+        中リング<br>
+        元気：エネルギー<br>
+        感情：気持ちの動き<br>
+        集中：注意力<br>
+        対人：コミュ力<br>
+        安定：落ち着き<br>
+        ストレス：負荷
+        `;
+    }
+
+    if(type === "inner"){
+        html = `
+        内リング<br>
+        創造・思考・共感・行動など<br>
+        12方向の心理分類
+        `;
+    }
+
+    document.getElementById("legendBox").innerHTML = html;
+}
+
+// =========================
+// 🔥 画面　切り替え
+// ========================
+function toggleView(){
+
+    const ring = document.getElementById("ringContainer");
+    const img = document.getElementById("mainImage");
+
+    if(showRing){
+
+        ring.style.opacity = 0;
+
+        setTimeout(()=>{
+            ring.style.display = "none";
+            img.style.display = "block";
+            img.style.opacity = 1;
+        },200);
+		
+    }else{
+
+        img.style.opacity = 0;
+
+        setTimeout(()=>{
+            img.style.display = "none";
+            ring.style.display = "block";
+            ring.style.opacity = 1;
+        },200);
+    }
+
+    showRing = !showRing;
+}
+
+
+// =========================
+// 🔥 波形描画（コア🔥）
+// ========================
+let isRecording = false;
+let waveAnimationId = null;
+
+function drawWave(analyser, dataArray){
+
+    const canvas = document.getElementById("waveCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const width = canvas.width;
+    const height = canvas.height;
+
+    analyser.getByteTimeDomainData(dataArray);
+
+    ctx.clearRect(0,0,width,height);
+
+    const centerY = height / 2;
+
+    ctx.beginPath();
+
+    for(let i=0;i<dataArray.length;i++){
+
+        const x = (i / dataArray.length) * width;
+
+        const v = dataArray[i] / 255.0;
+        const y = centerY + (v - 0.5) * 120;
+
+        if(i === 0){
+            ctx.moveTo(x,y);
+        }else{
+            // 🌸 なめらか曲線
+            const prevX = ((i-1) / dataArray.length) * width;
+            const prevY = centerY + ((dataArray[i-1]/255.0)-0.5)*120;
+
+            const cx = (prevX + x) / 2;
+
+            ctx.quadraticCurveTo(prevX, prevY, cx, (prevY + y)/2);
+        }
+    }
+
+    // =========================
+    // 🌈 グラデーション（可愛い）
+    // =========================
+    const grad = ctx.createLinearGradient(0,0,width,0);
+    grad.addColorStop(0,"#ff9ecb");
+    grad.addColorStop(0.5,"#fda4af");
+    grad.addColorStop(1,"#ff7eb3");
+
+    ctx.strokeStyle = grad;
+
+    // =========================
+    // ✨ ぼかし
+    // =========================
+    ctx.shadowBlur = 25;
+    ctx.shadowColor = "#ff9ecb";
+
+    // =========================
+    // 💗 太さ
+    // =========================
+    ctx.lineWidth = 6;
+
+    ctx.stroke();
+
+    // =========================
+    // 🌸 内側の細い線（2重）
+    // =========================
+    ctx.shadowBlur = 0;
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = "#ffffffaa";
+
+    ctx.stroke();
+
+    // =========================
+    // 🔥 アニメーション
+    // =========================
+    if(isRecording){
+        waveAnimationId = requestAnimationFrame(()=>{
+            drawWave(analyser, dataArray);
+        });
+    }
+}
+
+
+// =========================
+// 🔥 疑似animate描画
+// ========================
+function animate(){
+
+    //  呼吸が見えるように
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+
+    requestAnimationFrame(animate);
+}
+
+
+// =========================
+// 🔥 redraw関数
+// =======================
+function redraw(){
+    if(window.lastVector){
+        drawAllAura(window.lastVector);
+    }
+}
+
+// =========================
+// 🔥 設定画面
+// =======================
+function toggleSettings(){
+
+    const box = document.getElementById("specialsetting");
+
+    if(box.style.display === "none"){
+
+        box.style.display = "block";
+
+        box.innerHTML = `
+        <div class="comment">
+
+			🔧 設定<br><br>
+			
+			<div style="margin-top:10px;">
+				<button class="btn" onclick="applySettingsAndRedraw()">
+					🔄 再描画
+				</button>
+			</div>
+
+			<div id="dirtyStatus" style="font-size:12px;color:#999;">
+				✔ 反映済み
+			</div>
+
+			【画質】（※再描画が必要）<br>
+			<div class="radio-group">
+				<label><input type="radio" name="quality" value="low" checked> 低</label>
+				<label><input type="radio" name="quality" value="mid"> 中</label>
+				<label><input type="radio" name="quality" value="high"> 高</label>
+				<label></label><label></label>
+			</div><br>
+
+
+			【長さを相対強調（boost）】 個性の強さ / 感情の振れ幅（情動変動 / 活性度）<br>
+			<div class="radio-group">
+				<label><input type="radio" name="boost" value="0">0</label>
+				<label><input type="radio" name="boost" value="0.5">0.5</label>
+				<label><input type="radio" name="boost" value="1" checked>1</label>
+				<label><input type="radio" name="boost" value="1.5">1.5</label>
+			</div>
+			<div class="radio-group">
+				<label><input type="radio" name="boost" value="2">2</label>
+				<label><input type="radio" name="boost" value="2.5">2.5</label>
+				<label><input type="radio" name="boost" value="3">3</label>
+				<label><input type="radio" name="boost" value="3.5">3.5</label>
+			</div><br>
+
+			【呼吸】　リズム / 自律神経（リズム / 自律神経）<br>				
+			<div class="radio-group">
+				<label><input type="radio" name="breath" value="0">なし</label>
+				<label><input type="radio" name="breath" value="1" checked>弱</label>
+				<label><input type="radio" name="breath" value="2">強</label>			
+			</div><br>
+
+			【効果】　副交感神経 / リラックス（表現力 / 声の圧）<br>				
+			<div class="radio-group">
+				<label><input type="radio" name="c-long" value="0">なし</label>
+				<label><input type="radio" name="c-long" value="1" checked>弱</label>
+				<label><input type="radio" name="c-long" value="2">強</label>			
+			</div><br>
+
+			【光のゆらぎ】　覚醒レベル / 緊張（感情の揺れ / 不安定さ）<br>
+			<div class="radio-group">		
+				<label><input type="radio" name="d-long" value="0">なし</label>
+				<label><input type="radio" name="d-long" value="1" checked>弱</label>
+				<label><input type="radio" name="d-long" value="2">強</label>			
+			</div><br>
+		
+
+        </div>
+        `;
+
+        // 🔥 イベント接続
+        document.querySelectorAll('input[name="quality"]').forEach(el=>{
+            el.addEventListener("change",(e)=>{
+                applyQuality(e.target.value);
+            });
+        });
+
+        document.querySelectorAll('input[name="boost"]').forEach(el=>{
+            el.addEventListener("change",(e)=>{
+                appSettings.boost = parseFloat(e.target.value);
+				isDirty = true;
+				updateDirtyUI();
+            });
+        });
+
+        document.querySelectorAll('input[name="breath"]').forEach(el=>{
+            el.addEventListener("change",(e)=>{
+                appSettings.breath = parseFloat(e.target.value);
+				isDirty = true;
+				updateDirtyUI();
+            });
+        });
+
+		document.querySelectorAll('input[name="c-long"]').forEach(el=>{
+			el.addEventListener("change",(e)=>{
+				appSettings.effect = parseFloat(e.target.value);
+				isDirty = true;
+				updateDirtyUI();
+			});
+		});
+
+		document.querySelectorAll('input[name="d-long"]').forEach(el=>{
+			el.addEventListener("change",(e)=>{
+				appSettings.glow = parseFloat(e.target.value);
+				isDirty = true;
+				updateDirtyUI();
+			});
+		});
+
+
+    }else{
+        box.style.display = "none";
+    }
+}
+
+// =========================
+// JSON save, load
+// =======================
+function saveSettings(){
+    localStorage.setItem("voiceAuraSettings", JSON.stringify(appSettings));
+}
+
+function loadSettings(){
+    const s = localStorage.getItem("voiceAuraSettings");
+    if(s){
+        appSettings = JSON.parse(s);
+    }
+}
+
+
+
+
+// 🔥 一番最後にこれ
+animate();
+
 </script>
 
 </body>
