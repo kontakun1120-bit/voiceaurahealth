@@ -3,6 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="/static/mini_icon.png">
+<link rel="apple-touch-icon" href="/static/mini_icon.png">
+<link rel="manifest" href="manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <title>VoiceAuraHealth for You 🌸</title>
 
@@ -114,10 +117,11 @@ h1{
    🔥 ビジュアルエリア（最重要）
 ========================= */
 #visualBox{
-    height:auto;
+    width:100%;
+    max-width:380px;
+    aspect-ratio:1/1;   /* 🔥これ重要 */
+    margin:0 auto;
     position:relative;
-	top: 10px;
-	aspect-ratio:1 / 1;
     overflow:hidden;
 }
 
@@ -981,22 +985,37 @@ function drawAllAura(vector){
     const canvas = document.getElementById("auraRing");
     const ctx = canvas.getContext("2d");
 
+	// =========================
+	// ① CSSサイズ取得
+	// =========================
 	const size = canvas.offsetWidth;
 
-	canvas.width = size;
+	// =========================
+	// ② canvas内部サイズに反映
+	// =========================
+	canvas.width  = size;
 	canvas.height = size;
 
-    const cx = canvas.width / 2 + 0;   // 👉 右に10
-    const cy = canvas.height / 2 + 0;  // 👉 下に15
+	// =========================
+	// ③ 中心
+	// =========================
+	const cx = size / 2;
+	const cy = size / 2;
 
-    ctx.clearRect(0,0,canvas.width,canvas.height);
+	ctx.clearRect(0,0,size,size);
+
+	// =========================
+	// ④ ここで使う🔥
+	// =========================
+	const innerBase = size * 0.28;
+	const outerMax  = size * 0.45;
 
 
     // =========================
     // 🔥 ① 大きくする
     // =========================
-    const innerBase = 140;   // ←元55 → 拡大
-    const outerMax = 170;   // ←リング最大半径  140
+    const innerBase = size * 0.28;   // ←元55 → 拡大
+    const outerMax = size * 0.45;   // ←リング最大半径  140
 
     // =========================
     // 🔥 ③ 正規化（超重要）
@@ -1079,7 +1098,7 @@ function drawAllAura(vector){
 	drawInnerAura(ctx, cx, cy, vector);     // 内のリング
 
 	if(showOuterLabel){
-		drawLegend(ctx, cx, cy, outerMax + 7);  // ←元30 → 拡大
+		drawLegend(ctx, cx, cy, outerMax + 9);  // ←元30 → 拡大
 	}
 
 	if(showMiddleLabel){
@@ -1183,8 +1202,8 @@ function drawMiddleAura(ctx, cx, cy, vector){
     // =========================
     // 🔥 半径設定
     // =========================
-    const innerBase = 105;
-    const outerMax  = 135;
+    const innerBase = size * 0.22;
+    const outerMax  = size * 0.33;
 
     // =========================
     // 🔥 正規化
@@ -1377,8 +1396,8 @@ function drawInnerAura(ctx, cx, cy, vector){
 
     const normData = aura;
 
-    const innerBase = 60;
-    const outerMax  = 90;
+    const innerBase = size * 0.12;
+    const outerMax  = size * 0.20;
 
     const min = Math.min(...normData);
     const max = Math.max(...normData);
