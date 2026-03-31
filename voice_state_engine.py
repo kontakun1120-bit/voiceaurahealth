@@ -1,13 +1,30 @@
 # ==========================================================
-# VoiceAura VoiceState Engine（predict一本化・正規化版）
+# VoiceAura VoiceState Engine（predict一本化・完全版）
 # mini_app/voice_state_engine.py
 # ==========================================================
 
 import wave
 import numpy as np
+import random
 
 
 class VoiceStateEngine:
+    """
+    VoiceAura mini 用の音声状態推定エンジン
+
+    設計方針
+    ---------------------------------
+    1. 音声を 16bit PCM mono WAV として読む
+    2. 5秒音声を5分割して時系列平均する
+    3. 各分割音声を predict() に通す
+    4. predict() 内で
+       - 192次元ベクトル化
+       - 正規化
+       - 特徴量抽出
+       - 重み付きスコア化
+       を一貫して実施する
+    """
+
     # ------------------------------------------------------
     # 1.0 init
     # ------------------------------------------------------
@@ -15,13 +32,13 @@ class VoiceStateEngine:
         self.scale = 100
 
     # ------------------------------------------------------
-    # 2.0 外部API（ファイル）
+    # 2.0 外部公開API
     # ------------------------------------------------------
     def analyze_from_file(self, path: str) -> dict:
         return self.analyze_with_time(path)
 
     # ------------------------------------------------------
-    # 3.0 wav読み込み
+    # 3.0 WAV読み込み
     # ------------------------------------------------------
     def load_wav(self, path: str):
         with wave.open(path, "rb") as wf:
@@ -88,7 +105,7 @@ class VoiceStateEngine:
         return segments
 
     # ------------------------------------------------------
-    # 3.3 時系列解析（predict一本化）
+    # 3.3 時系列解析
     # ------------------------------------------------------
     def analyze_with_time(self, path: str) -> dict:
         audio = self._load_wav_mono(path)
@@ -110,8 +127,18 @@ class VoiceStateEngine:
         ]
 
         final = {}
+        
         for key in score_keys:
             final[key] = int(np.mean([r[key] for r in results]))
+
+        # 🔥 vector192を平均して追加
+        vectors = [r["vector192"] for r in results if "vector192" in r]
+
+        if len(vectors) > 0:
+            v_mean = np.mean(np.array(vectors), axis=0)
+            final["vector192"] = v_mean.tolist()
+        else:
+            final["vector192"] = [0.0]*192
 
         stress_comment, personality, color = self.generate_comment(final)
 
@@ -120,10 +147,11 @@ class VoiceStateEngine:
         final["ColorSector"] = color
 
         return final
+        
 
 
     # ------------------------------------------------------
-    # 5.0 音声 → 簡易192次元
+    # 4.0 audio -> 192 vector
     # ------------------------------------------------------
     def _audio_to_vector192(self, audio: np.ndarray) -> np.ndarray:
         if len(audio) == 0:
@@ -139,7 +167,7 @@ class VoiceStateEngine:
         return vec
 
     # ------------------------------------------------------
-    # 5.1 normalize（ベクトル正規化）
+    # 4.1 normalize vector
     # ------------------------------------------------------
     def _normalize(self, v: np.ndarray) -> np.ndarray:
         v = np.asarray(v, dtype=np.float32)
@@ -151,7 +179,7 @@ class VoiceStateEngine:
         return v / norm
 
     # ------------------------------------------------------
-    # 5.2 0-1 正規化
+    # 4.2 scalar normalize
     # ------------------------------------------------------
     def _norm01(self, x: float, min_v: float, max_v: float) -> float:
         if max_v <= min_v:
@@ -161,14 +189,14 @@ class VoiceStateEngine:
         return (x - min_v) / (max_v - min_v)
 
     # ------------------------------------------------------
-    # 5.3 0-100 clamp
+    # 4.3 0-100 clamp
     # ------------------------------------------------------
     def _clamp(self, x: float) -> int:
         x = max(0.0, min(float(self.scale), float(x)))
         return int(round(x))
 
     # ------------------------------------------------------
-    # 6.0 コア特徴量抽出
+    # 5.0 特徴量抽出
     # ------------------------------------------------------
     def _extract_core_features(self, v: np.ndarray) -> dict:
         if len(v) == 0:
@@ -195,14 +223,9 @@ class VoiceStateEngine:
         }
 
     # ------------------------------------------------------
-    # 7.0 重み付きスコア計算（本体）
+    # 5.1 重み付きスコア計算
     # ------------------------------------------------------
     def _calculate_scores(self, f: dict) -> dict:
-        # --------------------------------------------------
-        # 0-1 正規化
-        # 5秒程度の短音声を想定した暫定レンジ
-        # 実測に応じて今後微調整
-        # --------------------------------------------------
         rms_n = self._norm01(f["rms"], 0.02, 0.35)
         std_n = self._norm01(f["std"], 0.01, 0.25)
         peak_n = self._norm01(f["peak"], 0.05, 0.90)
@@ -211,9 +234,6 @@ class VoiceStateEngine:
         var_n = self._norm01(f["var"], 0.0001, 0.08)
         mean_abs_n = self._norm01(f["mean_abs"], 0.01, 0.30)
 
-        # --------------------------------------------------
-        # 重み付き合成
-        # --------------------------------------------------
         energy = (
             0.45 * rms_n +
             0.35 * dyn_n +
@@ -266,7 +286,7 @@ class VoiceStateEngine:
         }
 
     # ------------------------------------------------------
-    # 8.0 personality type
+    # 6.0 personality type
     # ------------------------------------------------------
     def _personality_type(
         self,
@@ -277,20 +297,20 @@ class VoiceStateEngine:
         stress: int
     ) -> str:
         if focus > 70:
-            return "🔬 Analyst"
+            return "🔬 分析型 タイプ"
         elif social > 70:
-            return "🤝 Empath"
+            return "🤝 共感型 タイプ"
         elif energy > 70:
-            return "🔥 Leader"
+            return "🔥 行動型 タイプ"
         elif stress < 30:
-            return "🌱 Reflector"
+            return "🌱 内省型 タイプ"
         elif emotion > 60:
-            return "🎨 Creator"
+            return "🎨 創造型 タイプ"
         else:
-            return "🧭 Explorer"
+            return "🧭 探索型 タイプ"
 
     # ------------------------------------------------------
-    # 8.1 color sector
+    # 7.0 color sector
     # ------------------------------------------------------
     def _color_sector(
         self,
@@ -307,7 +327,7 @@ class VoiceStateEngine:
             ("#001F54", "navy", "思考・分析"),
             ("#0077FF", "blue", "冷静・論理"),
             ("#00B7C2", "turquoise", "対人感覚"),
-            ("#00A86B", "emerald", "会話力"),
+            ("#00A86B", "green", "安定状態"),
             ("#7FFF00", "lime", "共感"),
             ("#FFD300", "yellow", "自信"),
             ("#FFD700", "gold", "存在感"),
@@ -324,7 +344,7 @@ class VoiceStateEngine:
         return f"{name} : {desc}"
 
     # ------------------------------------------------------
-    # 8.2 stress comment
+    # 8.0 stress comment
     # ------------------------------------------------------
     def stress_comment(self, stress: int) -> str:
         stress = int(stress)
@@ -341,7 +361,7 @@ class VoiceStateEngine:
             return "強いストレス状態です。"
 
     # ------------------------------------------------------
-    # 9.0 predict（完全一本化）
+    # 9.0 predict
     # ------------------------------------------------------
     def predict(self, audio: np.ndarray) -> dict:
         if len(audio) == 0:
@@ -353,7 +373,7 @@ class VoiceStateEngine:
                 "Social": 0,
                 "Fatigue": 0,
                 "Arousal": 0,
-                "Personality": "🧭 Explorer",
+                "Personality": "🧭 探索型 タイプ",
                 "ColorSector": "navy : 思考・分析",
                 "StressComment": "音声が短すぎます。"
             }
@@ -383,6 +403,7 @@ class VoiceStateEngine:
         scores["Personality"] = ptype
         scores["ColorSector"] = pcolor
         scores["StressComment"] = self.stress_comment(scores["Stress"])
+        scores["vector192"] = vector192.tolist()
 
         return scores
 
@@ -399,10 +420,10 @@ class VoiceStateEngine:
         elif stress > 40:
             stress_comment = "ややストレスあり"
         else:
-            stress_comment = "ストレス安定"
+            stress_comment = "安定状態"
 
         if energy > 70:
-            personality = "🔥 リーダー型 タイプ"
+            personality = "🔥 行動型 タイプ"
         elif fatigue > 70:
             personality = "🌱 内省型 タイプ"
         elif scores["Emotion"] > 60:
@@ -420,9 +441,28 @@ class VoiceStateEngine:
         return stress_comment, personality, color
 
 
-# ==========================================================
-# 11.0 test
-# ==========================================================
+    # ------------------------------------------------------
+    # 10.1 女性　総合コメント
+    # ------------------------------------------------------
+    def generate_daily_message(self):
+        messages = [
+            "ゆっくりでも大丈夫です🌿",
+            "今日は少しだけ、自分を大切に✨",
+            "無理しない一日を過ごしましょう☕",
+            "あなたのペースで大丈夫です🌸",
+            "ちょっと一息ついてみましょう🌙",
+        ]
+        return random.choice(messages)
+
+        
+    def generate_empathy_summary(self, scores):
+        if scores["Energy"] < 30:
+            return "少しお疲れのようですね🌿"
+        else:
+            return "穏やかな状態です✨"
+
+            
+
 if __name__ == "__main__":
     engine = VoiceStateEngine()
     state = engine.analyze_from_file("../static/voice_web.wav")
@@ -430,4 +470,3 @@ if __name__ == "__main__":
     print("\nVoice State\n")
     for k, v in state.items():
         print(f"{k:12} {v}")
-        
