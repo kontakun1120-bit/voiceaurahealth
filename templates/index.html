@@ -998,15 +998,15 @@ function drawAllAura(vector){
 
     // 外
     {
-        const innerBase = size * 0.30;    // 元々 0.28
-        const outerMax  = size * 0.46;    // 元々 0.46
+        const innerBase = size * 0.40;    // 元々 0.28
+        const outerMax  = size * 0.48;    // 元々 0.46
 
         drawOuterAura(ctx, cx, cy, dna, innerBase, outerMax);
     }
 
     // 中
     {
-        const innerBase = size * 0.24;    // 元々 0.22
+        const innerBase = size * 0.26;    // 元々 0.22
         const outerMax  = size * 0.34;    // 元々 0.34
 
         drawMiddleAura(ctx, cx, cy, psy, innerBase, outerMax);
@@ -1014,7 +1014,7 @@ function drawAllAura(vector){
 
     // 内
     {
-        const innerBase = size * 0.13;    // 元々 0.12
+        const innerBase = size * 0.12;    // 元々 0.12
         const outerMax  = size * 0.20;    // 元々 0.20
 
         drawInnerAura(ctx, cx, cy, aura, innerBase, outerMax);
@@ -1022,7 +1022,7 @@ function drawAllAura(vector){
 
     // 凡例ラベル
     if(showOuterLabel) drawLegend(ctx, cx, cy, size * 0.48);          // 外リングラベル
-    if(showMiddleLabel) drawMiddleLegend(ctx, cx, cy, size * 0.35);   // 中リングラベル
+    if(showMiddleLabel) drawMiddleLegend(ctx, cx, cy, size * 0.34);   // 中リングラベル
     if(showInnerLabel) drawInnerLegend(ctx, cx, cy, size * 0.20);     // 内リングラベル
 
 }
