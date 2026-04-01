@@ -998,24 +998,24 @@ function drawAllAura(vector){
 
     // 外
     {
-        const innerBase = size * 0.28;
-        const outerMax  = size * 0.45;
+        const innerBase = size * 0.30;    // 元々 0.28
+        const outerMax  = size * 0.46;    // 元々 0.46
 
         drawOuterAura(ctx, cx, cy, dna, innerBase, outerMax);
     }
 
     // 中
     {
-        const innerBase = size * 0.22;
-        const outerMax  = size * 0.33;
+        const innerBase = size * 0.24;    // 元々 0.22
+        const outerMax  = size * 0.34;    // 元々 0.34
 
         drawMiddleAura(ctx, cx, cy, psy, innerBase, outerMax);
     }
 
     // 内
     {
-        const innerBase = size * 0.12;
-        const outerMax  = size * 0.20;
+        const innerBase = size * 0.13;    // 元々 0.12
+        const outerMax  = size * 0.20;    // 元々 0.20
 
         drawInnerAura(ctx, cx, cy, aura, innerBase, outerMax);
     }
