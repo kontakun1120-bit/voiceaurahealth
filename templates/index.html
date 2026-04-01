@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" href="/static/mini_icon.png">
 <link rel="apple-touch-icon" href="/static/mini_icon.png">
-<link rel="manifest" href="manifest.json">
+<link rel="manifest" href="/static/manifest.json">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <title>VoiceAuraHealth for You 🌸</title>
 
@@ -305,6 +305,9 @@ h1{
 		</div>
 
 		<div id="legendBox" class="card" style="font-size:12px;"></div>
+		
+		<!-- 空欄　1行 -->
+		<div>　<br></div>
 		
 		<div>
 			<button class="btn" onclick="startRecording()">🎙 5秒チェック</button>
@@ -975,139 +978,52 @@ function applyQuality(q){
 // -------------------- 外リング　描画関数--------------------
 function drawAllAura(vector){
 
-    if(!vector || vector.length === 0){
-        return;
-    }
-
-	const { dna, psy, aura } = buildAura(vector);
-	const normData = dna;   // ←これに置き換え
+    if(!vector || vector.length === 0) return;
 
     const canvas = document.getElementById("auraRing");
     const ctx = canvas.getContext("2d");
 
-	// =========================
-	// ① CSSサイズ取得
-	// =========================
-	const size = canvas.offsetWidth;
+    const size = canvas.offsetWidth;
 
-	// =========================
-	// ② canvas内部サイズに反映
-	// =========================
-	canvas.width  = size;
-	canvas.height = size;
+    canvas.width  = size;
+    canvas.height = size;
 
-	// =========================
-	// ③ 中心
-	// =========================
-	const cx = size / 2;
-	const cy = size / 2;
+    const cx = size / 2;
+    const cy = size / 2;
 
-	ctx.clearRect(0,0,size,size);
+    ctx.clearRect(0,0,size,size);
 
-	// =========================
-	// ④ ここで使う🔥
-	// =========================
-	const innerBase = size * 0.28;
-	const outerMax  = size * 0.45;
+    // 🔥 データはここで1回だけ
+    const { dna, psy, aura } = buildAura(vector);
 
+    // 外
+    {
+        const innerBase = size * 0.28;
+        const outerMax  = size * 0.45;
 
-    // =========================
-    // 🔥 ① 大きくする
-    // =========================
-    const innerBase = size * 0.28;   // ←元55 → 拡大
-    const outerMax = size * 0.45;   // ←リング最大半径  140
-
-    // =========================
-    // 🔥 ③ 正規化（超重要）
-    // =========================
-	const min = Math.min(...normData);
-	const max = Math.max(...normData);
-
-    const norm = normData.map(v=>{
-        if(max - min === 0) return 0.5;
-        return (v - min) / (max - min); // 0〜1
-    });
-
-	const scale = appSettings.lineScale || 1.5;
-
-    // =========================
-    // 描画
-    // =========================
-    for(let i=0;i<norm.length;i++){
-
-        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
-
-        // 🔥 長さを相対強調
-		const boost = appSettings.boost;
-		
-		// 🔥 呼吸
-		const breath = appSettings.breath * 0.1 * Math.sin(Date.now() / 400);
-
-		// 🔥 強さ
-		const intensity = norm[i];
-		
-		const effect = appSettings.effect;
-
-		ctx.lineWidth = (1 + intensity * 2 * effect) * scale;
-
-		// 🔥 光のゆらぎ
-		const glow = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
-
-		// 🔥 半径
-		const r = innerBase 
-			+ Math.pow(norm[i], boost) * (outerMax - innerBase)
-			+ breath * 20;
-
-        const x1 = cx + innerBase * Math.cos(angle);
-        const y1 = cy + innerBase * Math.sin(angle);
-
-        const x2 = cx + r * Math.cos(angle);
-        const y2 = cy + r * Math.sin(angle);
-
-        // 🌈 虹色
-		const hue = (i / norm.length) * 360;
-		const light = 50 + intensity * 20;
-
-		ctx.strokeStyle = `hsl(${hue}, 80%, ${light}%)`;
-
-
-		// 🔥 グロー　ここだけで全部決める
-		ctx.shadowBlur = (5 + intensity * 15 + glow * 10) * scale;
-
-		ctx.shadowColor = ctx.strokeStyle;
-
-        ctx.beginPath();
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-        ctx.stroke();
+        drawOuterAura(ctx, cx, cy, dna, innerBase, outerMax);
     }
 
-    // 中心円
-    ctx.beginPath();
-    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
-    ctx.strokeStyle = "#eee";
-    ctx.stroke();
+    // 中
+    {
+        const innerBase = size * 0.22;
+        const outerMax  = size * 0.33;
 
+        drawMiddleAura(ctx, cx, cy, psy, innerBase, outerMax);
+    }
 
-    // =========================
-    // 🔥 ② 凡例（外へ）
-    // =========================
+    // 内
+    {
+        const innerBase = size * 0.12;
+        const outerMax  = size * 0.20;
 
-	drawMiddleAura(ctx, cx, cy, vector);     // 中のリング
+        drawInnerAura(ctx, cx, cy, aura, innerBase, outerMax);
+    }
 
-	drawInnerAura(ctx, cx, cy, vector);     // 内のリング
-
-	if(showOuterLabel){
-		drawLegend(ctx, cx, cy, outerMax + 9);  // ←元30 → 拡大
-	}
-
-	if(showMiddleLabel){
-		drawMiddleLegend(ctx, cx, cy, 120);
-	}
-	
-	if(showInnerLabel){
-		drawInnerLegend(ctx, cx, cy, 60);
-	}
+    // 凡例ラベル
+    if(showOuterLabel) drawLegend(ctx, cx, cy, size * 0.48);          // 外リングラベル
+    if(showMiddleLabel) drawMiddleLegend(ctx, cx, cy, size * 0.35);   // 中リングラベル
+    if(showInnerLabel) drawInnerLegend(ctx, cx, cy, size * 0.20);     // 内リングラベル
 
 }
 
@@ -1190,24 +1106,9 @@ function toggleOuter(){
 // =========================
 // 🔥 中リング（心理リング）
 // =========================
-function drawMiddleAura(ctx, cx, cy, vector){
+function drawMiddleAura(ctx, cx, cy, normData, innerBase, outerMax){
 
-    // =========================
-    // 🔥 データ取得
-    // =========================
-    const { dna, psy, aura } = buildAura(vector);
-
-    const normData = psy;   // ←12心理（ここ重要）
-
-    // =========================
-    // 🔥 半径設定
-    // =========================
-    const innerBase = size * 0.22;
-    const outerMax  = size * 0.33;
-
-    // =========================
     // 🔥 正規化
-    // =========================
     const min = Math.min(...normData);
     const max = Math.max(...normData);
 
@@ -1218,35 +1119,26 @@ function drawMiddleAura(ctx, cx, cy, vector){
 
     const scale = appSettings.lineScale || 1.5;
 
-    // =========================
-    // 🔥 12心理カラー
-    // =========================
     const psyColors = [
-        "#8F00FF", "#001F54", "#0077FF", "#00B7C2",
-        "#7FFF00", "#FFD300", "#FFD700", "#FF8C00",
-        "#FF6F61", "#FF0000", "#FF00FF", "#00A86B"
+        "#8F00FF","#001F54","#0077FF","#00B7C2",
+        "#7FFF00","#FFD300","#FFD700","#FF8C00",
+        "#FF6F61","#FF0000","#FF00FF","#00A86B"
     ];
 
     const sectorSize = Math.floor(norm.length / 12);
 
-    // =========================
-    // 🔥 描画
-    // =========================
+    // 描画
     for(let i=0;i<norm.length;i++){
 
         const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
 
-        // 🔥 パラメータ
         const boost  = appSettings.boost;
-        const breath = appSettings.breath * 0.05 * Math.sin(Date.now() / 400);
+        const breath = appSettings.breath * 0.05 * Math.sin(Date.now()/400);
         const effect = appSettings.effect;
         const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
 
         const intensity = norm[i];
 
-        // =========================
-        // 🔥 半径計算
-        // =========================
         const r = innerBase 
             + Math.pow(intensity, boost) * (outerMax - innerBase)
             + breath * 10;
@@ -1257,34 +1149,22 @@ function drawMiddleAura(ctx, cx, cy, vector){
         const x2 = cx + r * Math.cos(angle);
         const y2 = cy + r * Math.sin(angle);
 
-        // =========================
-        // 🔥 色（12分割）
-        // =========================
         const sectorIndex = Math.floor(i / sectorSize) % 12;
         const color = psyColors[sectorIndex];
 
         ctx.strokeStyle = color;
-
-        // =========================
-        // 🔥 太さ・光
-        // =========================
         ctx.lineWidth = (1 + intensity * 2 * effect) * scale;
 
         ctx.shadowBlur = (3 + intensity * 10 + glow * 5) * scale;
         ctx.shadowColor = color;
 
-        // =========================
-        // 🔥 描画
-        // =========================
         ctx.beginPath();
         ctx.moveTo(x1,y1);
         ctx.lineTo(x2,y2);
         ctx.stroke();
     }
 
-    // =========================
-    // 🔥 中心円
-    // =========================
+    // 中心円
     ctx.beginPath();
     ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
     ctx.strokeStyle = "#ddd";
@@ -1390,14 +1270,7 @@ function toggleMiddle(){
 // =========================
 // 🔥 小リング（意味リング）
 // =========================
-function drawInnerAura(ctx, cx, cy, vector){
-
-    const { dna, psy, aura } = buildAura(vector);
-
-    const normData = aura;
-
-    const innerBase = size * 0.12;
-    const outerMax  = size * 0.20;
+function drawInnerAura(ctx, cx, cy, normData, innerBase, outerMax){
 
     const min = Math.min(...normData);
     const max = Math.max(...normData);
@@ -1413,7 +1286,7 @@ function drawInnerAura(ctx, cx, cy, vector){
 
         const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
 
-        const boost  = appSettings.boost * 0.8;  // 少し弱め
+        const boost  = appSettings.boost * 0.8;
         const breath = appSettings.breath * 0.03 * Math.sin(Date.now()/400);
         const effect = appSettings.effect;
         const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
@@ -1430,19 +1303,17 @@ function drawInnerAura(ctx, cx, cy, vector){
         const x2 = cx + r * Math.cos(angle);
         const y2 = cy + r * Math.sin(angle);
 
-        // 🌿 （人格）
-		const hue = (i / norm.length) * 360;
+        const hue = (i / norm.length) * 360;
+        const sat = 60;
+        const light = 60 + intensity * 10;
 
-		// 🌿 内リング用：やさしい虹
-		const sat = 60;     // 彩度少し低め
-		const light = 60 + intensity * 10;
+        const color = `hsl(${hue}, ${sat}%, ${light}%)`;
 
-		ctx.strokeStyle = `hsl(${hue}, ${sat}%, ${light}%)`;
-
+        ctx.strokeStyle = color;
         ctx.lineWidth = (1 + intensity * 1.5 * effect) * scale;
 
         ctx.shadowBlur = (2 + intensity * 8 + glow * 5) * scale;
-        ctx.shadowColor = ctx.strokeStyle;
+        ctx.shadowColor = color;
 
         ctx.beginPath();
         ctx.moveTo(x1,y1);
