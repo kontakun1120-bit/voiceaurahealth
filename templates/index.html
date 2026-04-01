@@ -1028,6 +1028,66 @@ function drawAllAura(vector){
 }
 
 
+// =========================
+// 🔥 外リング（192ベクトル）
+// =========================
+function drawOuterAura(ctx, cx, cy, normData, innerBase, outerMax){
+
+    const min = Math.min(...normData);
+    const max = Math.max(...normData);
+
+    const norm = normData.map(v=>{
+        if(max - min === 0) return 0.5;
+        return (v - min) / (max - min);
+    });
+
+    const scale = appSettings.lineScale || 1.5;
+
+    for(let i=0;i<norm.length;i++){
+
+        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
+
+        const boost  = appSettings.boost;
+        const breath = appSettings.breath * 0.05 * Math.sin(Date.now()/400);
+        const effect = appSettings.effect;
+        const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
+
+        const intensity = norm[i];
+
+        const r = innerBase 
+            + Math.pow(intensity, boost) * (outerMax - innerBase)
+            + breath * 12;
+
+        const x1 = cx + innerBase * Math.cos(angle);
+        const y1 = cy + innerBase * Math.sin(angle);
+
+        const x2 = cx + r * Math.cos(angle);
+        const y2 = cy + r * Math.sin(angle);
+
+        // 🌈 外リングは虹色
+        const hue = (i / norm.length) * 360;
+        const color = `hsl(${hue}, 90%, 60%)`;
+
+        ctx.strokeStyle = color;
+        ctx.lineWidth = (1 + intensity * 2.5 * effect) * scale;
+
+        ctx.shadowBlur = (4 + intensity * 12 + glow * 6) * scale;
+        ctx.shadowColor = color;
+
+        ctx.beginPath();
+        ctx.moveTo(x1,y1);
+        ctx.lineTo(x2,y2);
+        ctx.stroke();
+    }
+
+    // 外円
+    ctx.beginPath();
+    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
+    ctx.strokeStyle = "#ddd";
+    ctx.stroke();
+}
+
+
 // -------------------- リング 凡例（外周ラベル）描画--------------------
 // 🌈 凡例（外周ラベル）
 function drawLegend(ctx, cx, cy, radius){
