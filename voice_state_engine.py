@@ -234,23 +234,11 @@ class VoiceStateEngine:
         var_n = self._norm01(f["var"], 0.0001, 0.08)
         mean_abs_n = self._norm01(f["mean_abs"], 0.01, 0.30)
 
-        energy = (
-            0.45 * rms_n +
-            0.35 * dyn_n +
-            0.20 * mean_abs_n
-        )
+        energy = (0.45 * rms_n + 0.35 * dyn_n + 0.20 * mean_abs_n) ** 1.3  # 見える差
 
-        stress = (
-            0.40 * std_n +
-            0.35 * zcr_n +
-            0.25 * var_n
-        )
+        stress = (0.40 * std_n + 0.35 * zcr_n + 0.25 * var_n) ** 1.3  # 見える差
 
-        emotion = (
-            0.45 * dyn_n +
-            0.35 * zcr_n +
-            0.20 * peak_n
-        )
+        emotion = (0.45 * dyn_n + 0.35 * zcr_n + 0.20 * peak_n) ** 1.3  # 見える差
 
         focus = (
             0.55 * (1.0 - zcr_n) +
@@ -379,7 +367,9 @@ class VoiceStateEngine:
             }
 
         vector192 = self._audio_to_vector192(audio)
-        v = self._normalize(vector192)
+
+        v = vector192  # ←正規化外す。正規化を弱める。変化が出る
+#        v = self._normalize(vector192)
 
         feat = self._extract_core_features(v)
         scores = self._calculate_scores(feat)
@@ -457,10 +447,11 @@ class VoiceStateEngine:
         
     def generate_empathy_summary(self, scores):
         if scores["Energy"] < 30:
-            return "少しお疲れのようですね🌿"
+            return "前回より少し疲れが出ていますね🌿"
+        elif scores["Energy"] > 60:
+            return "少し元気が戻ってきています✨"
         else:
-            return "穏やかな状態です✨"
-
+            return "大きな変化はなさそうです☕"
             
 
 if __name__ == "__main__":
