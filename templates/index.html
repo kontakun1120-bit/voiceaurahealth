@@ -537,8 +537,10 @@ async function startRecording(){
 
         const blob = new Blob(chunks,{type:"audio/webm"});
         const formData = new FormData();
+		
         formData.append("audio", blob);
-
+		formData.append("db", Number(currentDB));
+		
         const res = await fetch("/api/upload",{method:"POST", body:formData});
         const data = await res.json();
 
@@ -587,6 +589,9 @@ async function render(data){
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
     </div>
+
+	<div class="comment">環境騒音：${r.Noise ?? Math.round(currentDB)} dB</div>
+	<div class="comment">${r.EnvironmentFlag || ""}</div>
 
     <div class="card card-main">
         💭 今のあなたへ
@@ -1750,6 +1755,7 @@ let isRecording = false;
 let waveAnimationId = null;
 
 function drawWave(analyser, dataArray){
+	measureDB(analyser, dataArray);
 
     const canvas = document.getElementById("waveCanvas");
     const ctx = canvas.getContext("2d");
@@ -1784,6 +1790,7 @@ function drawWave(analyser, dataArray){
             ctx.quadraticCurveTo(prevX, prevY, cx, (prevY + y)/2);
         }
     }
+	
 
     // =========================
     // 🌈 グラデーション（可愛い）
@@ -1984,25 +1991,6 @@ function loadSettings(){
     }
 }
 
-// =========================
-// 押したとき（録音開始）
-// =======================
-//const btn = document.getElementById("recordBtn");
-//function startRecording(){
-//    btn.classList.remove("idle");
-//    btn.classList.add("active");
-//    drawWaveStart();  // ←後で作る
-//    // 録音処理
-//}
-//function stopRecording(){
-//    btn.classList.remove("active");
-//    btn.classList.add("idle");
-//}
-//function drawWaveStart(){
-//    const wave = document.getElementById("waveCanvas");
-//    wave.classList.add("active");
-//}
-
 let t = 0;
 
 function animateWave(){
@@ -2014,6 +2002,30 @@ function animateWave(){
     // 波形に加算するだけでOK
 }
 
+
+// =========================
+// 🔥 dB測定（追加）
+// =========================
+let currentDB = 0;
+
+function measureDB(analyser, dataArray){
+
+    analyser.getByteTimeDomainData(dataArray);
+
+    let sum = 0;
+
+    for(let i=0;i<dataArray.length;i++){
+        const v = (dataArray[i] - 128) / 128.0;
+        sum += v * v;
+    }
+
+    const rms = Math.sqrt(sum / dataArray.length);
+
+    // dB換算（簡易）
+    const db = 20 * Math.log10(rms + 1e-6) + 100;
+
+    currentDB = Math.max(0, Math.min(100, db));
+}
 
 
 
