@@ -47,13 +47,16 @@ def upload_audio():
         if file.filename == "":
             return jsonify({"error": "empty file"}), 400
 
+        # 🔥 追加
+        db = float(request.form.get("db", 50))
+
         # 🔥 OS対応（ここが神ポイント）
         temp_dir = tempfile.gettempdir()
 
         path = os.path.join(temp_dir, f"{uuid.uuid4()}.webm")
         file.save(path)
 
-        wav_path = path.replace(".wav","_c.wav")
+        wav_path = path.replace(".webm","_c.wav")
 
         # 🔥 音声変換
         audio = AudioSegment.from_file(path, format="webm")
@@ -61,16 +64,19 @@ def upload_audio():
         audio.export(wav_path, format="wav")
 
         # 🔥 解析
-        result = engine.analyze_from_file(wav_path)
+        result = engine.analyze_from_file(wav_path, db=db)
+        
         response = format_result(result)
 
-        # 🔥 表示
-        comment = request.form.get("comment","")
+        # 🔥 表示 将来用（コメント機能）
+#       comment = request.form.get("comment","")
         
         # 🔥 保存
 #        save_session(response, comment)
 
         return jsonify({"result": response})
+
+
 
     except Exception as e:
         print("🔥 ERROR:", e)  # Railwayログ用
