@@ -34,8 +34,8 @@ class VoiceStateEngine:
     # ------------------------------------------------------
     # 2.0 外部公開API
     # ------------------------------------------------------
-    def analyze_from_file(self, path: str) -> dict:
-        return self.analyze_with_time(path)
+    def analyze_from_file(self, path: str, db: float = 50) -> dict:
+        return self.analyze_with_time(path, db)
 
     # ------------------------------------------------------
     # 3.0 WAV読み込み
@@ -107,13 +107,13 @@ class VoiceStateEngine:
     # ------------------------------------------------------
     # 3.3 時系列解析
     # ------------------------------------------------------
-    def analyze_with_time(self, path: str) -> dict:
+    def analyze_with_time(self, path: str, db: float = 50) -> dict:
         audio = self._load_wav_mono(path)
         segments = self._split_audio(audio, 5)
 
         results = []
         for seg in segments:
-            score = self.predict(seg)
+            score = self.predict(seg, db)
             results.append(score)
 
         score_keys = [
@@ -130,6 +130,20 @@ class VoiceStateEngine:
         
         for key in score_keys:
             final[key] = int(np.mean([r[key] for r in results]))
+
+        # 🔥 Noise関連を追加
+        final["Noise"] = int(db)
+
+        # 🔥 Confidence平均
+        conf_list = [r.get("Confidence", 1.0) for r in results]
+        final["Confidence"] = round(float(np.mean(conf_list)), 2)
+
+        # 🔥 EnvironmentFlag（代表値）
+        flags = [r.get("EnvironmentFlag","") for r in results]
+
+        # 多数決
+        final["EnvironmentFlag"] = max(set(flags), key=flags.count)
+
 
         # 🔥 vector192を平均して追加
         vectors = [r["vector192"] for r in results if "vector192" in r]
@@ -148,7 +162,6 @@ class VoiceStateEngine:
 
         return final
         
-
 
     # ------------------------------------------------------
     # 4.0 audio -> 192 vector
@@ -274,6 +287,44 @@ class VoiceStateEngine:
         }
 
     # ------------------------------------------------------
+    # 5.1.2 Energy補正
+    # ------------------------------------------------------
+    def _noise_adjust_energy(self, energy, db):
+
+        # 基準50dB
+        noise_factor = (db - 50) / 50
+
+        # 騒音で増えた分を引く
+        adjusted = energy * (1 - 0.4 * noise_factor)
+
+        return self._clamp(adjusted)
+
+    # ------------------------------------------------------
+    # 5.1.3 Stress補正
+    # ------------------------------------------------------
+    def _noise_adjust_stress(self, stress, db):
+
+        # 騒音はストレス増加
+        noise_stress = (db - 40) * 0.5
+
+        adjusted = stress + noise_stress
+
+        return self._clamp(adjusted)
+
+    # ------------------------------------------------------
+    # 5.1.4 信頼度 補正
+    # ------------------------------------------------------
+    def _confidence(self, db):
+
+        if db < 40:
+            return 1.0   # 静か＝信頼高
+        elif db < 70:
+            return 0.8
+        else:
+            return 0.6   # うるさい＝信頼低
+
+
+    # ------------------------------------------------------
     # 5.2 エネルギー　変化
     # ------------------------------------------------------
     def compare_with_previous(self, current, previous):
@@ -368,7 +419,7 @@ class VoiceStateEngine:
     # ------------------------------------------------------
     # 9.0 predict
     # ------------------------------------------------------
-    def predict(self, audio: np.ndarray) -> dict:
+    def predict(self, audio: np.ndarray, db: float = 50) -> dict:
         if len(audio) == 0:
             return {
                 "Energy": 0,
@@ -390,6 +441,24 @@ class VoiceStateEngine:
 
         feat = self._extract_core_features(v)
         scores = self._calculate_scores(feat)
+
+        # 🔥 騒音補正
+        scores["Energy"] = self._noise_adjust_energy(scores["Energy"], db)
+        scores["Stress"] = self._noise_adjust_stress(scores["Stress"], db)
+
+        # 🔥 信頼度
+        scores["Confidence"] = self._confidence(db)
+
+        # 🔥 さらに追加（次の一手）
+        scores["Noise"] = int(db)
+
+        # 🔥 判定ロジック
+        if db > 70 and scores["Stress"] > 70:
+            scores["EnvironmentFlag"] = "環境ストレスの可能性"
+        elif db < 50 and scores["Stress"] > 70:
+            scores["EnvironmentFlag"] = "内因性ストレスの可能性"
+        else:
+            scores["EnvironmentFlag"] = "判定安定"
 
         ptype = self._personality_type(
             scores["Energy"],
