@@ -875,10 +875,18 @@ async function loadChart(){
     const res = await fetch("/api/energy_trend");
     const json = await res.json();
 
-    const labels = json.data.map(d => {
-        const t = new Date(d.time);
-        return `${t.getMonth()+1}/${t.getDate()} ${t.getHours()}:${String(t.getMinutes()).padStart(2,"0")}`;
-    });
+	const labels = json.data.map(d => {
+		const t = new Date(d.time);
+
+		const month = t.getMonth() + 1;
+		const day   = t.getDate();
+		const week = ["日","月","火","水","木","金","土"];
+		const w = week[t.getDay()];
+		const hour = String(t.getHours()).padStart(2,"0");
+		const min   = String(t.getMinutes()).padStart(2,"0");
+
+		return `${month}/${day}(${w}) ${d.zone} ${hour}:${min}`;
+	});
 
     const values = json.data.map(d=>d.energy);
 
