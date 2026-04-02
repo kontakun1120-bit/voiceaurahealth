@@ -277,14 +277,18 @@ class VoiceStateEngine:
     # 5.2 エネルギー　変化
     # ------------------------------------------------------
     def compare_with_previous(self, current, previous):
-        delta_energy = current["Energy"] - previous["Energy"]
+        try:
+            delta_energy = current.get("Energy", 0) - previous.get("Energy", 0)
 
-        if delta_energy < -5:
-            return "昨日より少し疲れが出ていますね🌿"
-        elif delta_energy > 5:
-            return "少し元気が戻ってきています✨"
-        else:
-            return "大きな変化はなさそうです☕"
+            if delta_energy < -5:
+                return "昨日より少し疲れが出ていますね🌿"
+            elif delta_energy > 5:
+                return "少し元気が戻ってきています✨"
+            else:
+                return "大きな変化はなさそうです☕"
+
+        except:
+            return "状態を確認中です"
 
     # ------------------------------------------------------
     # 6.0 personality type
