@@ -110,6 +110,22 @@ def load_previous_session():
 
 # --------------------
 def format_result(r):
+
+    prev = load_previous_session()
+
+    summary = engine.generate_empathy_summary(r)
+
+    # 🔥 安全に比較
+    if prev and isinstance(prev, dict) and "scores" in prev:
+        try:
+            msg = engine.compare_with_previous(
+                r,
+                prev["scores"]
+            )
+            summary = msg
+        except Exception as e:
+            print("compare error:", e)
+
     return {
         "scores":{
             "Energy":r["Energy"],
@@ -117,7 +133,7 @@ def format_result(r):
             "Focus":r["Focus"],
             "Social":r["Social"],
             "Calm":100-r["Stress"],
-            "Stress": r["Stress"],   # 追加
+            "Stress": r["Stress"],
         },
         "summary": summary,
         "vector192":r.get("vector192",[]),
@@ -127,7 +143,6 @@ def format_result(r):
             "inner": "意味分類（12セクター）"
         }
     }
-
 
 # ----------------------------------------------------------
 # 2.0 日記　Flask API追加
