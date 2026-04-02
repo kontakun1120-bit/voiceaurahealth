@@ -85,6 +85,29 @@ def upload_audio():
         except:
             pass
 
+
+# ----------------------------------------------------------
+# 3.0 前回データ取得
+# ----------------------------------------------------------
+def load_previous_session():
+    try:
+        if not os.path.exists("sessions"):
+            return None
+
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")],
+            reverse=True
+        )
+
+        if len(files) == 0:
+            return None
+
+        with open(f"sessions/{files[0]}", encoding="utf-8") as f:
+            return json.load(f)
+
+    except:
+        return None
+
 # --------------------
 def format_result(r):
     return {
@@ -96,7 +119,7 @@ def format_result(r):
             "Calm":100-r["Stress"],
             "Stress": r["Stress"],   # 追加
         },
-        "summary":engine.generate_empathy_summary(r),
+        "summary": summary,
         "vector192":r.get("vector192",[]),
         "ring_meta": {
             "outer": "声の特徴（192次元）",
