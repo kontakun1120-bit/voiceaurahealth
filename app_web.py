@@ -48,6 +48,9 @@ def ping():
 @app.route("/api/upload", methods=["POST"])
 def upload_audio():
 
+    path = None
+    wav_path = None
+
     try:
         if "audio" not in request.files:
             return jsonify({"error": "no audio file"}), 400
@@ -63,7 +66,7 @@ def upload_audio():
         # 🔥 OS対応（ここが神ポイント）
         temp_dir = tempfile.gettempdir()
 
-        ext = file.filename.split(".")[-1].lower()
+        ext = file.filename.split(".")[-1].lower() if "." in file.filename else "webm"
         path = os.path.join(temp_dir, f"{uuid.uuid4()}.{ext}")
         file.save(path)
 
@@ -84,7 +87,7 @@ def upload_audio():
 #       comment = request.form.get("comment","")
         
         # 🔥 保存
-        save_session(response, "")
+#        save_session(response, "")
 #        save_session(response, comment)
 
         return jsonify({"result": response})
@@ -95,9 +98,9 @@ def upload_audio():
 
     finally:
         try:
-            if os.path.exists(path):
+            if path and os.path.exists(path):
                 os.remove(path)
-            if os.path.exists(wav_path):
+            if wav_path and os.path.exists(wav_path):
                 os.remove(wav_path)
         except:
             pass
