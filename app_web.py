@@ -194,32 +194,28 @@ def day_summary_detail():
  
 
 # ----------------------------------------------------------
-# 3.4 GPT自然文化 GPT接続 LLM
+# 3.4 GPT自然文化 GPT接続 LLM 仮
 # ---------------------------------------------------------- 
 @app.route("/api/day_summary_ai")
 def day_summary_ai():
 
-    data = day_summary_detail().get_json()["data"]
+    res = day_summary_detail().get_json()
+    data = res.get("data", {})
 
-    text = build_day_insight(data)
+    if not data:
+        return jsonify({"summary": "データが不足しています"})
 
-    prompt = f"""
-以下を自然な日本語にしてください。
+    base = build_day_insight(data)
 
-{text}
+    # 🔥 仮AI（自然文化）
+    if "昼" in base:
+        txt = "昼に少し負荷がかかりやすいようです。無理をせず過ごしてくださいね。"
+    elif "朝" in base:
+        txt = "朝にやや負荷が見られます。ゆっくりスタートがおすすめです。"
+    else:
+        txt = "夜に疲れが出やすいようです。リラックスを意識すると良さそうです。"
 
-やさしく、短く、安心感のある文章にしてください。
-"""
-
-    res = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {"role":"system","content":"あなたは優しい医療アシスタントです"},
-            {"role":"user","content":prompt}
-        ]
-    )
-
-    return jsonify({"summary": res.choices[0].message.content})
+    return jsonify({"summary": txt})
 
 
 # ==========================================================
