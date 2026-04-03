@@ -93,6 +93,63 @@ def upload_audio():
 
 
 # ----------------------------------------------------------
+# 2.1 UIにボタン追加 API、LLM engine側
+# ----------------------------------------------------------
+@app.route("/api/llm_comment", methods=["POST"])
+def llm_comment():
+
+    try:
+        data = request.json
+        scores = data["scores"]
+
+        return jsonify({
+            "energy": engine.llm_energy(scores),
+            "emotion": engine.llm_emotion(scores),
+            "focus": engine.llm_focus(scores),
+            "stress": engine.llm_stress(scores),
+            "mental": engine.llm_mental_stress(scores),
+            "summary": engine.llm_summary(scores)
+        })
+
+    except Exception as e:
+        print("llm error:", e)
+        return jsonify({"error":"error"})
+
+
+# ----------------------------------------------------------
+# 2.2 今日のまとめAI LLM engine側
+# ----------------------------------------------------------
+@app.route("/api/day_summary")
+def day_summary():
+
+    data = load_all_sessions()
+
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    today_data = [
+        d for d in data if d["timestamp"].startswith(today)
+    ]
+
+    if len(today_data) == 0:
+        return jsonify({"summary":"データがありません"})
+
+    # 🔥 平均
+    avg_energy = sum(d["scores"]["Energy"] for d in today_data) / len(today_data)
+    avg_stress = sum(d["scores"]["MentalStress"] for d in today_data) / len(today_data)
+    avg_mental = sum(d["scores"].get("MentalStress",0) for d in today_data) / len(today_data)
+
+    # 🔥 コメント
+    if avg_stress > 60:
+        txt = "今日はやや負荷が高めです。無理せず過ごしましょう。"
+    elif avg_stress > 40:
+        txt = "適度な負荷の一日でした。"
+    else:
+        txt = "比較的安定した一日でした。"
+
+    return jsonify({"summary": txt})
+
+
+# ----------------------------------------------------------
 # 3.0 前回データ取得
 # ----------------------------------------------------------
 def load_previous_session():
@@ -113,6 +170,36 @@ def load_previous_session():
 
     except:
         return None
+
+
+# ----------------------------------------------------------
+# 🔥 全セッション読み込み（追加）
+# ----------------------------------------------------------
+def load_all_sessions():
+
+    data = []
+
+    try:
+        if not os.path.exists("sessions"):
+            return []
+
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")]
+        )
+
+        for f in files:
+            try:
+                with open(f"sessions/{f}", encoding="utf-8") as file:
+                    j = json.load(file)
+                    data.append(j)
+            except:
+                continue
+
+    except Exception as e:
+        print("load_all_sessions error:", e)
+
+    return data
+
 
 # --------------------
 def format_result(r):
@@ -139,7 +226,8 @@ def format_result(r):
             "Focus":r["Focus"],
             "Social":r["Social"],
             "Calm":100-r["Stress"],
-            "Stress": r["Stress"],
+            "Stress": r["Stress"],         # VoiceStress
+            "MentalStress": r["MentalStress"],   # MentalStress
         },
         "summary": summary,
         "vector192":r.get("vector192",[]),
@@ -174,7 +262,8 @@ def trend():
 
                     data.append({
                         "time":j["timestamp"],
-                        "energy":j["scores"]["Energy"]
+                        "energy":j["scores"]["Energy"],
+                        "zone": j.get("zone","")
                     })
             except Exception as e:
                 print("skip file:", f, e)
@@ -192,11 +281,21 @@ def trend():
 @app.route("/api/save_comment", methods=["POST"])
 def save_comment():
 
+    hour = datetime.now().hour
+
+    if hour < 10:
+        zone = "朝"
+    elif hour < 17:
+        zone = "昼"
+    else:
+        zone = "夜"
+
     try:
         data = request.json
 
         session = {
             "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "zone": zone, 
             "scores": data["scores"],
             "vector192": data.get("vector192", []),
             "summary": data.get("summary", ""),
