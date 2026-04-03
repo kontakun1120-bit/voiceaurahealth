@@ -83,6 +83,7 @@ def upload_audio():
 #       comment = request.form.get("comment","")
         
         # 🔥 保存
+        save_session(response, "")
 #        save_session(response, comment)
 
         return jsonify({"result": response})
