@@ -565,7 +565,16 @@ async function startRecording(){
 
     status.innerText = "録音中...";
 
-    const recorder = new MediaRecorder(stream);
+    let options = {};
+
+	if (MediaRecorder.isTypeSupported("audio/mp4")) {
+		options.mimeType = "audio/mp4";
+	} else if (MediaRecorder.isTypeSupported("audio/webm")) {
+		options.mimeType = "audio/webm";
+	}
+
+	const recorder = new MediaRecorder(stream, options);
+	
     let chunks = [];
 
     recorder.ondataavailable = e => chunks.push(e.data);
@@ -591,10 +600,11 @@ async function startRecording(){
 
         status.innerText = "解析中...";
 
-        const blob = new Blob(chunks,{type:"audio/webm"});
-        const formData = new FormData();
-		
-        formData.append("audio", blob);
+		const blob = new Blob(chunks, { type: recorder.mimeType });
+		const formData = new FormData();
+
+		const ext = recorder.mimeType.includes("mp4") ? "mp4" : "webm";
+		formData.append("audio", blob, `record.${ext}`);
 		formData.append("db", Number(currentDB));
 		
         const res = await fetch("/api/upload",{method:"POST", body:formData});
@@ -2181,6 +2191,7 @@ function getStressColor(v){
     if(v > 40) return "#facc15";   // 黄
     return "#22c55e";              // 緑
 }
+
 
 
 // 🔥 一番最後にこれ
