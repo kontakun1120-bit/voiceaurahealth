@@ -297,6 +297,32 @@ h1{
     box-shadow:0 3px 8px rgba(0,0,0,0.3);
 }
 
+/* =========================
+   🔥 録音開始 countdown
+========================= */
+#countdownWrap{
+    position:relative;
+    width:120px;
+    height:120px;
+    margin:10px auto;
+}
+
+#countText{
+    position:absolute;
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+    font-size:32px;
+    font-weight:bold;
+    color:#ff6b9d;
+}
+
+#countCircle{
+    stroke-dasharray: 314;
+    stroke-dashoffset: 0;
+    transition: stroke-dashoffset 1s linear;
+}
+
 /* コメント */
 .comment{
     font-size:13px;
@@ -371,7 +397,7 @@ h1{
 
 <h1 class="title">
   VoiceAuraHealth<span class="tm">™</span><br>
-  <span class="subtitle">for You 🌸 　ベータ版 v.2.1</span>
+  <span class="subtitle">for You 🌸 　ベータ版 v.2.3</span>
 </h1>
 <p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
 
@@ -410,6 +436,28 @@ h1{
 			<button id="recordBtn" class="btn record-btn idle" onclick="startRecording()">
 				🎙 5秒チェック
 			</button>
+
+			<div id="countdownWrap">
+				<svg width="120" height="120">
+					<circle
+						cx="60" cy="60" r="50"
+						stroke="#ffd1dc"
+						stroke-width="8"
+						fill="none"
+					/>
+					<circle
+						id="countCircle"
+						cx="60" cy="60" r="50"
+						stroke="#ff6b9d"
+						stroke-width="8"
+						fill="none"
+						stroke-linecap="round"
+						transform="rotate(-90 60 60)"
+					/>
+				</svg>
+
+				<div id="countText">3</div>
+			</div>
 
 			<p id="status"></p>
 		
@@ -509,14 +557,45 @@ function getResolution(){
     return 360;
 }
 
+
+// -------------------- 録音 カウントダウン関数--------------------
+async function countdown(sec=3){
+
+    const text = document.getElementById("countText");
+    const circle = document.getElementById("countCircle");
+
+    const total = 314;
+
+    for(let i=sec;i>0;i--){
+
+        text.innerText = i;
+
+        // 初期化
+        circle.style.transition = "none";
+        circle.style.strokeDashoffset = "0";
+
+        // 🔥 強制再描画（これが重要）
+        circle.getBoundingClientRect();
+
+        // アニメ開始
+        circle.style.transition = "stroke-dashoffset 1s linear";
+        circle.style.strokeDashoffset = total;
+
+        await new Promise(r=>setTimeout(r,1000));
+    }
+
+    text.innerText = "🎤";
+
+    await new Promise(r=>setTimeout(r,400));
+
+    text.innerText = "";
+}
+
 // -------------------- 録音 --------------------
-async function startRecording(){
+async function startRecording(sec){
 
-    const status = document.getElementById("status");
-    const result = document.getElementById("result");
-
-    status.innerText = "録音準備中...";
-    result.innerHTML = "";
+    // 🔥 カウントダウン
+    await countdown(3);
 
     let stream;
 
@@ -526,6 +605,12 @@ async function startRecording(){
         alert("マイク許可が必要です");
         return;
     }
+
+    const status = document.getElementById("status");
+    const result = document.getElementById("result");
+
+    status.innerText = "録音準備中...";
+    result.innerHTML = "";
 
     // =========================
     // 🔥 ① 波形スタート（ここだけ追加）
@@ -565,7 +650,7 @@ async function startRecording(){
 
     status.innerText = "録音中...";
 
-    let options = {};
+    let options = { mimeType: "audio/webm" };
 
 	if (MediaRecorder.isTypeSupported("audio/mp4")) {
 		options.mimeType = "audio/mp4";
@@ -607,8 +692,22 @@ async function startRecording(){
 		formData.append("audio", blob, `record.${ext}`);
 		formData.append("db", Number(currentDB));
 		
-        const res = await fetch("/api/upload",{method:"POST", body:formData});
-        const data = await res.json();
+		let data;
+		
+		try {
+			const res = await fetch("/api/upload",{method:"POST", body:formData});
+
+			if(!res.ok){
+				status.innerText = "通信エラー";
+				return;
+			}
+
+			data = await res.json();
+
+		} catch(e){
+			status.innerText = "接続エラー";
+			return;
+		}
 
         if(!data.result){
             status.innerText = "エラー";
@@ -2191,6 +2290,9 @@ function getStressColor(v){
     if(v > 40) return "#facc15";   // 黄
     return "#22c55e";              // 緑
 }
+
+
+
 
 
 
