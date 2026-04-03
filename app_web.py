@@ -1,39 +1,50 @@
 # ==========================================================
-# app_web.py（VoiceAuraHealth mini v2）
+# app_web.py（VoiceAuraHealth mini ベータ版 2.1
 # ==========================================================
 
+# ==========================================================
+# 0.0 import
+# ==========================================================
 from flask import Flask, render_template, request, jsonify
-import os, uuid, json
+import os, uuid, json, tempfile
 from datetime import datetime
 from pydub import AudioSegment
-from voice_state_engine import VoiceStateEngine
-import tempfile
+# from openai import OpenAI
 
+from voice_state_engine import VoiceStateEngine
+
+
+# ==========================================================
+# 0.1 初期化
+# ==========================================================
 app = Flask(__name__)
 engine = VoiceStateEngine()
+# client = OpenAI()
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 
+# ==========================================================
+# 1.0 基本API
+# ==========================================================
 # ----------------------------------------------------------
-# 0.0 サーバー準備確認
+# 1.1 index）
 # ----------------------------------------------------------
+@app.route("/")
+def index():
+    return render_template("index.html")
+
+# ----------------------------------------------------------
+# 1.2 サーバー準備確認
+# ---------------------------------------------------------
 @app.route("/api/ping")
 def ping():
     return "ok"
 
 
 # ----------------------------------------------------------
-# 1.0 index
-# ----------------------------------------------------------
-@app.route("/")
-def index():
-    return render_template("index.html")
-
-
-# ----------------------------------------------------------
-# 2.0 音声アップロードAPI（Railway安定版）
+# 2.0 音声解析 音声アップロードAPI（Railway安定版）
 # ----------------------------------------------------------
 @app.route("/api/upload", methods=["POST"])
 def upload_audio():
@@ -76,10 +87,8 @@ def upload_audio():
 
         return jsonify({"result": response})
 
-
-
     except Exception as e:
-        print("🔥 ERROR:", e)  # Railwayログ用
+        print("🔥[UPLOAD ERROR]", e)   # Railwayログ用
         return jsonify({"error": str(e)}), 500
 
     finally:
@@ -92,8 +101,11 @@ def upload_audio():
             pass
 
 
+# ==========================================================
+# 3.0 LLM / AI 関連
+# ==========================================================
 # ----------------------------------------------------------
-# 2.1 UIにボタン追加 API、LLM engine側
+# 3.1 LLMコメント UIにボタン追加 API、LLM engine側
 # ----------------------------------------------------------
 @app.route("/api/llm_comment", methods=["POST"])
 def llm_comment():
@@ -117,7 +129,7 @@ def llm_comment():
 
 
 # ----------------------------------------------------------
-# 2.2 今日のまとめAI LLM engine側
+# 3.2  今日のまとめ（簡易）AI LLM
 # ----------------------------------------------------------
 @app.route("/api/day_summary")
 def day_summary():
@@ -135,13 +147,12 @@ def day_summary():
 
     # 🔥 平均
     avg_energy = sum(d["scores"]["Energy"] for d in today_data) / len(today_data)
-    avg_stress = sum(d["scores"]["MentalStress"] for d in today_data) / len(today_data)
     avg_mental = sum(d["scores"].get("MentalStress",0) for d in today_data) / len(today_data)
 
     # 🔥 コメント
-    if avg_stress > 60:
+    if avg_mental > 60:
         txt = "今日はやや負荷が高めです。無理せず過ごしましょう。"
-    elif avg_stress > 40:
+    elif avg_mental > 40:
         txt = "適度な負荷の一日でした。"
     else:
         txt = "比較的安定した一日でした。"
@@ -150,7 +161,72 @@ def day_summary():
 
 
 # ----------------------------------------------------------
-# 3.0 前回データ取得
+# 3.3  朝昼夜まとめ（精密版・構造）AI LLM
+# ----------------------------------------------------------
+@app.route("/api/day_summary_detail")
+def day_summary_detail():
+
+    data = load_all_sessions()
+    today = datetime.now().strftime("%Y-%m-%d")
+
+    today_data = [d for d in data if d["timestamp"].startswith(today)]
+
+    if not today_data:
+        return jsonify({"summary": "データがありません"})
+
+    zones = {"朝": [], "昼": [], "夜": []}
+
+    for d in today_data:
+        z = d.get("zone", "")
+        if z in zones:
+            zones[z].append(d)
+
+    result = {}
+
+    for k, v in zones.items():
+        if v:
+            result[k] = {
+                "mental": sum(d["scores"].get("MentalStress",0) for d in v) / len(v),
+                "energy": sum(d["scores"].get("Energy",0) for d in v) / len(v),
+            }
+
+    return jsonify({"data": result})
+ 
+
+# ----------------------------------------------------------
+# 3.4 GPT自然文化 GPT接続 LLM
+# ---------------------------------------------------------- 
+@app.route("/api/day_summary_ai")
+def day_summary_ai():
+
+    data = day_summary_detail().get_json()["data"]
+
+    text = build_day_insight(data)
+
+    prompt = f"""
+以下を自然な日本語にしてください。
+
+{text}
+
+やさしく、短く、安心感のある文章にしてください。
+"""
+
+    res = client.chat.completions.create(
+        model="gpt-4o-mini",
+        messages=[
+            {"role":"system","content":"あなたは優しい医療アシスタントです"},
+            {"role":"user","content":prompt}
+        ]
+    )
+
+    return jsonify({"summary": res.choices[0].message.content})
+
+
+# ==========================================================
+# 4.0 セッション管理
+# ==========================================================
+# ----------------------------------------------------------
+# 4.1 前回データ取得
 # ----------------------------------------------------------
 def load_previous_session():
     try:
@@ -173,7 +249,7 @@ def load_previous_session():
 
 
 # ----------------------------------------------------------
-# 🔥 全セッション読み込み（追加）
+# 4.2 全セッション読み込み
 # ----------------------------------------------------------
 def load_all_sessions():
 
@@ -201,83 +277,9 @@ def load_all_sessions():
     return data
 
 
-# --------------------
-def format_result(r):
-
-    prev = load_previous_session()
-
-    summary = engine.generate_empathy_summary(r)
-
-    # 🔥 安全に比較
-    if prev and isinstance(prev, dict) and "scores" in prev:
-        try:
-            msg = engine.compare_with_previous(
-                r,
-                prev["scores"]
-            )
-            summary = msg
-        except Exception as e:
-            print("compare error:", e)
-
-    return {
-        "scores":{
-            "Energy":r["Energy"],
-            "Emotion":r["Emotion"],
-            "Focus":r["Focus"],
-            "Social":r["Social"],
-            "Calm":100-r["Stress"],
-            "Stress": r["Stress"],         # VoiceStress
-            "MentalStress": r["MentalStress"],   # MentalStress
-        },
-        "summary": summary,
-        "vector192":r.get("vector192",[]),
-        "ring_meta": {
-            "outer": "声の特徴（192次元）",
-            "middle": "心理状態（6指標）",
-            "inner": "意味分類（12セクター）"
-        }
-    }
-
 # ----------------------------------------------------------
-# 2.0 日記　Flask API追加
-# ----------------------------------------------------------
-@app.route("/api/energy_trend")
-def trend():
-
-    data = []
-
-    try:
-        if not os.path.exists("sessions"):
-            return jsonify({"data":[]})
-
-        files = sorted(
-            [f for f in os.listdir("sessions") if f.endswith(".json")],
-            reverse=True
-        )
-
-        for f in files:
-            try:
-                with open(f"sessions/{f}",encoding="utf-8") as file:
-                    j=json.load(file)
-
-                    data.append({
-                        "time":j["timestamp"],
-                        "energy":j["scores"]["Energy"],
-                        "zone": j.get("zone","")
-                    })
-            except Exception as e:
-                print("skip file:", f, e)
-                continue
-
-    except Exception as e:
-        print("trend error:", e)
-
-    return jsonify({"data": data})
-
-
-# ----------------------------------------------------------
-# 2.1 日記save　Flask API追加
-# ----------------------------------------------------------
+# 4.3 日記save　Flask API追加
+# ---------------------------------------------------------
 @app.route("/api/save_comment", methods=["POST"])
 def save_comment():
 
@@ -317,8 +319,8 @@ def save_comment():
 
 
 # ----------------------------------------------------------
-# 2.2.1 日記sessions　Flask API追加
-# ----------------------------------------------------------
+# 4.4   日記sessions　Flask API追加
+# ---------------------------------------------------------
 @app.route("/api/sessions")
 def get_sessions():
 
@@ -350,127 +352,68 @@ def get_sessions():
     return jsonify({"data": data})
 
 
+# ==========================================================
+# 5.0 分析ロジック
+# ==========================================================
 # ----------------------------------------------------------
-# 2.2.2 日記sessions　Flask 詳細API
-# ----------------------------------------------------------
-@app.route("/api/session/<sid>")
-def get_session_detail(sid):
+# 5.1 比較
+# ---------------------------------------------------------
+def format_result(r):
 
-    try:
-        path = f"sessions/{sid}"
+    prev = load_previous_session()
 
-        if not os.path.exists(path):
-            return jsonify({"error":"not found"})
+    summary = engine.generate_empathy_summary(r)
 
-        with open(path, encoding="utf-8") as f:
-            data = json.load(f)
+    # 🔥 安全に比較
+    if prev and isinstance(prev, dict) and "scores" in prev:
+        try:
+            msg = engine.compare_with_previous(
+                r,
+                prev["scores"]
+            )
+            summary = msg
+        except Exception as e:
+            print("compare error:", e)
 
-        return jsonify({"data": data})
-
-    except Exception as e:
-        print("detail error:", e)
-        return jsonify({"error": str(e)})
-
-
-# ----------------------------------------------------------
-# 2.2.3 日記sessions　Flask 詳細API 追加
-# ----------------------------------------------------------
-@app.route("/api/session_diff/<sid>")
-def get_session_diff(sid):
-
-    try:
-        files = sorted(
-            [f for f in os.listdir("sessions") if f.endswith(".json")],
-            reverse=True
-        )
-
-        if len(files) < 2:
-            return jsonify({"diff": {}})
-
-        # 対象ファイル位置
-        idx = files.index(sid)
-        if idx == len(files) - 1:
-            return jsonify({"diff": {}})
-
-        def load(f):
-            with open(f"sessions/{f}", encoding="utf-8") as file:
-                return json.load(file)
-
-        current = load(files[idx])
-        prev = load(files[idx + 1])
-
-        diff = {}
-
-        for k in current["scores"]:
-            diff[k] = current["scores"][k] - prev["scores"][k]
-
-        return jsonify({"diff": diff})
-
-    except Exception as e:
-        print("detail diff error:", e)
-        return jsonify({"diff": {}})
+    return {
+        "scores":{
+            "Energy":r["Energy"],
+            "Emotion":r["Emotion"],
+            "Focus":r["Focus"],
+            "Social":r["Social"],
+            "Calm":100-r["Stress"],
+            "Stress": r["Stress"],         # VoiceStress
+            "MentalStress": r.get("MentalStress", 0)   # MentalStress
+        },
+        "summary": summary,
+        "vector192":r.get("vector192",[]),
+        "ring_meta": {
+            "outer": "声の特徴（192次元）",
+            "middle": "心理状態（6指標）",
+            "inner": "意味分類（12セクター）"
+        }
+    }
 
 
 # ----------------------------------------------------------
-# 2.3 昨日との差　Flask API追加
-# ----------------------------------------------------------
-@app.route("/api/diff")
-def get_diff():
+# 5.2 意味化最大ストレス
+# ---------------------------------------------------------
+def build_day_insight(data):
 
-    try:
-        if not os.path.exists("sessions"):
-            return jsonify({"diff": 0})
+    # 最大ストレス帯
+    worst = max(data.items(), key=lambda x: x[1]["mental"])[0]
 
-        files = sorted(
-            [f for f in os.listdir("sessions") if f.endswith(".json")],
-            reverse=True
-        )
-
-        if len(files) < 2:
-            return jsonify({"diff": 0})
-
-        def load(f):
-            with open(f"sessions/{f}", encoding="utf-8") as file:
-                return json.load(file)
-
-        latest = load(files[0])
-        prev = load(files[1])
-
-        diff = latest["scores"]["Energy"] - prev["scores"]["Energy"]
-
-        return jsonify({"diff": diff})
-
-    except Exception as e:
-        print("diff error:", e)
-        return jsonify({"diff": 0})
+    if worst == "昼":
+        return "昼にストレスが高くなる傾向があります"
+    elif worst == "朝":
+        return "朝にやや負荷がかかっています"
+    else:
+        return "夜に疲れが出やすい状態です"
 
 
 # ----------------------------------------------------------
-# 2.4 履歴 一行、全削除　Flask API追加
-# ----------------------------------------------------------
-@app.route("/api/delete_session/<id>", methods=["DELETE"])
-def delete_session(id):
-
-    path = f"sessions/{id}"
-
-    if os.path.exists(path):
-        os.remove(path)
-
-    return jsonify({"status":"ok"})
-    
-@app.route("/api/delete_all_sessions", methods=["DELETE"])
-def delete_all_sessions():
-
-    if os.path.exists("sessions"):
-        for f in os.listdir("sessions"):
-            if f.endswith(".json"):
-                os.remove(f"sessions/{f}")
-
-    return jsonify({"status":"ok"})
-
-# ----------------------------------------------------------
-# 3.1 指標ごとのコメント
-# ----------------------------------------------------------
+# 5.3 指標ごとのコメント
+# ---------------------------------------------------------
 def build_score_comments(scores):
 
     def energy(v):
@@ -522,8 +465,177 @@ def build_score_comments(scores):
     }
 
 
+# ==========================================================
+# 6.0 履歴・分析API
+# ==========================================================
 # ----------------------------------------------------------
-# 4.0 192次元のベクトルの保存関数
+# 6.1 日記　Flask API追加
+# ----------------------------------------------------------
+@app.route("/api/energy_trend")
+def trend():
+
+    data = []
+
+    try:
+        if not os.path.exists("sessions"):
+            return jsonify({"data":[]})
+
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")],
+            reverse=True
+        )
+
+        for f in files:
+            try:
+                with open(f"sessions/{f}",encoding="utf-8") as file:
+                    j=json.load(file)
+
+                    data.append({
+                        "time":j["timestamp"],
+                        "energy":j["scores"]["Energy"],
+                        "zone": j.get("zone","")
+                    })
+            except Exception as e:
+                print("skip file:", f, e)
+                continue
+
+    except Exception as e:
+        print("trend error:", e)
+
+    return jsonify({"data": data})
+
+
+# ----------------------------------------------------------
+# 6.2 日記sessions　Flask 詳細API
+# ----------------------------------------------------------
+@app.route("/api/session/<sid>")
+def get_session_detail(sid):
+
+    try:
+        path = f"sessions/{sid}"
+
+        if not os.path.exists(path):
+            return jsonify({"error":"not found"})
+
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+
+        return jsonify({"data": data})
+
+    except Exception as e:
+        print("detail error:", e)
+        return jsonify({"error": str(e)})
+
+
+# ----------------------------------------------------------
+# 6.3 日記sessions　Flask 詳細API 追加
+# ----------------------------------------------------------
+@app.route("/api/session_diff/<sid>")
+def get_session_diff(sid):
+
+    try:
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")],
+            reverse=True
+        )
+
+        if len(files) < 2:
+            return jsonify({"diff": {}})
+
+        # 対象ファイル位置
+        idx = files.index(sid)
+        if idx == len(files) - 1:
+            return jsonify({"diff": {}})
+
+        def load(f):
+            with open(f"sessions/{f}", encoding="utf-8") as file:
+                return json.load(file)
+
+        current = load(files[idx])
+        prev = load(files[idx + 1])
+
+        diff = {}
+
+        for k in current["scores"]:
+            diff[k] = current["scores"][k] - prev["scores"][k]
+
+        return jsonify({"diff": diff})
+
+    except Exception as e:
+        print("detail diff error:", e)
+        return jsonify({"diff": {}})
+
+
+# ----------------------------------------------------------
+# 6.4 昨日との差　Flask API追加
+# ----------------------------------------------------------
+@app.route("/api/diff")
+def get_diff():
+
+    try:
+        if not os.path.exists("sessions"):
+            return jsonify({"diff": 0})
+
+        files = sorted(
+            [f for f in os.listdir("sessions") if f.endswith(".json")],
+            reverse=True
+        )
+
+        if len(files) < 2:
+            return jsonify({"diff": 0})
+
+        def load(f):
+            with open(f"sessions/{f}", encoding="utf-8") as file:
+                return json.load(file)
+
+        latest = load(files[0])
+        prev = load(files[1])
+
+        diff = latest["scores"]["Energy"] - prev["scores"]["Energy"]
+
+        return jsonify({"diff": diff})
+
+    except Exception as e:
+        print("diff error:", e)
+        return jsonify({"diff": 0})
+
+
+# ==========================================================
+# 7.0 管理API
+# ==========================================================
+# ----------------------------------------------------------
+# 7.1 履歴 一行、全削除　Flask API追加
+# ----------------------------------------------------------
+@app.route("/api/delete_session/<id>", methods=["DELETE"])
+def delete_session(id):
+
+    path = f"sessions/{id}"
+
+    if os.path.exists(path):
+        os.remove(path)
+
+    return jsonify({"status":"ok"})
+
+
+# ----------------------------------------------------------
+# 7.2 削除  
+# ---------------------------------------------------------    
+@app.route("/api/delete_all_sessions", methods=["DELETE"])
+def delete_all_sessions():
+
+    if os.path.exists("sessions"):
+        for f in os.listdir("sessions"):
+            if f.endswith(".json"):
+                os.remove(f"sessions/{f}")
+
+    return jsonify({"status":"ok"})
+
+
+# ==========================================================
+# 8.0 保存系
+# ==========================================================
+# ----------------------------------------------------------
+# 8.1 192次元のベクトルの保存関数
 # ----------------------------------------------------------
 def save_session(result, comment=""):
 
@@ -548,8 +660,9 @@ def save_session(result, comment=""):
     except Exception as e:
         print("⚠ save error:", e)
 
-# ----------------------------------------------------------
-# 5.0 run
-# ----------------------------------------------------------
+
+# ==========================================================
+# 9.0 run
+# ==========================================================
 if __name__ == "__main__":
     app.run(debug=True)
