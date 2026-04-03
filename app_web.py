@@ -8,11 +8,11 @@
 from flask import Flask, render_template, request, jsonify
 import os, uuid, json, tempfile
 from datetime import datetime
+from zoneinfo import ZoneInfo
 from pydub import AudioSegment
 # from openai import OpenAI
 
 from voice_state_engine import VoiceStateEngine
-
 
 # ==========================================================
 # 0.1 初期化
@@ -23,6 +23,9 @@ engine = VoiceStateEngine()
 
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+def now_jst():
+    return datetime.now(ZoneInfo("Asia/Tokyo"))
 
 # ==========================================================
 # 1.0 基本API
@@ -141,7 +144,7 @@ def day_summary():
 
     data = load_all_sessions()
 
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = now_jst().strftime("%Y-%m-%d")
 
     today_data = [
         d for d in data if d["timestamp"].startswith(today)
@@ -172,7 +175,7 @@ def day_summary():
 def day_summary_detail():
 
     data = load_all_sessions()
-    today = datetime.now().strftime("%Y-%m-%d")
+    today = now_jst().strftime("%Y-%m-%d")
 
     today_data = [d for d in data if d["timestamp"].startswith(today)]
 
@@ -284,7 +287,8 @@ def load_all_sessions():
 @app.route("/api/save_comment", methods=["POST"])
 def save_comment():
 
-    hour = datetime.now().hour
+    now = now_jst()
+    hour = now.hour
 
     if hour < 10:
         zone = "朝"
@@ -297,7 +301,7 @@ def save_comment():
         data = request.json
 
         session = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
             "zone": zone, 
             "scores": data["scores"],
             "vector192": data.get("vector192", []),
@@ -307,7 +311,7 @@ def save_comment():
 
         os.makedirs("sessions", exist_ok=True)
 
-        path = f"sessions/{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
+        path = f"sessions/{now.strftime('%Y%m%d_%H%M%S')}.json"
 
         with open(path, "w", encoding="utf-8") as f:
             json.dump(session, f, ensure_ascii=False, indent=2)
@@ -640,9 +644,11 @@ def delete_all_sessions():
 # ----------------------------------------------------------
 def save_session(result, comment=""):
 
+    now = now_jst()
+
     try:
         session = {
-            "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": now.strftime("%Y-%m-%d %H:%M:%S"),
             "scores": result["scores"],
             "vector192": result.get("vector192", []),
             "summary": result.get("summary", ""),
@@ -652,7 +658,7 @@ def save_session(result, comment=""):
         # フォルダ作成
         os.makedirs("sessions", exist_ok=True)
 
-        filename = datetime.now().strftime("session_%Y%m%d_%H%M%S.json")
+        filename = now.strftime("session_%Y%m%d_%H%M%S.json")
         path = os.path.join("sessions", filename)
 
         with open(path, "w", encoding="utf-8") as f:
