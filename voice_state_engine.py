@@ -124,6 +124,7 @@ class VoiceStateEngine:
             "Social",
             "Fatigue",
             "Arousal",
+            "MentalStress",
         ]
 
         final = {}
@@ -300,7 +301,7 @@ class VoiceStateEngine:
         return self._clamp(adjusted)
 
     # ------------------------------------------------------
-    # 5.1.3 Stress補正
+    # 5.1.3.1 Voice Stress補正
     # ------------------------------------------------------
     def _noise_adjust_stress(self, stress, db):
 
@@ -310,6 +311,24 @@ class VoiceStateEngine:
         adjusted = stress + noise_stress
 
         return self._clamp(adjusted)
+
+
+    # ------------------------------------------------------
+    # 5.1.3.2 Mental Stress補正
+    # ------------------------------------------------------
+    def _calculate_mental_stress(self, scores):
+
+        energy = scores["Energy"]
+        focus = scores["Focus"]
+        voice_stress = scores["Stress"]
+
+        mental = (
+            (100 - energy) * 0.5 +
+            voice_stress * 0.3 +
+            (100 - focus) * 0.2
+        )
+
+        return self._clamp(mental)
 
     # ------------------------------------------------------
     # 5.1.4 信頼度 補正
@@ -417,6 +436,139 @@ class VoiceStateEngine:
             return "強いストレス状態です。"
 
     # ------------------------------------------------------
+    # 8.1.1 LLM関数 comment
+    # ------------------------------------------------------
+    def build_llm_text(self, scores):
+
+        e = scores.get("Energy",0)
+        em = scores.get("Emotion",0)
+        f = scores.get("Focus",0)
+
+        if e < 20:
+            return "少し疲れが強めに出ています。今日は無理をせず、ゆっくり整えるのが良さそうです。"
+
+        elif e < 40:
+            return "ややエネルギーが低めです。軽く休憩を入れるとバランスが戻りやすい状態です。"
+
+        elif e > 70:
+            return "エネルギーはしっかりあります。行動や集中に向いた良い状態です。"
+
+        else:
+            return "大きな偏りはなく、落ち着いた状態です。自分のペースで過ごせそうです。"
+
+    # ------------------------------------------------------
+    # 8.1.1.1 LLM関数 comment詳細まとめ
+    # ------------------------------------------------------
+    def llm_summary(self, scores):
+
+        e = scores.get("Energy",0)
+        em = scores.get("Emotion",0)
+        f = scores.get("Focus",0)
+        s = scores.get("MentalStress",0)
+
+        parts = []
+
+        # Energy
+        if e < 30:
+            parts.append("少し疲れが出ています")
+        elif e > 70:
+            parts.append("エネルギーは十分です")
+        else:
+            parts.append("大きな疲れはなさそうです")
+
+        # Emotion
+        if em < 30:
+            parts.append("気持ちはやや落ち着いています")
+        elif em > 70:
+            parts.append("気持ちは前向きです")
+        else:
+            parts.append("気持ちは安定しています")
+
+        # Focus
+        if f < 30:
+            parts.append("集中はやや落ち気味です")
+        elif f > 70:
+            parts.append("集中しやすい状態です")
+        else:
+            parts.append("集中は保たれています")
+ 
+        # Mental Stress
+        if s > 70:
+            parts.append("心理的な負荷が高めです")
+        elif s > 40:
+            parts.append("やや負荷があります")
+        else:
+            parts.append("心理的には安定しています")
+
+
+        return "。".join(parts) + "。"
+
+
+    # 8.1.2 UIにボタン追加 energy
+    def llm_energy(self, scores):
+        e = scores.get("Energy",0)
+
+        if e < 20:
+            return "かなりエネルギーが低い状態です。今日は無理せず休息を優先しましょう。"
+        elif e < 40:
+            return "ややエネルギーが低めです。軽く休むと回復しやすいです。"
+        elif e > 70:
+            return "エネルギーがしっかりあります。行動に向いた良い状態です。"
+        else:
+            return "安定したエネルギー状態です。"
+
+    # 8.1.2 UIにボタン追加 emotion
+    def llm_emotion(self, scores):
+        e = scores.get("Emotion",0)
+
+        if e < 30:
+            return "感情がやや抑え気味です。無理に上げず自然でOKです。"
+        elif e > 70:
+            return "感情が豊かに動いています。良い流れです。"
+        else:
+            return "感情は安定しています。"
+
+    # 8.1.3 UIにボタン追加 focus
+    def llm_focus(self, scores):
+        f = scores.get("Focus",0)
+
+        if f < 30:
+            return "集中力がやや落ちています。短時間の作業がおすすめです。"
+        elif f > 70:
+            return "集中力が高く、作業に向いています。"
+        else:
+            return "適度な集中状態です。"
+
+    # ----------------------------------------------------------
+    # 8.1.4 LLM 音声ストレス コメント
+    # ----------------------------------------------------------
+    def llm_stress(self, scores):
+        s = scores.get("Stress",0)
+
+        if s > 70:
+            return "ストレスが高めです。しっかり休息を取ることが大切です。"
+        elif s > 40:
+            return "ややストレスがかかっています。少しリラックスを意識すると良い状態です。"
+        else:
+            return "ストレスは低めで安定しています。"
+
+
+    # ----------------------------------------------------------
+    # 8.1.5 LLM 心理ストレス コメント
+    # ----------------------------------------------------------
+    def llm_mental_stress(self, scores):
+
+        s = scores.get("MentalStress",0)
+
+        if s > 70:
+            return "心理的な負荷が高めです。無理をせず、しっかり休むことをおすすめします。"
+        elif s > 40:
+            return "やや心理的な負荷があります。軽くリラックスすると良い状態です。"
+        else:
+            return "心理的には安定した状態です。"
+
+
+    # ------------------------------------------------------
     # 9.0 predict
     # ------------------------------------------------------
     def predict(self, audio: np.ndarray, db: float = 50) -> dict:
@@ -445,6 +597,9 @@ class VoiceStateEngine:
         # 🔥 騒音補正
         scores["Energy"] = self._noise_adjust_energy(scores["Energy"], db)
         scores["Stress"] = self._noise_adjust_stress(scores["Stress"], db)
+
+        # 🔥 心理ストレス補正
+        scores["MentalStress"] = self._calculate_mental_stress(scores)
 
         # 🔥 信頼度
         scores["Confidence"] = self._confidence(db)
