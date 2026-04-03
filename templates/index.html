@@ -301,10 +301,15 @@ h1{
    🔥 録音開始 countdown
 ========================= */
 #countdownWrap{
-    position:relative;
+    position:absolute;   /* 🔥ここ重要 */
+
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+
     width:120px;
     height:120px;
-    margin:10px auto;
+	display:none;
 }
 
 #countText{
@@ -407,6 +412,28 @@ h1{
 		<!-- 🔥 ここ追加 -->
 		<div id="visualBox">
 
+			<div id="countdownWrap">
+				<svg width="120" height="120">
+					<circle
+						cx="60" cy="60" r="50"
+						stroke="#ffd1dc"
+						stroke-width="8"
+						fill="none"
+					/>
+					<circle
+						id="countCircle"
+						cx="60" cy="60" r="50"
+						stroke="#ff6b9d"
+						stroke-width="8"
+						fill="none"
+						stroke-linecap="round"
+						transform="rotate(-90 60 60)"
+					/>
+				</svg>
+
+				<div id="countText">3</div>
+			</div>
+
 			<canvas id="waveCanvas"></canvas>
 
 			<div id="ringContainer" style="display:none;">
@@ -434,30 +461,8 @@ h1{
 		
 		<div>
 			<button id="recordBtn" class="btn record-btn idle" onclick="startRecording()">
-				🎙 5秒チェック
+				🎙 5秒チェック スタート
 			</button>
-
-			<div id="countdownWrap">
-				<svg width="120" height="120">
-					<circle
-						cx="60" cy="60" r="50"
-						stroke="#ffd1dc"
-						stroke-width="8"
-						fill="none"
-					/>
-					<circle
-						id="countCircle"
-						cx="60" cy="60" r="50"
-						stroke="#ff6b9d"
-						stroke-width="8"
-						fill="none"
-						stroke-linecap="round"
-						transform="rotate(-90 60 60)"
-					/>
-				</svg>
-
-				<div id="countText">3</div>
-			</div>
 
 			<p id="status"></p>
 		
@@ -561,10 +566,19 @@ function getResolution(){
 // -------------------- 録音 カウントダウン関数--------------------
 async function countdown(sec=3){
 
+    const wrap = document.getElementById("countdownWrap");
     const text = document.getElementById("countText");
     const circle = document.getElementById("countCircle");
 
     const total = 314;
+
+    // 🔥 表示ON（ここ重要）
+    wrap.style.display = "block";
+
+    // 他は消す
+    document.getElementById("mainImage").style.display = "none";
+    document.getElementById("waveCanvas").style.display = "none";
+    document.getElementById("ringContainer").style.display = "none";
 
     for(let i=sec;i>0;i--){
 
@@ -588,7 +602,8 @@ async function countdown(sec=3){
 
     await new Promise(r=>setTimeout(r,400));
 
-    text.innerText = "";
+    // 🔥 カウントダウン消す
+    wrap.style.display = "none";
 }
 
 // -------------------- 録音 --------------------
