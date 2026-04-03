@@ -310,7 +310,29 @@ h1{
     margin-top:5px;
 }
 
-/* 設定画面 */
+/* =========================
+   🔥 LLM コメント
+========================= */
+#llmBox{
+    transition: all 0.3s ease;
+}
+
+.llm-tab{
+    padding:6px 10px;
+    border:none;
+    border-radius:15px;
+    background:#f3f4f6;
+    font-size:12px;
+}
+
+.llm-tab.active{
+    background:#fda4af;
+    color:white;
+}
+
+/* =========================
+   設定画面
+========================= */
 #settingsBox{
     transition: all 0.3s;
 	text-align:center;   /* 🔥追加 */
@@ -349,7 +371,7 @@ h1{
 
 <h1 class="title">
   VoiceAuraHealth<span class="tm">™</span><br>
-  <span class="subtitle">for You 🌸 　ベータ版 v.1</span>
+  <span class="subtitle">for You 🌸 　ベータ版 v.2.1</span>
 </h1>
 <p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
 
@@ -407,6 +429,40 @@ h1{
 	<div class="card2 chart-card">
 		<button class="btn" onclick="loadChart()">📈 Energy推移</button>
 		<canvas id="energyChart" height="200" style="display:none;"></canvas>
+	</div>
+
+	<div class="card2">
+
+		<button class="btn" onclick="toggleLLM()">
+			🤖 AIコメント
+		</button>
+
+		<div id="llmBox" style="display:none; margin-top:10px;">
+
+			<!-- 🔥 タブボタン -->
+			<div style="margin-bottom:10px; display:flex; gap:6px; justify-content:center;">
+
+				<button class="llm-tab active" onclick="showLLMTab('summary', this)">総合</button>
+				<button class="llm-tab" onclick="showLLMTab('stress', this)">声</button>	
+				<button class="llm-tab" onclick="showLLMTab('mental', this)">心理</button>
+				<button class="llm-tab" onclick="showLLMTab('energy', this)">元気</button>
+				<button class="llm-tab" onclick="showLLMTab('emotion', this)">気持ち</button>
+				<button class="llm-tab" onclick="showLLMTab('focus', this)">集中</button>
+
+			</div>
+
+			<!-- 🔥 表示エリア -->
+			<div id="llmCommentBox" class="comment"></div>
+
+		</div>
+	</div>
+
+	<div class="card2">
+		<button class="btn" onclick="loadDaySummary()">
+			📊 今日のまとめ
+		</button>
+
+		<div id="daySummaryBox" class="comment"></div>
 	</div>
 
 	<div class="card2">
@@ -585,6 +641,13 @@ async function render(data){
         <b>あなたの今の状態 🌿</b>
         <div class="time">${time}</div>
         <div class="comment">${diffText}</div>
+		<div class="comment" style="color:${getStressColor(s.MentalStress)}">
+			心理ストレス：${s.MentalStress}
+		</div>
+
+		<div class="comment">
+			声ストレス：${s.Stress}
+		</div>
         <div class="comment">元気：${s.Energy}</div>
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
@@ -624,6 +687,7 @@ async function render(data){
 	document.getElementById("ringContainer").style.display = "block";
 	document.getElementById("mainImage").style.display = "none";
 	
+	llmData = null;	   // 👇コメントのキャッシュ　リセット
 }
 
 
@@ -796,7 +860,7 @@ async function loadDetail(id){
 		${metric("集中", d.scores.Focus, diff?.Focus || 0)}
 		${metric("つながり", d.scores.Social, diff?.Social || 0)}
 		${metric("リラックス", d.scores.Calm, diff?.Calm || 0)}
-
+		${metric("ストレス", d.scores.Stress, diff?.Stress || 0)}
         <br>
         💬 ${d.user_comment || "（コメントなし）"}
 
@@ -817,6 +881,16 @@ async function loadDetailDiff(id){
     const json = await res.json();
 
     return json.diff || {};
+}
+
+// -------------------- 詳細表示 その3-------------------
+async function loadDaySummary(){
+
+    const res = await fetch("/api/day_summary");
+    const json = await res.json();
+
+    document.getElementById("daySummaryBox").innerText =
+        json.summary;
 }
 
 
@@ -919,13 +993,15 @@ function drawDetailChart(d){
 
     const ctx = document.getElementById("detailChart");
 
-    const labels = ["Energy","Emotion","Focus","Social","Calm"];
+    const labels = ["Energy","Emotion","Focus","Social","Calm","Stress"];
     const values = [
         d.scores.Energy,
         d.scores.Emotion,
         d.scores.Focus,
         d.scores.Social,
-        d.scores.Calm
+        d.scores.Calm,
+		d.scores.Stress
+		
     ];
 
     if(detailChart){
@@ -949,6 +1025,68 @@ function drawDetailChart(d){
             }
         }
     });
+}
+
+
+// ------------------ LLM フロント関数 （開閉＋取得→後でタブ制御）  --------------
+let llmData = null;
+let currentTab = "energy";
+
+async function toggleLLM(){
+
+    const box = document.getElementById("llmBox");
+
+    if(box.style.display === "block"){
+        box.style.display = "none";
+        return;
+    }
+
+    box.style.display = "block";
+
+    if(llmData === null){
+
+        if(!lastResult){
+            document.getElementById("llmCommentBox").innerText = "先に測定してください";
+            return;
+        }
+
+        const res = await fetch("/api/llm_comment",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+                scores: lastResult.scores
+            })
+        });
+
+        const json = await res.json();
+
+        llmData = json;
+
+        showLLMTab("summary", document.querySelector(".llm-tab"));
+    }
+}
+
+// ------------------ LLM フロント関数 （タブ制御）  --------------
+function showLLMTab(type, el){
+
+    currentTab = type;
+
+    if(!llmData) return;
+
+    let text = "";
+
+    if(type === "energy") text = llmData.energy;
+    if(type === "emotion") text = llmData.emotion;
+    if(type === "focus") text = llmData.focus;
+	if(type === "stress") text = llmData.stress;
+	if(type === "mental") text = llmData.mental;
+	if(type === "summary") text = llmData.summary;
+
+    document.getElementById("llmCommentBox").innerText = text;
+
+    // 🔥 active切り替え
+    document.querySelectorAll(".llm-tab").forEach(b=>b.classList.remove("active"));
+    el.classList.add("active");
 }
 
 
@@ -2035,6 +2173,14 @@ function measureDB(analyser, dataArray){
     currentDB = Math.max(0, Math.min(100, db));
 }
 
+// =========================
+// 🔥 ストレス　アラーム
+// =========================
+function getStressColor(v){
+    if(v > 70) return "#ef4444";   // 赤
+    if(v > 40) return "#facc15";   // 黄
+    return "#22c55e";              // 緑
+}
 
 
 // 🔥 一番最後にこれ
