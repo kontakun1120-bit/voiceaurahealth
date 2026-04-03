@@ -24,7 +24,6 @@ engine = VoiceStateEngine()
 UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-
 # ==========================================================
 # 1.0 基本API
 # ==========================================================
@@ -64,13 +63,15 @@ def upload_audio():
         # 🔥 OS対応（ここが神ポイント）
         temp_dir = tempfile.gettempdir()
 
-        path = os.path.join(temp_dir, f"{uuid.uuid4()}.webm")
+        ext = file.filename.split(".")[-1].lower()
+        path = os.path.join(temp_dir, f"{uuid.uuid4()}.{ext}")
         file.save(path)
 
-        wav_path = path.replace(".webm","_c.wav")
+        base, _ = os.path.splitext(path)
+        wav_path = f"{base}_c.wav"
 
         # 🔥 音声変換
-        audio = AudioSegment.from_file(path, format="webm")
+        audio = AudioSegment.from_file(path)
         audio = audio.set_frame_rate(16000).set_channels(1).set_sample_width(2)
         audio.export(wav_path, format="wav")
 
