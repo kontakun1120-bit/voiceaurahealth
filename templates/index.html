@@ -609,6 +609,8 @@ async function countdown(sec=3){
 // -------------------- 録音 --------------------
 async function startRecording(sec){
 
+	baselineDB = null;  // ←これ追加
+
     // 🔥 カウントダウン
     await countdown(3);
 
@@ -2277,7 +2279,12 @@ function animateWave(){
 // =========================
 // 🔥 dB測定（追加）
 // =========================
+// =========================
+// 🔥 dB測定（改善版）
+// =========================
 let currentDB = 0;
+let smoothedDB = 0;
+let baselineDB = null;
 
 function measureDB(analyser, dataArray){
 
@@ -2292,10 +2299,23 @@ function measureDB(analyser, dataArray){
 
     const rms = Math.sqrt(sum / dataArray.length);
 
-    // dB換算（簡易）
-    const db = 20 * Math.log10(rms + 1e-6) + 100;
+    // 🔥 生dB（物理寄り）
+    let dbRaw = 20 * Math.log10(rms + 1e-6);
 
-    currentDB = Math.max(0, Math.min(100, db));
+    // 🔥 スケーリング（現実寄り）
+    let db = (dbRaw + 60) * 1.5;
+
+    // 🔥 baseline補正（初回のみ記録）
+    if(baselineDB === null){
+        baselineDB = db;
+    }
+
+    let adjusted = db - baselineDB + 40; // 中央を40付近に
+
+    // 🔥 スムージング（重要）
+    smoothedDB = smoothedDB * 0.8 + adjusted * 0.2;
+
+    currentDB = Math.max(0, Math.min(100, Math.round(smoothedDB)));
 }
 
 // =========================
