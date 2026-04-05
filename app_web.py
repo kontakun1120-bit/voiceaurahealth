@@ -132,7 +132,7 @@ def llm_comment():
             "focus": comments.get("Focus", "データなし"),
             "stress": comments.get("Stress", "データなし"),
             "mental": comments.get("Calm", "データなし"),
-            "summary": comments.get("Stress", "データなし")
+            "summary": comments.get("Stress", "データなし"),
             "hidden": scores.get("HiddenStress", 0)
         })
         
