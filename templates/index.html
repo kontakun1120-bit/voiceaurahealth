@@ -832,12 +832,10 @@ async function render(data){
 
 //    lastResult = data;  // 保存
 
-    let result = JSON.parse(JSON.stringify(data.result));
-
-    result = adjustScores(result, currentMode);
-
-
-    const r = adjustScores(data.result, currentMode);
+	const r = adjustScores(
+		JSON.parse(JSON.stringify(data.result)),
+		currentMode
+	);
     const s = r.scores;
 
     const now = new Date();
@@ -2550,13 +2548,15 @@ function getStressColor(v){
 // =========================
 function adjustScores(r, mode){
 
+    if(!r || !r.scores) return r;
+
     if(mode === "stress"){
-        r.Stress = Math.min(100, r.Stress * 1.3);
-        r.Energy *= 0.9;
+        r.scores.Stress = Math.min(100, r.scores.Stress * 1.3);
+        r.scores.Energy *= 0.9;
     }
 
     if(mode === "focus"){
-        r.Focus = Math.min(100, r.Focus * 1.3);
+        r.scores.Focus = Math.min(100, r.scores.Focus * 1.3);
     }
 
     return r;
