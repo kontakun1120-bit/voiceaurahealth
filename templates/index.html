@@ -2075,11 +2075,36 @@ function setMode(mode){
 
     redraw();
 
+
     if(lastResult){
         render(lastResult);
     }
 }
 
+// =========================
+// モード切り替え　サマリー　チェンジ
+// =========================
+function getModeComment(tab){
+
+    const data = llmData;
+    if(!data) return "データなし";
+
+    if(tab === "総合"){
+        return data.summary || "データなし";
+    }
+
+    const tabMap = {
+        "声": "energy",
+        "心理": "mental",
+        "元気": "energy",
+        "気持ち": "emotion",
+        "集中": "focus"
+    };
+
+    const key = tabMap[tab];
+
+    return key ? data[key] : "データなし";
+}
 
 // =========================
 // 🔥 ボタン　ホーバー凡例
