@@ -121,18 +121,18 @@ def llm_comment():
 
     try:
         data = request.json
-        scores = data["scores"]
+        scores = data.get("scores", {})
         mode = data.get("mode", "balance")
 
         comments = generate_mode_comment(scores, mode)
 
         return jsonify({
-            "energy": comments["Energy"],
-            "emotion": comments["Emotion"],
-            "focus": comments["Focus"],
-            "stress": comments["Stress"],
-            "mental": comments["Calm"],
-            "summary": comments["Stress"]
+            "energy": comments.get("Energy", "データなし"),
+            "emotion": comments.get("Emotion", "データなし"),
+            "focus": comments.get("Focus", "データなし"),
+            "stress": comments.get("Stress", "データなし"),
+            "mental": comments.get("Calm", "データなし"),
+            "summary": comments.get("Stress", "データなし")
         })
         
 #        data = request.json
@@ -149,8 +149,14 @@ def llm_comment():
 
     except Exception as e:
         print("llm error:", e)
-        return jsonify({"error":"error"})
-
+        return jsonify({
+            "energy": "データなし",
+            "emotion": "データなし",
+            "focus": "データなし",
+            "stress": "データなし",
+            "mental": "データなし",
+            "summary": "データなし"
+        })
 
 # ----------------------------------------------------------
 # 3.2  今日のまとめ（簡易）AI LLM
@@ -171,12 +177,15 @@ def day_summary():
 
     # 🔥 平均
     avg_energy = sum(d["scores"]["Energy"] for d in today_data) / len(today_data)
-    avg_mental = sum(d["scores"].get("MentalStress",0) for d in today_data) / len(today_data)
+    avg_stress = sum(
+        (d["scores"].get("Stress",0) + d["scores"].get("MentalStress",0)) / 2
+        for d in today_data
+    ) / len(today_data)
 
     # 🔥 コメント
-    if avg_mental > 60:
+    if avg_stress > 60:
         txt = "今日はやや負荷が高めです。無理せず過ごしましょう。"
-    elif avg_mental > 40:
+    elif avg_stress > 40:
         txt = "適度な負荷の一日でした。"
     else:
         txt = "比較的安定した一日でした。"
@@ -210,7 +219,10 @@ def day_summary_detail():
     for k, v in zones.items():
         if v:
             result[k] = {
-                "mental": sum(d["scores"].get("MentalStress",0) for d in v) / len(v),
+                "mental": sum(
+                    (d["scores"].get("Stress",0) + d["scores"].get("MentalStress",0)) / 2
+                    for d in v
+                ) / len(v),
                 "energy": sum(d["scores"].get("Energy",0) for d in v) / len(v),
             }
 
@@ -373,6 +385,19 @@ def get_sessions():
     return jsonify({"data": data})
 
 
+# ----------------------------------------------------------
+# 4.5  日記sessions　Stress統合（超重要）
+# --------------------------------------------------------
+def merge_stress(scores):
+    voice = scores.get("Stress", 0)
+    mental = scores.get("MentalStress", 0)
+
+    # 🔥 合成（シンプル平均）
+    merged = (voice + mental) / 2
+
+    return merged
+
+
 # ==========================================================
 # 5.0 分析ロジック
 # ==========================================================
@@ -385,7 +410,6 @@ def format_result(r):
 
     summary = engine.generate_empathy_summary(r)
 
-    # 🔥 安全に比較
     if prev and isinstance(prev, dict) and "scores" in prev:
         try:
             msg = engine.compare_with_previous(
@@ -396,18 +420,22 @@ def format_result(r):
         except Exception as e:
             print("compare error:", e)
 
+    # 🔥 Stress統合
+    merged_stress = (r["Stress"] + r.get("MentalStress", 0)) / 2
+
     return {
         "scores":{
-            "Energy":r["Energy"],
-            "Emotion":r["Emotion"],
-            "Focus":r["Focus"],
-            "Social":r["Social"],
-            "Calm":100-r["Stress"],
-            "Stress": r["Stress"],         # VoiceStress
-            "MentalStress": r.get("MentalStress", 0)   # MentalStress
+            "Energy": r["Energy"],
+            "Emotion": r["Emotion"],
+            "Focus": r["Focus"],
+            "Social": r["Social"],
+            "Calm": 100 - merged_stress,   # ←ここも変更🔥
+            "Stress": merged_stress,       # ←統合ストレス🔥
+            "MentalStress": r.get("MentalStress", 0),  # UI用に残す
+            "VoiceStress": r["Stress"]     # デバッグ用（任意）
         },
         "summary": summary,
-        "vector192":r.get("vector192",[]),
+        "vector192": r.get("vector192",[]),
         "ring_meta": {
             "outer": "声の特徴（192次元）",
             "middle": "心理状態（6指標）",
