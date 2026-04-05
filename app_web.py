@@ -432,7 +432,8 @@ def format_result(r):
             "Calm": 100 - merged_stress,   # ←ここも変更🔥
             "Stress": merged_stress,       # ←統合ストレス🔥
             "MentalStress": r.get("MentalStress", 0),  # UI用に残す
-            "VoiceStress": r["Stress"]     # デバッグ用（任意）
+            "VoiceStress": r["Stress"],     # デバッグ用（任意）
+            "HiddenStress": r.get("MentalStress",0) - r["Stress"]  # ←隠れストレス？
         },
         "summary": summary,
         "vector192": r.get("vector192",[]),
@@ -458,6 +459,16 @@ def build_day_insight(data):
         return "朝にやや負荷がかかっています"
     else:
         return "夜に疲れが出やすい状態です"
+
+
+# ----------------------------------------------------------
+# 5.2.2 隠れストレス = 心理ストレス − 声ストレス　の仮説
+# ---------------------------------------------------------
+def calc_hidden_stress(scores):
+    mental = scores.get("MentalStress", 0)
+    voice  = scores.get("VoiceStress", scores.get("Stress",0))
+
+    return mental - voice
 
 
 # ----------------------------------------------------------
