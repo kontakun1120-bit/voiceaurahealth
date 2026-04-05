@@ -31,6 +31,8 @@ body{
     padding:10px;
 }
 
+
+
 /* タイトル */
 h1{
     font-size:22px;
@@ -68,7 +70,69 @@ h1{
     margin-bottom:20px;
 }
 
-/* メインカード */
+/* =========================
+   モード選択
+========================= */
+#modeSelector button{
+    margin:5px;
+    padding:8px 14px;
+    border-radius:20px;
+    border:none;
+    background:#eee;
+    transition: all 0.2s ease;
+    cursor:pointer;
+}
+
+/* 🔥 ホバー */
+#modeSelector button:hover{
+    transform: translateY(-2px) scale(1.05);
+    box-shadow:0 6px 12px rgba(0,0,0,0.15);
+}
+
+/* 🔥 押したとき */
+#modeSelector button:active{
+    transform: scale(0.95);
+}
+
+/* 🔥 選択中 */
+#modeSelector button.active{
+    background: linear-gradient(135deg,#fb7185,#f43f5e);
+    color:white;
+    box-shadow:0 4px 10px rgba(0,0,0,0.15);
+}
+
+/* =========================
+   🌸 For You（デフォルト）
+========================= */
+body.mode-balance{
+    background: linear-gradient(180deg,#fff1f2,#f0fdf4);
+}
+
+/* =========================
+   🔥 For Stress（警戒）
+========================= */
+body.mode-stress{
+    background: linear-gradient(180deg,#fff1f2,#ffe4e6);
+}
+
+body.mode-stress .card{
+    background:#fff5f5;
+}
+
+/* =========================
+   🧊 For Focus（冷静）
+========================= */
+body.mode-focus{
+    background: linear-gradient(180deg,#eff6ff,#e0f2fe);
+}
+
+body.mode-focus .card{
+    background:#f0f9ff;
+}
+
+/* =========================
+   メインカード
+========================= */
 .card{
     background:#eeffee;    /* ピンク　#FFCCDD */
     border-radius:20px;
@@ -169,6 +233,10 @@ h1{
     height:70%;
 	left: 0; right: 0;
     object-fit:contain;
+	border-radius:50px;
+	box-shadow:
+	0 10px 25px rgba(0,0,0,0.15),
+	inset 0 0 20px rgba(255,255,255,0.3);
 }
 
 
@@ -398,13 +466,26 @@ h1{
 
 <div class="container">
 
-<!--  img src="static/main_logo.png" class="logo" -->
 
 <h1 class="title">
   VoiceAuraHealth<span class="tm">™</span><br>
-  <span class="subtitle">for You 🌸 　ベータ版 v.2.3</span>
+  <span id="modeSubtitle" class="subtitle">
+      for You 🌸　ベータ版 v.3.1
+  </span>
 </h1>
-<p class="sub">あなたの声から、やさしく心の状態を感じとります</p>
+<p id="modeDesc" class="sub">
+    あなたの声から、やさしく心の状態を感じとります
+</p>
+
+	<div id="modeSelector"  style="text-align:center; margin:5px;">
+
+		<button onclick="setMode('balance')" id="btn_balance">For You</button>
+
+		<button onclick="setMode('stress')" id="btn_stress">For Stress</button>
+
+		<button onclick="setMode('focus')" id="btn_focus">For Focus</button>
+
+	</div>
 
 	<div class="card">
 		<b>🌈 VoiceAuraリング</b>
@@ -749,6 +830,13 @@ async function render(data){
 
     lastResult = data.result;
 
+    lastResult = data;  // 保存
+
+    let result = JSON.parse(JSON.stringify(data.result));
+
+    result = adjustScores(result, currentMode);
+
+
     const r = data.result;
     const s = r.scores;
 
@@ -784,7 +872,7 @@ async function render(data){
 
     <div class="card card-main">
         💭 今のあなたへ
-        <div class="comment">${r.summary}</div>
+        <div class="comment">${formatCommentByMode(r.summary)}</div>
 
         <input id="user_comment" maxlength="20"
         placeholder="ひとことメモ（任意）"
@@ -1176,13 +1264,14 @@ async function toggleLLM(){
             return;
         }
 
-        const res = await fetch("/api/llm_comment",{
-            method:"POST",
-            headers:{"Content-Type":"application/json"},
-            body: JSON.stringify({
-                scores: lastResult.scores
-            })
-        });
+		const res = await fetch("/api/llm_comment",{
+			method:"POST",
+			headers:{"Content-Type":"application/json"},
+			body: JSON.stringify({
+				scores: lastResult.scores,
+				mode: currentMode
+			})
+		});
 
         const json = await res.json();
 
@@ -1930,6 +2019,69 @@ function compute12Sector(data){
 
 
 // =========================
+// モード切り替え　全体の色・ボタン　選択
+// =========================
+let currentMode = "balance";
+
+function setMode(mode){
+
+    currentMode = mode;
+
+    // 🔥 bodyクラス切替
+    document.body.classList.remove("mode-balance","mode-stress","mode-focus");
+    document.body.classList.add("mode-" + mode);
+
+    // 🔥 ボタン色
+    document.querySelectorAll("#modeSelector button")
+        .forEach(b=>b.classList.remove("active"));
+
+    document.getElementById("btn_" + mode).classList.add("active");
+
+    // 🔥 subtitle変更
+    const sub = document.getElementById("modeSubtitle");
+
+    if(mode === "balance"){sub.innerHTML = "for You 🌸　ベータ版 v.3.3";}
+    if(mode === "stress"){sub.innerHTML = "for Stress 🔥　ベータ版 v.3.3";}
+    if(mode === "focus"){sub.innerHTML = "for Focus 🧊　ベータ版 v.3.3";}
+
+    // 🔥 subtext変更
+	const desc = document.getElementById("modeDesc");
+
+	if(mode === "balance"){desc.innerText = "あなたの声から、やさしく心の状態を感じとります";}
+	if(mode === "stress"){desc.innerText = "ストレス状態を検出し、無理のサインを見つけます";}
+	if(mode === "focus"){desc.innerText = "集中状態を解析し、パフォーマンスを可視化します";}
+
+    // 🔥 パラメータ切替
+    if(mode === "balance"){
+        appSettings.boost = 1.5;
+        appSettings.breath = 1;
+        appSettings.effect = 1;
+        appSettings.glow = 1;
+    }
+
+    if(mode === "stress"){
+        appSettings.boost = 2.2;   // 強調
+        appSettings.breath = 0.5;  // 呼吸弱め
+        appSettings.effect = 1.5;
+        appSettings.glow = 2;
+    }
+
+    if(mode === "focus"){
+        appSettings.boost = 1.2;
+        appSettings.breath = 0.3;
+        appSettings.effect = 0.8;
+        appSettings.glow = 0.5;
+    }
+
+    redraw();
+
+    if(lastResult){
+        render(lastResult);
+    }
+}
+
+
+// =========================
 // 🔥 ボタン　ホーバー凡例
 // =========================
 function showLegend(type){
@@ -1948,26 +2100,29 @@ function showLegend(type){
     if(type === "commentword"){
         html = `
 		🗣 例題<br><br>
+		<div style="text-align:left; line-height:1.6; padding:15px;">
 		1. おはようございます。こんにちは。では、さようなら。<br>
 		2. こんにちは。今日は、ちょっと、暑いです。<br>
 		3. こんにちは。今日も、もっと、頑張りましょう。<br>
 		4. こんばんは。昨日は、よく、寝れましたか。<br>
 		5. 私は、○○○です。仕事は○○○です。<br>
-		・  自由に、なんでも良いのに、しゃべって下さい。
+		・  自由に、なんでも、しゃべってみて下さい。<br>
+		<br>
+		</div>
         `;
     }
 
 
     if(type === "outer"){
         html = `
-        外リング<br>
+        外リング<br><br>
         声の微細特徴（192次元ベクトル）
         `;
     }
 
     if(type === "middle"){
         html = `
-        中リング<br>
+        中リング<br><br>
         元気：エネルギー<br>
         感情：気持ちの動き<br>
         集中：注意力<br>
@@ -1979,7 +2134,7 @@ function showLegend(type){
 
     if(type === "inner"){
         html = `
-        内リング<br>
+        内リング<br><br>
         創造・思考・共感・行動など<br>
         12方向の心理分類
         `;
@@ -2277,9 +2432,6 @@ function animateWave(){
 
 
 // =========================
-// 🔥 dB測定（追加）
-// =========================
-// =========================
 // 🔥 dB測定（改善版）
 // =========================
 let currentDB = 0;
@@ -2326,6 +2478,44 @@ function getStressColor(v){
     if(v > 40) return "#facc15";   // 黄
     return "#22c55e";              // 緑
 }
+
+
+
+// =========================
+// ストレス、フォーカル　パラメータ切り替え
+// =========================
+function adjustScores(r, mode){
+
+    if(mode === "stress"){
+        r.Stress = Math.min(100, r.Stress * 1.3);
+        r.Energy *= 0.9;
+    }
+
+    if(mode === "focus"){
+        r.Focus = Math.min(100, r.Focus * 1.3);
+    }
+
+    return r;
+}
+
+
+// =========================
+// ストレス、フォーカル　フロント切り替え
+// =========================
+function formatCommentByMode(text){
+
+    if(currentMode === "stress"){
+        return "⚠️ 少し注意です。\n" + text + "\n無理しすぎないでください。";
+    }
+
+    if(currentMode === "focus"){
+        return "🧊 集中状態です。\n" + text + "\nこのまま継続しましょう。";
+    }
+
+    // balance
+    return "🌿 今の状態です。\n" + text;
+}
+
 
 
 
