@@ -858,7 +858,7 @@ async function render(data){
 		</div>
 
 		<div class="comment">総合ストレス：${s.Stress}</div>
-		<div class="comment">隠れストレスか：${s.HiddenStress ?? 0}</div>
+		<div class="comment">隠れストレス：${s.HiddenStress ?? 0}</div>
         <div class="comment">元気：${s.Energy}</div>
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
@@ -929,7 +929,7 @@ async function saveComment(){
         method:"POST",
         headers:{"Content-Type":"application/json"},
         body:JSON.stringify({
-            scores:lastResult.scores,
+            scores: window.lastScores,
             vector192:lastResult.vector192,
             summary:lastResult.summary,
             comment:comment
