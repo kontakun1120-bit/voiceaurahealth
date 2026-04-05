@@ -830,14 +830,14 @@ async function render(data){
 
     lastResult = data.result;
 
-    lastResult = data;  // 保存
+//    lastResult = data;  // 保存
 
     let result = JSON.parse(JSON.stringify(data.result));
 
     result = adjustScores(result, currentMode);
 
 
-    const r = data.result;
+    const r = adjustScores(data.result, currentMode);
     const s = r.scores;
 
     const now = new Date();
@@ -859,8 +859,8 @@ async function render(data){
 			心理ストレス：${s.MentalStress}
 		</div>
 
-		<div class="comment">声ストレス：${s.Stress}</div>
-		<div class="comment">隠れストレス？：${s.HiddenStress}</div>
+		<div class="comment">総合ストレス：${s.Stress}</div>
+		<div class="comment">隠れストレスか：${s.HiddenStress ?? 0}</div>
         <div class="comment">元気：${s.Energy}</div>
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
@@ -1335,7 +1335,7 @@ function showLLMTab(type, el){
     }
 
     // 以下　普通のコード
-    document.getElementById("llmCommentBox").innerText = text ?? "データなし";
+    document.getElementById("llmCommentBox").innerHTML = text ?? "データなし";
 
     document.querySelectorAll(".llm-tab").forEach(b=>b.classList.remove("active"));
     el.classList.add("active");
