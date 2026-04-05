@@ -1264,20 +1264,29 @@ async function toggleLLM(){
             return;
         }
 
-		const res = await fetch("/api/llm_comment",{
-			method:"POST",
-			headers:{"Content-Type":"application/json"},
-			body: JSON.stringify({
-				scores: lastResult.scores,
-				mode: currentMode
-			})
-		});
+        try{
+            const res = await fetch("/api/llm_comment",{
+                method:"POST",
+                headers:{"Content-Type":"application/json"},
+                body: JSON.stringify({
+                    scores: lastResult.scores,
+                    mode: currentMode
+                })
+            });
 
-        const json = await res.json();
+            const json = await res.json();
 
-        llmData = json;
+            if(!res.ok || json.error){
+                document.getElementById("llmCommentBox").innerText = "AIコメント取得エラー";
+                return;
+            }
 
-        showLLMTab("summary", document.querySelector(".llm-tab"));
+            llmData = json;
+            showLLMTab("summary", document.querySelector(".llm-tab"));
+
+        }catch(e){
+            document.getElementById("llmCommentBox").innerText = "通信エラー";
+        }
     }
 }
 
@@ -1286,20 +1295,30 @@ function showLLMTab(type, el){
 
     currentTab = type;
 
-    if(!llmData) return;
+    if(!llmData){
+        document.getElementById("llmCommentBox").innerText = "データなし";
+        return;
+    }
 
-    let text = "";
+    let text = "データなし";
 
-    if(type === "energy") text = llmData.energy;
-    if(type === "emotion") text = llmData.emotion;
-    if(type === "focus") text = llmData.focus;
-	if(type === "stress") text = llmData.stress;
-	if(type === "mental") text = llmData.mental;
-	if(type === "summary") text = llmData.summary;
+    if(type === "summary"){
+        text = llmData.summary ?? "データなし";
+    }else{
+        const jpMap = {
+            "energy": "元気",
+            "emotion": "気持ち",
+            "focus": "集中",
+            "stress": "声",
+            "mental": "心理"
+        };
 
-    document.getElementById("llmCommentBox").innerText = text;
+        const jp = jpMap[type];
+        text = getModeComment(jp);
+    }
 
-    // 🔥 active切り替え
+    document.getElementById("llmCommentBox").innerText = text ?? "データなし";
+
     document.querySelectorAll(".llm-tab").forEach(b=>b.classList.remove("active"));
     el.classList.add("active");
 }
@@ -2090,11 +2109,11 @@ function getModeComment(tab){
     if(!data) return "データなし";
 
     if(tab === "総合"){
-        return data.summary || "データなし";
+        return data.summary ?? "データなし";
     }
 
     const tabMap = {
-        "声": "energy",
+        "声": "stress",
         "心理": "mental",
         "元気": "energy",
         "気持ち": "emotion",
@@ -2102,8 +2121,9 @@ function getModeComment(tab){
     };
 
     const key = tabMap[tab];
+    if(!key) return "データなし";
 
-    return key ? data[key] : "データなし";
+    return data[key] ?? "データなし";
 }
 
 // =========================
