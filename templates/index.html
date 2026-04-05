@@ -852,16 +852,15 @@ async function render(data){
 
     let html = `
     <div class="card card-main">
-        <b>あなたの今の状態 🌿</b>
+        <b>あなたの今の状態 🌿（%）</b>
         <div class="time">${time}</div>
         <div class="comment">${diffText}</div>
 		<div class="comment" style="color:${getStressColor(s.MentalStress)}">
 			心理ストレス：${s.MentalStress}
 		</div>
 
-		<div class="comment">
-			声ストレス：${s.Stress}
-		</div>
+		<div class="comment">声ストレス：${s.Stress}</div>
+		<div class="comment">隠れストレス？：${s.HiddenStress}</div>
         <div class="comment">元気：${s.Energy}</div>
         <div class="comment">気持ち：${s.Emotion}</div>
         <div class="comment">集中：${s.Focus}</div>
@@ -902,6 +901,13 @@ async function render(data){
 	document.getElementById("mainImage").style.display = "none";
 	
 	llmData = null;	   // 👇コメントのキャッシュ　リセット
+}
+
+// -------------隠れストレス　判定関数 --------------------
+function getHiddenLabel(v){
+    if(v > 20) return "⚠️ 内面ストレス高（隠れ）";
+    if(v < -20) return "🌀 一時的変動";
+    return "🌿 安定";
 }
 
 
@@ -1317,6 +1323,18 @@ function showLLMTab(type, el){
         text = getModeComment(jp);
     }
 
+    // =====================================
+    // 🔥 ここ追加（for stress 限定）
+    // =====================================
+    if(currentMode === "stress" && type === "stress"){
+
+        const hidden = llmData.hidden ?? 0;
+        const label = getHiddenLabel(hidden);
+
+        text += `<br><br><b>隠れストレス：</b>${hidden.toFixed(1)} (${label})`;
+    }
+
+    // 以下　普通のコード
     document.getElementById("llmCommentBox").innerText = text ?? "データなし";
 
     document.querySelectorAll(".llm-tab").forEach(b=>b.classList.remove("active"));
@@ -1821,6 +1839,7 @@ function toggleMiddle(){
 		中リング（心理）<br>
 		　・声から推定された心理状態（12分類）<br>
 		　・感情・集中・対人・ストレスなどの傾向<br>
+		　・隠れストレス = 心理ストレス − 声ストレス　±20仮定
         `;
 
     }else{
