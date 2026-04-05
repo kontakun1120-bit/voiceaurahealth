@@ -133,6 +133,7 @@ def llm_comment():
             "stress": comments.get("Stress", "データなし"),
             "mental": comments.get("Calm", "データなし"),
             "summary": comments.get("Stress", "データなし")
+            "hidden": scores.get("HiddenStress", 0)
         })
         
 #        data = request.json
@@ -423,6 +424,9 @@ def format_result(r):
     # 🔥 Stress統合
     merged_stress = (r["Stress"] + r.get("MentalStress", 0)) / 2
 
+    # 🔥 隠れストレス　仮定
+    hidden = r.get("MentalStress",0) - r["Stress"]
+
     return {
         "scores":{
             "Energy": r["Energy"],
@@ -433,7 +437,7 @@ def format_result(r):
             "Stress": merged_stress,       # ←統合ストレス🔥
             "MentalStress": r.get("MentalStress", 0),  # UI用に残す
             "VoiceStress": r["Stress"],     # デバッグ用（任意）
-            "HiddenStress": r.get("MentalStress",0) - r["Stress"]  # ←隠れストレス？
+            "HiddenStress": hidden  # ←隠れストレス？
         },
         "summary": summary,
         "vector192": r.get("vector192",[]),
