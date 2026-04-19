@@ -1056,9 +1056,19 @@ canvas {
             autoGain: true
         };
 
+		const BASE_SIZE = 600;
+
         // =========================
 // ユーティリティ        // ユーティリティ
         // =========================
+		function getScaledAmp(baseAmp, canvas) {
+			return baseAmp * (canvas.width / BASE_SIZE);
+		}
+
+		function getScaledR(baseR, canvas) {
+			return baseR * (canvas.width / BASE_SIZE);
+		}
+
 		function showTab(index) {
 
 			const tabs = document.querySelectorAll(".tab");
@@ -1275,10 +1285,15 @@ canvas {
 
 		function resizeCanvas(canvas) {
 
-			const size = Math.min(window.innerWidth * 0.6, 300);
+			const rect = canvas.getBoundingClientRect();
 
-			canvas.width = size;
-			canvas.height = size;
+			const scale = window.devicePixelRatio || 1;
+
+			canvas.width = rect.width * scale;
+			canvas.height = rect.height * scale;
+
+			const ctx = canvas.getContext("2d");
+			ctx.setTransform(scale, 0, 0, scale, 0, 0);
 		}
 
 		function setupCanvasResize() {
@@ -2428,25 +2443,45 @@ canvas {
             if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
 
             const canvas = document.getElementById("canvas");
+			resizeCanvas(canvas);  // ←これ必須
+			
             const ctx = canvas.getContext("2d");
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
+			
+			// =========================
+			// 🔥 ここ追加（最重要）
+			// =========================
+			const r1 = getScaledR(100, canvas);
+			const r2 = getScaledR(150, canvas);
+			const r3 = getScaledR(200, canvas);
 
-            drawBaseCircle(ctx, cx, cy, 100);
-            drawBaseCircle(ctx, cx, cy, 150);
-            drawBaseCircle(ctx, cx, cy, 200);
+			const amp1 = getScaledAmp(40, canvas);
+			const amp2 = getScaledAmp(50, canvas);
+			const amp3 = getScaledAmp(60, canvas);
+
+			// =========================
+			// ベース円
+			// =========================
+			drawBaseCircle(ctx, cx, cy, r1);
+			drawBaseCircle(ctx, cx, cy, r2);
+			drawBaseCircle(ctx, cx, cy, r3);
 
             const stepDNA = calcStep(globalRes, densityDNA);
             const stepPSY = calcStep(globalRes, densityPSY);
             const stepAURA = calcStep(globalRes, densityAURA);
 
-            drawAuraVectorRing(ctx, data.dna, cx, cy, 100, 40, stepDNA);
-            drawAuraVectorRing(ctx, data.psy, cx, cy, 150, 50, stepPSY);
-            drawAuraVectorRing(ctx, data.aura, cx, cy, 200, 60, stepAURA);
-			drawSectorLabels(ctx, cx, cy, 230);
+			// =========================
+			// 🔥 ここも変更
+			// =========================
+			drawAuraVectorRing(ctx, data.dna, cx, cy, r1, amp1, stepDNA);
+			drawAuraVectorRing(ctx, data.psy, cx, cy, r2, amp2, stepPSY);
+			drawAuraVectorRing(ctx, data.aura, cx, cy, r3, amp3, stepAURA);
+
+			drawSectorLabels(ctx, cx, cy, r3 + 30);
         }
 
         function drawAuraVectorRing(ctx, arr, cx, cy, r, amp, stepAngle) {
