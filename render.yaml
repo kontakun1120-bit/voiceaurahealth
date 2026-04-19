@@ -8,4 +8,4 @@ services:
 
     buildCommand: pip install -r requirements.txt
 
-    startCommand: gunicorn app_web:app
+    startCommand: gunicorn -w 2 -k gthread --threads 4 app_web:app
