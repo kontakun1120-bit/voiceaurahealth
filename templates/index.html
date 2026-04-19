@@ -1,2599 +1,3582 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="icon" href="/static/mini_icon.png">
-<link rel="apple-touch-icon" href="/static/mini_icon.png">
-<link rel="manifest" href="/static/manifest.json">
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<title>VoiceAuraHealth for You 🌸</title>
+    <meta charset="UTF-8">
+    <title>VoiceAuraHealth TM mini</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="manifest" href="/static/manifest.json">
+	<link rel="icon" href="/static/mini_icon.png">
+	<script>
+	if ('serviceWorker' in navigator) {
+		navigator.serviceWorker.register('/static/service_worker.js');
+	}
+	</script>
+	<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+	<script src="https://unpkg.com/html5-qrcode"></script>
 
-
+	
 <style>
-body{
-    margin:0;
-    font-family: "Hiragino Maru Gothic ProN", sans-serif;
-    background: linear-gradient(180deg,#fff1f2,#f0fdf4);
-    color:#444;
-    text-align:center;
+
+/* =========================
+   0. ベース（共通）
+========================= */
+:root {
+    --accent-aura: #ff7edb;   /* ピンク（外リング） */
+    --accent-psy: #6fa8ff;    /* 青（中リング） */
+    --accent-dna: #7dffb3;    /* グリーン（内リング） */
 }
 
-.container{
-    max-width:400px;
-    margin:auto;
-    padding:10px;
+* {
+     box-sizing: border-box;
 }
 
-.container2{
-    max-width:400px;
-    margin:auto;
-    padding:10px;
+body {
+     margin: 0;
+     font-family: "Hiragino Sans", "Yu Gothic", sans-serif;
+     background: #f3f5f9;
+     color: #333;
+     text-align: center;
 }
 
-
-
-/* タイトル */
-h1{
-    font-size:22px;
-    margin-top:10px;
+.page {
+     width: min(100%, 960px);
+     margin: 0 auto;
+     padding: 16px;
 }
 
-.title{
-    font-size: 24px;
-    font-weight: 600;
+.tab {
+    display: none;
+}
+
+.tab.active {
+    display: block;
+}
+
+/* =========================
+   1. BOX
+========================= */
+.hero-box,
+.setting-box,
+.report-box {
+     border-radius: 16px;
+     padding: 16px;
+     margin: 16px auto;
+     width: min(100%, 780px);
+}
+
+/* =========================
+   2. ナビ
+========================= */
+.nav {
+     display: flex;
+     gap: 6px;
+     margin-bottom: 12px;
+}
+
+.nav button {
+     flex: 1;
+     padding: 10px;
+     border-radius: 14px;
+     border: none;
+     cursor: pointer;
+     font-size: 13px;
+}
+
+/* =========================
+   3. ボタン共通
+========================= */
+button {
+     width: 100%;
+     padding: 12px;
+     border-radius: 14px;
+     border: none;
+     cursor: pointer;
+     font-weight: bold;
+     transition: 0.2s;
+}
+
+button:hover {
+     transform: scale(1.04);
+}
+
+/* =========================
+   🌸 女性モード
+========================= */
+.mode-soft {
+     background: linear-gradient(180deg, #fdf6ff, #eef4ff);
+}
+
+.mode-soft .hero-box,
+.mode-soft .setting-box,
+.mode-soft .report-box {
+     background: rgba(255,255,255,0.7);
+     box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+}
+
+.mode-soft button {
+     background: linear-gradient(135deg, #ff7edb, #6fa8ff);
+     color: white;
+     box-shadow: 0 4px 12px rgba(255, 126, 219, 0.3);
+}
+
+.mode-soft .nav button.active {
+     background: linear-gradient(135deg, #ff5cd6, #4e8eff);
+}
+
+/* =========================
+   🏥 医療モード
+========================= */
+.mode-medical {
+     background: #eef7f2;
+}
+
+/* BOX */
+.mode-medical .hero-box,
+.mode-medical .setting-box,
+.mode-medical .report-box {
+     background: #ffffff;
+     border: 1px solid #cfe8dc;
+     box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* ボタン */
+.mode-medical button {
+     background: linear-gradient(135deg, #b7e4d3, #8fd3b6);
+     color: #1b5e20;
+}
+
+/* ホバー */
+.mode-medical button:hover {
+     transform: none;
+     opacity: 0.85;
+}
+
+/* activeタブ */
+.mode-medical .nav button.active {
+     background: linear-gradient(135deg, #7eddb5, #4ccfa3);
+     color: #004d40;
+}
+
+.mode-medical .medical-panel {
+     max-width: 400px;
+     margin: 20px auto;
+     padding: 16px;
+     background: #ffffff;
+     border-radius: 12px;
+     border: 1px solid #cfe8dc;
+}
+
+.gauge {
+     margin-bottom: 20px;
+     text-align: left;
+}
+
+.gauge-title {
+     font-size: 14px;
+     margin-bottom: 6px;
+     color: #333;
+}
+
+.bar {
+     width: 100%;
+     height: 14px;
+     background: #e6f4ee;
+     border-radius: 10px;
+     overflow: hidden;
+}
+
+.fill {
+     height: 100%;
+     width: 0%;
+     border-radius: 10px;
+     transition: width 0.4s ease;
+}
+
+#stress_value,
+#energy_value,
+#medical_value {
+     font-size: 12px;
+     margin-top: 4px;
+}
+
+/* =========================
+   例題（軽く・左寄せ）
+========================= */
+.example-box {
+    margin-top: 10px;
+    text-align: left;
+    opacity: 0.85;
+}
+
+.example-title {
+    font-size: 12px;
+    color: #666;
+    margin-bottom: 6px;
+}
+
+.example-list {
+    padding-left: 18px;
+    margin: 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #444;
+}
+
+.example-list li {
+    margin-bottom: 4px;
+}
+
+/* =========================
+   Analyze 上エリア固定化
+========================= */
+#analyze-top {
+    height: 260px;        /* ← ここが超重要 */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+}
+
+#analyze-top > div {
+    position: absolute;
+    width: 100%;
     text-align: center;
-    line-height: 1.4;
 }
 
-/* TMを小さく＆上に */
-.tm{
+#analyze_idle_top img {
+    width: 90%;
+    max-width: 300px;
+    border-radius: 12px;
+}
+
+#countdown {
+    font-size: 64px;
+    font-weight: bold;
+}
+
+#mic_canvas {
+    width: 180px;
+    height: 180px;
+}
+
+/* =========================
+   カウントダウン映画風
+========================= */
+
+#countdown {
+    font-size: 90px;
+    font-weight: 800;
+    color: white;
+    text-align: center;
+    position: relative;
+    z-index: 2;
+
+    text-shadow:
+        0 0 10px rgba(255,255,255,0.8),
+        0 0 20px rgba(255,120,200,0.6),
+        0 0 40px rgba(255,120,200,0.4);
+}
+
+/* ドンッと出る */
+.count-pop {
+    animation: pop 0.6s ease;
+}
+
+@keyframes pop {
+    0% {
+        transform: scale(0.3);
+        opacity: 0;
+    }
+    40% {
+        transform: scale(1.4);
+        opacity: 1;
+    }
+    70% {
+        transform: scale(0.9);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+#count_circle {
+    position: absolute;
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    border: 5px solid rgba(255, 120, 200, 0.8);
+    box-shadow: 0 0 20px rgba(255,120,200,0.6);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    z-index: 1;
+}
+
+.circle-pulse {
+    animation: pulse 0.6s ease;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translate(-50%, -50%) scale(0.3);
+        opacity: 0.8;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.4);
+        opacity: 0;
+    }
+}
+
+.count-overlay {
+    background: rgba(0,0,0,0.1);
+    transition: 0.3s;
+}
+
+/* =========================
+   4. Analyzeカード
+========================= */
+#analyze-bottom {
+     width: min(100%, 360px);
+     margin: 20px auto;
+     padding: 16px;
+     border-radius: 18px;
+     line-height: 1.8;
+}
+
+.mode-soft #analyze-bottom {
+     background: rgba(255,255,255,0.7);
+}
+
+.mode-medical #analyze-bottom {
+     background: #ffffff;
+     border: 1px solid #ddd;
+}
+
+/* =========================
+   5. Canvas
+========================= */
+canvas {
+     width: 100%;
+     max-width: 600px;
+     border-radius: 20px;
+     display: block;
+     margin: 0 auto;
+}
+
+/* =========================
+   5.1 パラパラ アコーディオン（完全版）
+========================= */
+
+/* アコーディオン全体 */
+.accordion {
+    margin-top: 12px;
+}
+
+/* 各ブロック */
+.acc-item {
+    margin-bottom: 8px;
+}
+
+/* radio非表示 */
+.acc-item input {
+    display: none;
+}
+
+/* タイトルボタン */
+.acc-title {
+    display: block;
+    padding: 14px;
+    font-weight: 700;
+    border-radius: 12px;
+    cursor: pointer;
+    text-align: center;
+    color: #ffffff;
+    letter-spacing: 1px;
+    transition: 0.2s ease;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.5);
+}
+
+/* ホバー */
+.acc-title:hover {
+    transform: scale(1.02);
+}
+
+/* コンテンツ（閉じ状態） */
+.acc-content {
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: translateY(-6px);
+    transition:
+        max-height 0.4s ease,
+        opacity 0.3s ease,
+        transform 0.3s ease;
+    padding: 0 12px;
     font-size: 14px;
-    vertical-align: super;
-    margin-left: 2px;
+    line-height: 1.6;
 }
 
-/* サブタイトル */
-.subtitle{
-    display:block;
-    font-size:16px;
-    font-style:italic;   /* ←イタリック */
-    font-weight:400;
-    color:#888;
-    margin-top:4px;
-	letter-spacing:1px;
+/* 開いた状態 */
+.acc-item input:checked ~ .acc-content {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 12px;
 }
 
-.sub{
-    font-size:13px;
-    color:#888;
-    margin-bottom:20px;
+/* 開いてるボタン強調 */
+.acc-item input:checked + .acc-title {
+    transform: scale(1.04);
+    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
 }
 
 /* =========================
-   モード選択
+   カラーテーマ（リング連動）
 ========================= */
-#modeSelector button{
-    margin:5px;
-    padding:8px 14px;
-    border-radius:20px;
-    border:none;
-    background:#eee;
-    transition: all 0.2s ease;
-    cursor:pointer;
+/* リングの説明　開閉　（ダミー　ボタン） */
+.acc-item:nth-child(1) .acc-title {
+    background: linear-gradient(135deg, #5ee0a8, #38c98a);
 }
 
-/* 🔥 ホバー */
-#modeSelector button:hover{
-    transform: translateY(-2px) scale(1.05);
-    box-shadow:0 6px 12px rgba(0,0,0,0.15);
+/* 🌈 外リング（AURA） */
+.acc-item:nth-child(2) .acc-title {
+    background: linear-gradient(135deg, #ff6fd8, #e052c4);
 }
 
-/* 🔥 押したとき */
-#modeSelector button:active{
-    transform: scale(0.95);
+/* 🔵 中リング（PSY） */
+.acc-item:nth-child(3) .acc-title {
+    background: linear-gradient(135deg, #5c8df6, #3d6edb);
 }
 
-/* 🔥 選択中 */
-#modeSelector button.active{
-    background: linear-gradient(135deg,#fb7185,#f43f5e);
-    color:white;
-    box-shadow:0 4px 10px rgba(0,0,0,0.15);
-}
-
-/* =========================
-   🌸 For You（デフォルト）
-========================= */
-body.mode-balance{
-    background: linear-gradient(180deg,#fff1f2,#f0fdf4);
-}
-
-/* =========================
-   🔥 For Stress（警戒）
-========================= */
-body.mode-stress{
-    background: linear-gradient(180deg,#fff1f2,#ffe4e6);
-}
-
-body.mode-stress .card{
-    background:#fff5f5;
-}
-
-/* =========================
-   🧊 For Focus（冷静）
-========================= */
-body.mode-focus{
-    background: linear-gradient(180deg,#eff6ff,#e0f2fe);
-}
-
-body.mode-focus .card{
-    background:#f0f9ff;
-}
-
-/* =========================
-   メインカード
-========================= */
-.card{
-    background:#eeffee;    /* ピンク　#FFCCDD */
-    border-radius:20px;
-    padding:10px;
-    margin-top:20px;
-    box-shadow:0 10px 20px rgba(0,0,0,0.08);
-}
-
-/* サブカード */
-.card2{
-    background:#FFFFFF;    /* ピンク　#FFCCDD */
-    border-radius:20px;
-    padding:10px;
-    margin:20px auto 0 auto;
-    box-shadow:0 10px 20px rgba(0,0,0,0.08);
-
-    width:90%;
-    max-width:360px;
-
-    text-align:center;
-}
-
-.card2 > *{
-    width:100%;
-}
-
-.card-main{
-    background:#ffffff;   /* ←白🔥 */
-}
-
-.chart-card{
-    width:90%;
-    max-width:360px;
-    margin:20px auto 0 auto;
-    text-align:center;
-}
-
-#energyChart{
-    display:block;
-    width:100% !important;
-    max-width:320px;
-    margin:12px auto 0 auto;
-}
-
-/* =========================
-   🔥 ビジュアルエリア（最重要）
-========================= */
-#visualBox{
-    width:100%;
-    max-width:380px;
-    aspect-ratio:1/1;   /* 🔥これ重要 */
-    margin:0 auto;
-    position:relative;
-    overflow:hidden;
-}
-
-/* 波形 */
-#waveCanvas{
-    position:absolute;
-    top:0;
-    width:100%;
-    height:100%;
-    left:0; right:0;
-
-    opacity:0;                /* ←最初は透明 */
-    transition: opacity 0.4s ease;   /* ←これが“ふわっ” */
-    
-    pointer-events:none;
-}
-
-#waveCanvas.active{
-    opacity:1;
-}
-
-/* リング */
-#ringContainer{
-    position:absolute;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    z-index:1;
-}
-
-#auraRing{
-    width:100%;
-    height:100%;
-    pointer-events:none; /* 🔥クリック透過 */
-}
-
-/* メイン画像 */
-#mainImage{
-    position:absolute;
-	margin: 0 auto;
-    top:20%;
-    left:0;
-    width:70%;
-    height:70%;
-	left: 0; right: 0;
-    object-fit:contain;
-	border-radius:50px;
-	box-shadow:
-	0 10px 25px rgba(0,0,0,0.15),
-	inset 0 0 20px rgba(255,255,255,0.3);
+/* 🟢 内リング（DNA） */
+.acc-item:nth-child(4) .acc-title {
+    background: linear-gradient(135deg, #5ee0a8, #38c98a);
 }
 
 
 /* =========================
-   🔥 下（リングボタン）
+   VoiceAura コメント（女性）
 ========================= */
-#ringButtons{
-    display:flex;
-    justify-content:center;
-    gap:10px;
-    margin-top:10px;
+.mode-soft #summary-box {
+    background: linear-gradient(135deg, #fff0f8, #eef4ff);
+    color: #333;
+    box-shadow: 0 6px 16px rgba(255, 126, 219, 0.15);
 }
 
-#ringButtons b{
-    writing-mode: vertical-rl;
-    text-orientation: upright;
-    font-size:12px;
+.mode-soft #summary_text {
+    color: #444;   /* ←これが重要 */
 }
 
-#ringButtons button{
-    padding:6px 10px;
-    border:none;
-    border-radius:20px;
-    background:#fff;
-    font-size:12px;
-    box-shadow:0 2px 5px rgba(0,0,0,0.1);
+
+/* =========================
+   心理年齢（女性）
+========================= */
+.mode-soft #age-box {
+    background: linear-gradient(135deg, #fff6ec, #f0f8ff);
+    color: #333;
+    box-shadow: 0 6px 16px rgba(111, 168, 255, 0.15);
 }
 
-/* 例ボタン */
-.btn-example{
-    background:#bbf7d0;
-    color:#166534;
+.mode-soft #age_text {
+    color: #222;
+}
+
+.mode-soft #type_text {
+    color: #666;
 }
 
 /* =========================
-   🔥 凡例
+   6. メンタル
 ========================= */
-#legendBox{
-    margin-top:30px;
-    background:#ffffff;
-    border-radius:15px;
-    padding:1px;
+#mental_box {
+     text-align: left;
+     padding: 16px;
+     border-radius: 10px;
+     line-height: 1.8;
+}
+
+.mode-medical #mental_box {
+     border-left: 4px solid #4aa3ff;
+     background: #ffffff;
+}
+
+@keyframes blink {
+    0% { opacity:1; }
+    50% { opacity:0.4; }
+    100% { opacity:1; }
+}
+
+.danger-blink {
+    animation: blink 1s infinite;
 }
 
 /* =========================
-   🔥 メインボタン
+   7. フラグ
 ========================= */
-.btn{
-    padding:14px 14px;
-    border:none;
-    border-radius:30px;
-    background: linear-gradient(90deg,#fda4af,#fbcfe8);
-    color:white;
-    font-size:15px;
-    width:90%;       /* 🔥統一 */
-    max-width:none;   /* 🔥制限解除 */
-	transition: all 0.15s ease;
-    cursor: pointer;
+#flag_box {
+     padding: 14px;
+     border-radius: 10px;
+     font-weight: bold;
 }
 
-/* =========================
-   🔥 ボタン共通改善
-========================= */
-.btn, 
-#ringButtons button {
-
-    transition: all 0.15s ease;
-    cursor: pointer;
+.flag-ok {
+     background: #e8f5e9;
+     color: #2e7d32;
 }
 
-/* =========================
-   🔥 ホバー（マウス乗せ）
-========================= */
-.btn:hover,
-#ringButtons button:hover {
-
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+.flag-warn {
+     background: #fff3e0;
+     color: #ef6c00;
 }
 
-/* =========================
-   🔥 クリック中
-========================= */
-.btn:active,
-#ringButtons button:active {
-
-    transform: translateY(1px) scale(0.97);
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-	filter: brightness(0.95);
-}
-
-/* =========================
-   🔥 録音ボタン（通常）
-========================= */
-.record-btn{
-    background: linear-gradient(135deg, #fda4af, #f9a8d4);
-    color:#fff;
-    border:none;
-    border-radius:30px;
-    padding:14px 24px;
-    font-size:16px;
-    box-shadow:0 6px 15px rgba(0,0,0,0.15);
-
-    transition: all 0.2s ease;
-}
-
-/* =========================
-   🔥 呼吸アニメーション
-========================= */
-.record-btn.idle{
-    animation: pulse 2.5s infinite;
-}
-
-@keyframes pulse{
-    0%   { box-shadow:0 0 0 rgba(253,164,175,0.4); }
-    50%  { box-shadow:0 0 20px rgba(253,164,175,0.8); }
-    100% { box-shadow:0 0 0 rgba(253,164,175,0.4); }
-}
-
-/* =========================
-   🔥 押したとき（録音開始）
-========================= */
-.record-btn.active{
-    background: linear-gradient(135deg, #fb7185, #f43f5e);
-    transform: scale(0.96);
-    box-shadow:0 3px 8px rgba(0,0,0,0.3);
-}
-
-/* =========================
-   🔥 録音開始 countdown
-========================= */
-#countdownWrap{
-    position:absolute;   /* 🔥ここ重要 */
-
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-
-    width:120px;
-    height:120px;
-	display:none;
-}
-
-#countText{
-    position:absolute;
-    top:50%;
-    left:50%;
-    transform:translate(-50%,-50%);
-    font-size:32px;
-    font-weight:bold;
-    color:#ff6b9d;
-}
-
-#countCircle{
-    stroke-dasharray: 314;
-    stroke-dashoffset: 0;
-    transition: stroke-dashoffset 1s linear;
-}
-
-/* コメント */
-.comment{
-    font-size:13px;
-    margin-top:6px;
-    color:#666;
-}
-
-.time{
-    font-size:12px;
-    color:#aaa;
-    margin-top:5px;
-}
-
-/* =========================
-   🔥 LLM コメント
-========================= */
-#llmBox{
-    transition: all 0.3s ease;
-}
-
-.llm-tab{
-    padding:6px 10px;
-    border:none;
-    border-radius:15px;
-    background:#f3f4f6;
-    font-size:12px;
-}
-
-.llm-tab.active{
-    background:#fda4af;
-    color:white;
-}
-
-/* =========================
-   設定画面
-========================= */
-#settingsBox{
-    transition: all 0.3s;
-	text-align:center;   /* 🔥追加 */
-}
-
-.radio-group{
-    display:flex;
-    justify-content:center;
-    gap:12px;
-    flex-wrap:wrap; /* スマホ対応 */
-}
-
-.radio-group label{
-    display:flex;
-    align-items:center;
-    gap:4px;
-    font-size:13px;
-}
-
-/* フッター */
-.footer{
-    margin-top:30px;
-    font-size:12px;
-    color:#888;
-    text-align:center;
+.flag-danger {
+     background: #ffebee;
+     color: #c62828;
 }
 
 </style>
+
+
 </head>
 
 <body>
+    <div class="page">
+        <h2 style="letter-spacing:1px;">VoiceAuraHealth<span style="font-size:14px;"> TM</span></h2>
+        <h3>mini ベータ版 v5</h3>
+		
+        <!-- ナビ -->
+        <div class="nav nav-top">
+            <button onclick="showTab(0)">分　析</button>
+            <button onclick="showTab(1)">判　定</button>
+            <button onclick="showTab(2)">レポート</button>
+            <button onclick="showTab(3)">Sample</button>
+        </div>
+		<div class="nav nav-bottom">
+			<button onclick="showTab(4)">メンタル</button>
+			<button onclick="showTab(5)">ラボ</button>
+			<button onclick="showTab(6)">コンセプト</button>
+			<button onclick="showTab(7)">管理室</button>
+		</div>		
+		
 
-<div class="container">
+        <!-- 解析 -->
+        <div class="tab active">
+			<div class="hero-box">
+				<div id="analyze-container">
+					<!-- 🔵 上：固定エリア -->
+					<div id="analyze-top">
+						<!-- メイン 準備　上-->
+						<div id="analyze_idle_top">
+							<img src="/static/main_logo2.png" class="main-logo">
+						</div>
+						<!-- カウントダウン 上-->
+						<div id="analyze_count_top" style="display:none;">
+						<div id="count_circle"></div>
+							<h1 id="countdown">3</h1>
+						</div>
+						<!-- 録音中 上-->
+						<div id="analyze_record_top" style="display:none;">
+							<canvas id="mic_canvas"></canvas>
+						</div>
+						<!-- 解析中 上-->
+						<div id="analyze_processing_top"></div>
 
+						<!-- 解析終了 上-->
+						<div id="analyze_done_top" style="display:none;"></div>
+					</div>
 
-<h1 class="title">
-  VoiceAuraHealth<span class="tm">™</span><br>
-  <span id="modeSubtitle" class="subtitle">
-      for You 🌸　ベータ版 v.4.0
-  </span>
-</h1>
-<p id="modeDesc" class="sub">
-    あなたの声から、やさしく心の状態を感じとります
-</p>
+					<!-- 🟢 下：可変エリア -->
+					<div id="analyze-bottom">
+						<!-- メイン 準備 下-->
+						<div id="analyze_idle_bottom">
+							<button class="action-btn" onclick="startCountdown()">🎙 話してみる</button>
+							<p>5秒間、自然に話してください</p>
+							<p> </p>
+							<div class="example-box">
+								<div class="example-title">例題：</div>
 
-	<div id="modeSelector"  style="text-align:center; margin:5px;">
+								<ul class="example-list">
+									<li>おはようございます。こんにちは。では、さようなら。</li>
+									<li>こんにちは。今日は、ちょっと、暑いです。</li>
+									<li>こんにちは。今日も、もっと、頑張りましょう。</li>
+									<li>こんばんは。昨日は、よく、寝れましたか。</li>
+									<li>私は、○○○です。仕事は○○○です。</li>
+									<li>自由に、なんでも、しゃべってみて下さい。</li>
+								</ul>
+							</div>
 
-		<button onclick="setMode('balance')" id="btn_balance">For You</button>
+						</div>
+						<!-- カウントダウン 下-->
+						<div id="analyze_count_bottom" style="display:none;">
+							<p>準備してください</p>
+							<p> </p>
+							<div class="example-box">
+								<div class="example-title">例題：</div>
 
-		<button onclick="setMode('stress')" id="btn_stress">For Stress</button>
+								<ul class="example-list">
+									<li>おはようございます。こんにちは。では、さようなら。</li>
+									<li>こんにちは。今日は、ちょっと、暑いです。</li>
+									<li>こんにちは。今日も、もっと、頑張りましょう。</li>
+									<li>こんばんは。昨日は、よく、寝れましたか。</li>
+									<li>私は、○○○です。仕事は○○○です。</li>
+									<li>自由に、なんでも、しゃべってみて下さい。</li>
+								</ul>
+							</div>
 
-		<button onclick="setMode('focus')" id="btn_focus">For Focus</button>
+						</div>
+						<!-- 録音中 下-->
+						<div id="analyze_record_bottom" style="display:none;">
+							<p id="record_text">話してください...</p>
+							<p> </p>
+							<div class="example-box">
+								<div class="example-title">例題：</div>
 
-	</div>
+								<ul class="example-list">
+									<li>おはようございます。こんにちは。では、さようなら。</li>
+									<li>こんにちは。今日は、ちょっと、暑いです。</li>
+									<li>こんにちは。今日も、もっと、頑張りましょう。</li>
+									<li>こんばんは。昨日は、よく、寝れましたか。</li>
+									<li>私は、○○○です。仕事は○○○です。</li>
+									<li>自由に、なんでも、しゃべってみて下さい。</li>
+								</ul>
+							</div>
 
-	<div class="card">
-		<b>🌈 VoiceAuraリング</b>
+						</div>
+						<!-- 解析中 下-->
+						<div id="analyze_processing_bottom" style="display:none;">
+							<p id="progress_text">解析中 0%</p>
+							<div id="progress-bar">
+								<div id="progress-inner"></div>
+							</div>
+						</div>
+						<!-- 解析終了 下-->
+						<div id="analyze_done_bottom" style="display:none;">
+							<h2>解析完了</h2>
+							<button class="action-btn" onclick="goToResult()" style="margin-top:10px;">
+								👉 判定を見る
+							</button>							
+							<p>結果を表示しました</p>
 
-		<!-- 🔥 ここ追加 -->
-		<div id="visualBox">
+							<button class="action-btn"  onclick="resetAnalyze()" style="margin-top:10px; font-size:16px;">
+								もう一回チェックしてみますか？
+							</button>
+						</div>
+					</div>
+				</div>
+		   </div>
+        </div>
 
-			<div id="countdownWrap">
-				<svg width="120" height="120">
-					<circle
-						cx="60" cy="60" r="50"
-						stroke="#ffd1dc"
-						stroke-width="8"
-						fill="none"
-					/>
-					<circle
-						id="countCircle"
-						cx="60" cy="60" r="50"
-						stroke="#ff6b9d"
-						stroke-width="8"
-						fill="none"
-						stroke-linecap="round"
-						transform="rotate(-90 60 60)"
-					/>
-				</svg>
+        <!-- 判定 -->
+        <div class="tab">
+            <div class="hero-box">
+                <canvas id="canvas" width="600" height="600"></canvas>
+                <div class="small-note">放射ベクトル表示 / 呼吸アニメーション / オートゲイン対応</div>
+            </div>
 
-				<div id="countText">3</div>
+			<div class="setting-box" id="summary-box">
+				<div class="setting-title">VoiceAuraコメント</div>
+				<div id="summary_text" style="font-size:16px;">
+					解析結果を表示します
+				</div>
 			</div>
 
-			<canvas id="waveCanvas"></canvas>
-
-			<div id="ringContainer" style="display:none;">
-				<canvas id="auraRing"></canvas>
+			<div class="setting-box" id="age-box">
+				<div class="setting-title">心理年齢</div>
+				<div id="age_text" style="font-size:18px; font-weight:bold;">
+					--歳
+				</div>
+				<div id="type_text" style="font-size:14px;">
+					タイプ表示
+				</div>
 			</div>
 
-			<img id="mainImage" src="static/main_logo.png" class="logo">
+			<div class="accordion">
+				<div class="acc-item">
+					<input type="radio" name="acc" id="acc1" checked>
+					<label for="acc1" class="acc-title">リングの説明　開閉</label>
+                </div>
 
+				<!-- 外リング -->
+				<div class="acc-item">
+					<input type="radio" name="acc" id="acc2">
+					<label for="acc2" class="acc-title">外リング（AURA）</label>
+					<div class="acc-content">
+						・外リング（AURA）は、あなたの「外に現れる印象」を表します。<br>
+						・声のトーンやリズムから、周囲に与える雰囲気を可視化しています。<br>
+						・このリングは、他人から見たあなたの状態に最も近い層です。<br>
+						・エネルギーや勢い、存在感の強さがここに現れます。<br>
+						・変動が大きいほど、感情や状態が外に出やすい傾向があります。<br>
+						・滑らかな形は安定した印象、尖った形は強い主張や個性を示します。<br>
+						・共感・行動・ストレスなどの影響が統合されて表現されます。<br>
+						・日によって変化しやすく、その時のコンディションを反映します。<br>
+						・コミュニケーションの質や対人印象の指標として活用できます。<br>
+						・「今のあなたがどう見えているか」を示すリングです。<br>
+                    </div>
+                </div>
+
+				<!-- 中リング -->
+				<div class="acc-item">
+					<input type="radio" name="acc" id="acc3">
+					<label for="acc3" class="acc-title">中リング（心理）</label>
+					<div class="acc-content">
+						・中リング（PSY）は、あなたの「心理状態の変化」を表します。<br>
+						・声の揺らぎや変化量から、内面の動きを抽出しています。<br>
+						・ストレスや集中、感情の起伏がここに反映されます。<br>
+						・値が高いほど、状態が活発または不安定である可能性があります。<br>
+						・滑らかな場合は落ち着いた状態、波が大きい場合は変動が強い状態です。<br>
+						・日常の疲労や精神的負荷が現れやすい層です。<br>
+						・外リングよりも内側にあるため、より主観的な状態を示します。<br>
+						・短時間でも変化しやすく、リアルタイム性が高い指標です。<br>
+						・自分の内面の揺れを把握するために重要な情報です。<br>
+						・「今の心の動き」を示すリングです。<br>
+                    </div>
+                </div>
+
+				<!-- 内リング -->
+				<div class="acc-item">
+					<input type="radio" name="acc" id="acc4">
+					<label for="acc4" class="acc-title">内リング（DNA）</label>
+					<div class="acc-content">
+						・内リング（DNA）は、あなたの「声の本質的な特徴」を表します。<br>
+						・音のスペクトル情報から、個人の特性を抽出しています。<br>
+						・性格傾向や思考スタイルのベースとなる部分です。<br>
+						・比較的変化しにくく、長期的な特徴を反映します。<br>
+						・声質・発声・話し方の癖がここに現れます。<br>
+						・他のリングの基盤となる重要な情報層です。<br>
+						・内面の安定性や基本的な気質を示唆します。<br>
+						・短時間では大きく変わらないため、個人識別にも近い要素です。<br>
+						・全体のバランスや傾向を理解する鍵になります。<br>
+						・「あなたの本来の特性」を示すリングです。<br>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stack">
+				<div class="setting-title">⚙ 設定</div>
+                <div class="setting-box">
+                    <div class="setting-title">呼吸設定</div>
+
+                    <div class="setting-row">
+                        <span class="label-left">強さ</span>
+                        <input type="range" id="breath_amp" min="0" max="4" value="2">
+                        <span id="label_breath_amp" class="label-right">(中)</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="label-left">速度</span>
+                        <input type="range" id="breath_speed" min="0" max="4" value="2">
+                        <span id="label_breath_speed" class="label-right">(中)</span>
+                    </div>
+                </div>
+
+                <div class="setting-box">
+                    <div class="setting-title">画質設定</div>
+
+                    <div class="setting-row">
+                        <span class="label-left">全体</span>
+                        <input type="range" id="q_global" min="1" max="2" value="1">
+                        <span id="label_global" class="label-right">(普通)</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="label-left">DNA</span>
+                        <input type="range" id="q_dna" min="1" max="5" value="3">
+                        <span id="label_dna" class="label-right">(中)</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="label-left">PSY</span>
+                        <input type="range" id="q_psy" min="1" max="5" value="3">
+                        <span id="label_psy_view" class="label-right">(中)</span>
+                    </div>
+
+                    <div class="setting-row">
+                        <span class="label-left">AURA</span>
+                        <input type="range" id="q_aura" min="1" max="5" value="3">
+                        <span id="label_aura" class="label-right">(中)</span>
+                    </div>
+                </div>
+
+                <div class="setting-box">
+                    <div class="setting-title">表示設定</div>
+
+                    <div class="setting-row">
+                        <span class="label-left">ゲイン</span>
+                        <span class="label-right">OFF</span>
+                        <input type="checkbox" id="auto_gain" checked>
+                        <span class="label-right">ON</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="user-box">
+                <select id="user_select">
+                    <option value="user1">ユーザー1</option>
+                    <option value="user2">ユーザー2</option>
+                    <option value="user3">ユーザー3</option>
+                </select>
+
+                <button class="action-btn" onclick="saveSettings(document.getElementById('user_select').value)">保存</button>
+                <button class="action-btn" onclick="loadSettings(document.getElementById('user_select').value)">読込</button>
+                <button class="action-btn" onclick="resetSettings()">リセット</button>
+            </div>
 		</div>
 
-		<div id="ringButtons">
-			<b>リング</b>	
-			<button onclick="toggleOuter()">外</button>
-			<button onclick="toggleMiddle()">中</button>
-			<button onclick="toggleInner()">内</button>
-			<b></b>
-			<button onclick="showLegend('commentword')" class="btn-example">おすすめ例題</button>
+        <!-- レポート -->
+        <div class="tab">
+            <div class="report-box">
+                <h3 id="energy">🔋元気（エネルギー）</h3>
+                <h3 id="emotion">💗気持ち（感情）</h3>
+                <h3 id="presence">✨オーラ（存在感）</h3>
+            </div>
+			<div class="qr-box">
+				<button onclick="generateQRFromCurrent()">
+					🌈 今のAuraをシェア
+				</button>
 
+				<canvas id="qr_canvas"></canvas>
+
+				<button onclick="copyQRLink()">🔗 リンクコピー</button>
+
+				<p id="qr_text"></p>
+
+			</div>
+			<div class="compare-box">
+				<div id="qr-reader" style="width:250px;"></div>
+					<div class="compare-area">
+						<button onclick="startQRScanner()">📷 QR読み取り</button>
+						<input id="name_input" placeholder="あなたの名前">
+						<input id="target_input" placeholder="相手の名前">
+						<textarea id="qr_input"
+							placeholder="相手のリンク or QRデータを貼ってください"></textarea>
+						<button onclick="compareWithQR()">💞 相性チェック</button>
+					</div>
+				<div id="share_card" class="share-card">
+					<div class="title">
+						Aura Compatibility
+					</div>
+					<div class="logo">
+						VoiceAuraHealth ✨
+					</div>
+					<div id="compare_result"></div>
+
+					<div class="date"></div>
+
+					<div class="footer">
+						mini.voiceaurahealth.com
+					</div>
+
+				</div>
+
+				<div style="margin-top:10px;">
+					<button class="action-btn" onclick="saveShareCard()">📸 画像保存</button>
+					<button class="action-btn" onclick="shareShareCard()">📤 共有</button>
+				</div>
+
+			</div>
+        </div>
+
+		<!-- Sample -->
+		<div class="tab">
+			<div class="report-box">
+				<h3>🎨 色占い（準備中）</h3>
+			</div>
 		</div>
 
-		<div id="legendBox" class="card" style="font-size:12px;"></div>
-		
-		<!-- 空欄　1行 -->
-		<div>　<br></div>
-		
-		<div>
-			<button id="recordBtn" class="btn record-btn idle" onclick="startRecording()">
-				🎙 5秒チェック スタート
-			</button>
+		<!-- メンタル -->
+		<div class="tab">
+			<div class="medical-panel">
 
-			<p id="status"></p>
-		
-			<div id="result" class="card"></div>
-		</div>
-		
-	</div>
-</div>
+				<div class="gauge">
+					<div class="gauge-title">ストレス</div>
+					<div class="bar">
+						<div id="stress_bar" class="fill"></div>
+					</div>
+					<div id="stress_value">--</div>
+				</div>
 
-<div class="container2">
+				<div class="gauge">
+					<div class="gauge-title">エネルギー</div>
+					<div class="bar">
+						<div id="energy_bar" class="fill"></div>
+					</div>
+					<div id="energy_value">--</div>
+				</div>
 
-	<div class="card2">
-		<button class="btn" onclick="loadHistory()">📖 履歴を見る</button>
-		<div id="history" style="display:none;"></div>
-	</div>
+				<div class="gauge">
+					<div class="gauge-title">医療スコア</div>
+					<div class="bar">
+						<div id="medical_bar" class="fill"></div>
+					</div>
+					<div id="medical_value">--</div>
+				</div>
 
-	<div class="card2 chart-card">
-		<button class="btn" onclick="loadChart()">📈 Energy推移</button>
-		<canvas id="energyChart" height="200" style="display:none;"></canvas>
-	</div>
-
-	<div class="card2">
-
-		<button class="btn" onclick="toggleLLM()">
-			🤖 AIコメント
-		</button>
-
-		<div id="llmBox" style="display:none; margin-top:10px;">
-
-			<!-- 🔥 タブボタン -->
-			<div style="margin-bottom:10px; display:flex; gap:6px; justify-content:center;">
-
-				<button class="llm-tab active" onclick="showLLMTab('summary', this)">総合</button>
-				<button class="llm-tab" onclick="showLLMTab('stress', this)">声</button>	
-				<button class="llm-tab" onclick="showLLMTab('mental', this)">心理</button>
-				<button class="llm-tab" onclick="showLLMTab('energy', this)">元気</button>
-				<button class="llm-tab" onclick="showLLMTab('emotion', this)">気持ち</button>
-				<button class="llm-tab" onclick="showLLMTab('focus', this)">集中</button>
+				<div id="medical_comment"></div>
 
 			</div>
 
-			<!-- 🔥 表示エリア -->
-			<div id="llmCommentBox" class="comment"></div>
+			<div class="report-box">
+				<h3>🧠 メンタル状態</h3>
+				<div id="mental_box">
+					解析後に表示されます<br>
+					<br>
+					<strong>状態：</strong> 安定<br>
+					<strong>ストレス：</strong> 中等度<br>
+					<strong>特徴：</strong> 少し疲労傾向
+				</div>
+			</div>
+
+			<div class="report-box">
+				<h3>⚠ 医療フラグ</h3>
+				<div id="flag_box" class="flag-warn">
+					⚠ 軽度ストレスあり
+				</div>
+				<div id="mental_flag"></div>
+			</div>
 
 		</div>
-	</div>
-
-	<div class="card2">
-		<button class="btn" onclick="loadDaySummary()">
-			📊 今日のまとめ
-		</button>
-
-		<div id="daySummaryBox" class="comment"></div>
-	</div>
-
-	<div class="card2">
-		<button class="btn" onclick="toggleSettings()">⚙️ 設定</button>
-		<div id="specialsetting" style="display:none;"></div>
-	</div>
-</div>
-
-<div class="footer">
-    © 2026 VoiceAuraHealth TM
-</div>
-
-<script>
-
-// 🔥 ここに追加（超重要）
-let currentLegend = "";
-
-let showRing = false;
-let showOuterLabel = true;
-let showMiddleLabel = true;
-let showInnerLabel = true;
-let isDirty = false;
-
-let appSettings = {
-
-    quality: "low",     //  low, mid, high
-    resolution: 360,    // 解像度（角度ステップ）low=360, mid=720, high=1440
-    lineScale: 2.0,     // ベクトル棒のシャープ化
-
-    boost: 1.5,    // ←ここで強さ調整（1.5〜2.5がおすすめ）
-    breath: 1,     // 🔥 呼吸
-    effect: 1,	   // 🔥 強さ
-    glow: 1	       // 🔥 光のゆらぎ
-
-};
-
-// -------------------- 解像度の変換 --------------------
-function getResolution(){
-
-    if(appSettings.quality === "low") return 360;
-    if(appSettings.quality === "mid") return 720;
-    if(appSettings.quality === "high") return 1440;
-
-    return 360;
-}
 
 
-// -------------------- 録音 カウントダウン関数--------------------
-async function countdown(sec=3){
+        <!-- ラボ -->
+        <div class="tab">
+			<div class="report-box">
 
-    const wrap = document.getElementById("countdownWrap");
-    const text = document.getElementById("countText");
-    const circle = document.getElementById("countCircle");
+				<h3>🧠 本日の状態</h3>
+				<div id="karte_today"></div>
 
-    const total = 314;
+				<h3>📊 履歴</h3>
+				<div id="karte_history"></div>
 
-    // 🔥 表示ON（ここ重要）
-    wrap.style.display = "block";
+				<h3>📈 状態グラフ</h3>
+				<canvas id="karte_chart" width="300" height="150"></canvas>
 
-    // 他は消す
-    document.getElementById("mainImage").style.display = "none";
-    document.getElementById("waveCanvas").style.display = "none";
-    document.getElementById("ringContainer").style.display = "none";
+				<h3>⚠ ストレス分析</h3>
+				<div id="karte_stress"></div>
 
-    for(let i=sec;i>0;i--){
+				<hr style="margin:20px 0; opacity:0.3;">
 
-        text.innerText = i;
+				<h3>📝 プラン</h3>
+				<div id="karte_plan">
+					<!-- ここは今は空でOK -->
+				</div>
 
-        // 初期化
-        circle.style.transition = "none";
-        circle.style.strokeDashoffset = "0";
+			</div>
+        </div>
 
-        // 🔥 強制再描画（これが重要）
-        circle.getBoundingClientRect();
+		<!-- コンセプト -->
+		<div class="tab">
+			<div class="report-box">
+				<h3>📘 VoiceAura理論（準備中）</h3>
+			</div>
+		</div>
 
-        // アニメ開始
-        circle.style.transition = "stroke-dashoffset 1s linear";
-        circle.style.strokeDashoffset = total;
+		<!-- 管理室 -->
+		<div class="tab">
+			<div class="report-box">
+				<h3>⚙ 管理室（準備中）</h3>
+			</div>
+		</div>
 
-        await new Promise(r=>setTimeout(r,1000));
-    }
+    </div>
 
-    text.innerText = "🎤";
-
-    await new Promise(r=>setTimeout(r,400));
-
-    // 🔥 カウントダウン消す
-    wrap.style.display = "none";
-}
-
-// -------------------- 録音 --------------------
-async function startRecording(sec){
-
-	baselineDB = null;  // ←これ追加
-
-    // 🔥 カウントダウン
-    await countdown(3);
-
-    let stream;
-
-    try{
-        stream = await navigator.mediaDevices.getUserMedia({audio:true});
-    }catch(e){
-        alert("マイク許可が必要です");
-        return;
-    }
-
-    const status = document.getElementById("status");
-    const result = document.getElementById("result");
-
-    status.innerText = "録音準備中...";
-    result.innerHTML = "";
-
-    // =========================
-    // 🔥 ① 波形スタート（ここだけ追加）
-    // =========================
-    const audioContext = new AudioContext();
-    const source = audioContext.createMediaStreamSource(stream);
-    const analyser = audioContext.createAnalyser();
-
-    source.connect(analyser);
-
-    analyser.fftSize = 256;
-    const dataArray = new Uint8Array(analyser.frequencyBinCount);
-
-
-
-	const wave = document.getElementById("waveCanvas");
-
-	wave.style.display = "block";   // 表示
-	setTimeout(()=>{
-		wave.classList.add("active");   // ←ふわっと出る
-	},10);
-
-//    document.getElementById("waveCanvas").style.display = "block";
-	
-    document.getElementById("mainImage").style.display = "none";
-    document.getElementById("ringContainer").style.display = "none";
-
-    isRecording = true;
-	
-	const canvas = document.getElementById("waveCanvas");
-
-	canvas.width  = canvas.offsetWidth;
-	canvas.height = canvas.offsetHeight;
-	
-    drawWave(analyser, dataArray);
-    // =========================
-
-    status.innerText = "録音中...";
-
-    let options = { mimeType: "audio/webm" };
-
-	if (MediaRecorder.isTypeSupported("audio/mp4")) {
-		options.mimeType = "audio/mp4";
-	} else if (MediaRecorder.isTypeSupported("audio/webm")) {
-		options.mimeType = "audio/webm";
-	}
-
-	const recorder = new MediaRecorder(stream, options);
-	
-    let chunks = [];
-
-    recorder.ondataavailable = e => chunks.push(e.data);
-
-    recorder.onstop = async ()=>{
+    <script>
+        // =========================
+        // 基本変数
+        // =========================
+        let tabs = document.querySelectorAll(".tab");
+        let data = null;
+        let time = 0;
+        let animationStarted = false;
+		
+        // スワイプ切替（スマホ）		
+		let currentTab = 0;
+		let startX = 0;
 
         // =========================
-        // 🔥 ② 波形ストップ
+        // グローバル解像度（2段階）
         // =========================
-        isRecording = false;
-        cancelAnimationFrame(waveAnimationId);
-		
-//        document.getElementById("waveCanvas").style.display = "none";
-		
-		wave.classList.remove("active");
+        let globalRes = 360;
 
-		setTimeout(()=>{
-			wave.style.display = "none";
-		},400);
-		
-		
+        const globalResolutionMap = {
+            1: { label: "(普通)", value: 360 },
+            2: { label: "(綺麗)", value: 720 }
+        };
+
         // =========================
+        // リング別密度（5段階）
+        // =========================
+        let densityDNA = 4;
+        let densityPSY = 4;
+        let densityAURA = 4;
 
-        status.innerText = "解析中...";
+        const densityMap = {
+            1: { label: "(粗)", density: 1 },
+            2: { label: "(低)", density: 2 },
+            3: { label: "(中)", density: 4 },
+            4: { label: "(高)", density: 8 },
+            5: { label: "(綺麗)", density: 16 }
+        };
 
-		const blob = new Blob(chunks, { type: recorder.mimeType });
-		const formData = new FormData();
+        // =========================
+        // 呼吸設定
+        // =========================
+        let breathAmp = 5;
+        const breathAmpMap = {
+            0: { label: "(停止)", value: 0 },
+            1: { label: "(弱)", value: 2 },
+            2: { label: "(中)", value: 5 },
+            3: { label: "(強)", value: 8 },
+            4: { label: "(激)", value: 12 }
+        };
 
-		const ext = recorder.mimeType.includes("mp4") ? "mp4" : "webm";
-		formData.append("audio", blob, `record.${ext}`);
-		formData.append("db", Number(currentDB));
-		
-		let data;
-		
-		try {
-			const res = await fetch("/api/upload",{method:"POST", body:formData});
+        let breathSpeed = 0.05;
+        const breathSpeedMap = {
+            0: { label: "(停止)", value: 0 },
+            1: { label: "(遅)", value: 0.01 },
+            2: { label: "(中)", value: 0.05 },
+            3: { label: "(速)", value: 0.1 },
+            4: { label: "(激)", value: 0.2 }
+        };
 
-			if(!res.ok){
-				status.innerText = "通信エラー";
+        // =========================
+        // 表示設定
+        // =========================
+        let autoGain = true;
+
+        // =========================
+        // 初期設定
+        // =========================
+        const defaultSettings = {
+            globalRes: 360,
+            densityDNA: 4,
+            densityPSY: 4,
+            densityAURA: 4,
+            breathAmp: 5,
+            breathSpeed: 0.05,
+            autoGain: true
+        };
+
+        // =========================
+// ユーティリティ        // ユーティリティ
+        // =========================
+		function showTab(index) {
+
+			const tabs = document.querySelectorAll(".tab");
+			const buttons = document.querySelectorAll(".nav-top button, .nav-bottom button");
+
+			tabs.forEach((t, i) => {
+				t.style.display = "none";
+				t.classList.remove("active");
+			});
+
+			tabs[index].style.display = "block";
+			tabs[index].classList.add("active");
+
+			buttons.forEach((b, i) => {
+				b.classList.toggle("active", i === index);
+			});
+
+			document.body.classList.remove("mode-soft", "mode-medical");
+
+			 if (index <= 3) {
+				  document.body.classList.add("mode-soft");
+			 } else {
+				  document.body.classList.add("mode-medical");
+			 }
+			updateCanvasBackground(); // ←追加
+			updateAnimationMode(); // ←これ追加
+		}
+
+		function updateCanvasBackground() {
+
+			const canvas = document.getElementById("canvas");
+
+			if (!canvas) return;
+
+			if (document.body.classList.contains("mode-medical")) {
+				canvas.style.background = "#ffffff";   // 医療：白
+			} else {
+				canvas.style.background = "#111";      // 女性：黒（映える）
+			}
+		}
+
+		function updateAnimationMode() {
+
+			if (document.body.classList.contains("mode-soft")) {
+
+				// 🌸 女性 → 動く
+				breathAmp = 8;
+				breathSpeed = 0.08;
+
+			} else {
+
+				// 🏥 医療 → 静か
+				breathAmp = 2;
+				breathSpeed = 0.02;
+			}
+		}
+
+		// ===== 医療JS
+		function updateMedicalUI() {
+
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+
+			let stress = calculateStress(data.dna, data.psy);
+
+			let energy = data.dna.map(v => Math.abs(v))
+				.reduce((a,b)=>a+b,0)/data.dna.length * 100;
+
+			let medical = calculateMedicalScore(data.dna, data.psy, data.aura);
+
+			// ===== 表示 =====
+			setGauge("stress", stress);
+			setGauge("energy", energy);
+			setGauge("medical", medical);
+
+			// ===== コメント =====
+			document.getElementById("medical_comment").innerText =
+				getMedicalComment(medical);
+
+			// ===== フラグ =====
+			updateMedicalFlag(medical);
+		}
+
+		// ===== 色分けロジック（超重要）
+		function setGauge(name, value) {
+
+			const bar = document.getElementById(name + "_bar");
+			const text = document.getElementById(name + "_value");
+
+			if (!bar || !text) return;
+
+			// 上限
+			value = Math.max(0, Math.min(value, 100));
+			bar.style.width = value + "%";
+
+			// 色
+			let color;
+
+			if (value < 40) {
+				color = "#4caf50";
+			} else if (value < 70) {
+				color = "#ff9800";
+			} else {
+				color = "#f44336";
+			}
+
+			bar.style.background = color;
+			text.innerText = Math.round(value) + " %";
+
+			// 🔥 点滅（ここ追加）
+			if (value > 85) {
+				bar.classList.add("danger-blink");
+			} else {
+				bar.classList.remove("danger-blink");
+			}
+		}
+
+		// ===== 医療フラグ連動
+		function updateMedicalFlag(score){
+
+			const box = document.getElementById("flag_box");
+
+			if (!box) return;
+			box.classList.remove("flag-ok","flag-warn","flag-danger");
+
+			if(score > 80){
+				box.classList.add("flag-danger");
+				box.innerText = "🚨 要注意";
+			}
+			else if(score > 60){
+				box.classList.add("flag-warn");
+				box.innerText = "⚠ 注意";
+			}
+			else{
+				box.classList.add("flag-ok");
+				box.innerText = "◎ 安定";
+			}
+		}
+
+		// ===== 医療UI　リセット
+		function resetMedicalUI() {
+
+			["stress","energy","medical"].forEach(name=>{
+				const bar = document.getElementById(name + "_bar");
+				const text = document.getElementById(name + "_value");
+
+				if (bar) bar.style.width = "0%";
+				if (text) text.innerText = "--";
+			});
+
+			document.getElementById("medical_comment").innerText = "";
+
+			// 🔥 これ追加
+			updateMedicalFlag(0);
+		}
+
+        function calcStep(resolution, density) {
+            return (Math.PI * 2 / resolution) / density;
+        }
+
+		function updateAnalysisSettingLabels() {
+
+			const pairs = [
+				["sigma", "label_sigma"],
+				["upscale", "label_upscale"],
+				["psy", "label_psy_setting"],
+				["contrast", "label_contrast"]
+			];
+
+			pairs.forEach(([id, labelId]) => {
+
+				const el = document.getElementById(id);
+				const label = document.getElementById(labelId);
+
+				if (!el || !label) return; // 🔥 これが最重要
+
+				label.innerText = el.value;
+			});
+		}
+
+		function setAnalyzeState(state) {
+			analyzeState = state;
+
+			const states = ["idle", "count", "record", "processing", "done"];
+
+			states.forEach(s => {
+				const top = document.getElementById(`analyze_${s}_top`);
+				const bottom = document.getElementById(`analyze_${s}_bottom`);
+
+				if (top) top.style.display = "none";
+				if (bottom) bottom.style.display = "none";
+			});
+
+			const activeTop = document.getElementById(`analyze_${state}_top`);
+			const activeBottom = document.getElementById(`analyze_${state}_bottom`);
+
+			if (activeTop) activeTop.style.display = "block";
+			if (activeBottom) activeBottom.style.display = "block";
+		}
+
+		function setProgress(p) {
+			document.getElementById("progress-inner").style.width = p + "%";
+			document.getElementById("progress_text").innerText = "解析中 " + Math.floor(p) + "%";
+		}
+
+
+		function setProcessingUI() {
+
+			// 🔵 上はそのまま（リング維持）
+
+			// 🟢 下だけ切り替え
+			document.getElementById("analyze_record_bottom").style.display = "none";
+			document.getElementById("analyze_processing_bottom").style.display = "block";
+		}
+
+		function resizeCanvas(canvas) {
+
+			const size = Math.min(window.innerWidth * 0.6, 300);
+
+			canvas.width = size;
+			canvas.height = size;
+		}
+
+		function setupCanvasResize() {
+
+			const canvas = document.getElementById("mic_canvas");
+
+			function resize() {
+
+				if (!canvas) return;
+
+				const size = Math.min(window.innerWidth * 0.6, 300);
+
+				canvas.width = size;
+				canvas.height = size;
+			}
+
+			// 初回
+			resize();
+
+			// スマホ回転・画面変更
+			window.addEventListener("resize", resize);
+		}
+
+		// -------------------------
+		// ボタン　開閉
+		// -------------------------
+		function openSettingsModal() {
+			const modal = document.getElementById("settings_modal");
+			modal.style.display = "block";
+			document.body.style.overflow = "hidden";
+
+			// アニメーション用
+			requestAnimationFrame(() => {
+				modal.classList.add("show");
+			});
+		}
+
+		function closeSettingsModal() {
+			const modal = document.getElementById("settings_modal");
+
+			modal.classList.remove("show");
+
+			setTimeout(() => {
+				modal.style.display = "none";   // 🔥これが必要
+			}, 200);
+
+			document.body.style.overflow = "auto";
+		}
+
+		// -------------------------
+		// 🔥 外クリックで閉じる
+		// -------------------------
+		window.addEventListener("click", function(event) {
+
+			const modal = document.getElementById("settings_modal");
+
+			// モーダル背景クリック時だけ閉じる
+			if (event.target === modal) {
+				closeSettingsModal();
+			}
+		});
+
+		// -------------------------
+		// 🔥 外クリックで閉じる　タブクリックと同期　アクティブ表示
+		// -------------------------
+		function showSettingTab(i) {
+
+			currentTab = i;
+
+			const container = document.getElementById("tabContainer");
+			container.style.transform = `translateX(-${i * 25}%)`;
+
+			// ボタンのactive
+			const buttons = document.querySelectorAll(".modal-tabs button");
+			buttons.forEach((b, idx) => {
+				b.classList.toggle("active", idx === i);
+			});
+		}
+
+
+
+		// 共通関数
+		function getSafeLevel() {
+			return typeof lastLevel !== "undefined" ? lastLevel : 0;
+		}
+
+		// タブ移動
+		function goToResult() {
+			showTab(1);
+			window.scrollTo({ top: 0, behavior: "smooth" });
+		}
+
+		// 医療コメント（自動診断）
+		function getMedicalComment(score){
+
+			if(score > 80) return "🚨 強いストレス状態。休息を強く推奨";
+			if(score > 60) return "⚠ ストレス高め。注意が必要";
+			if(score > 40) return "△ 軽度ストレス";
+			return "◎ 安定状態";
+		}
+
+		// innerHTML → 安全化
+		function safeHTML(str) {
+			return str
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;");
+		}
+
+		function nl2brSafe(str) {
+			return safeHTML(String(str)).replace(/\n/g, "<br>");
+		}
+
+		// フォーマット自動判定
+		function getSupportedMimeType() {
+
+			const types = [
+				"audio/webm;codecs=opus",
+				"audio/webm",
+				"audio/mp4",
+				"audio/aac"
+			];
+
+			for (let t of types) {
+				if (MediaRecorder.isTypeSupported(t)) {
+					return t;
+				}
+			}
+
+			return "";
+		}
+
+
+// QR生成
+		// -------------------------
+		// 🔥 QR生成
+		// -------------------------
+		function generateQRFromCurrent() {
+
+			if (!data || !data.dna) {
+				alert("先に解析してください");
 				return;
 			}
 
-			data = await res.json();
+			// =========================
+			// 圧縮
+			// =========================
+			let compressed = data.dna.map(v => Math.round(v * 1000));
 
-		} catch(e){
-			status.innerText = "接続エラー";
-			return;
+			let str = compressed.join(",");
+
+			// 🔥 安全Base64
+			let encoded = btoa(unescape(encodeURIComponent(str)));
+
+			// URL
+			let url = location.origin + "?d=" + encoded;
+
+			// QR生成
+			let canvas = document.getElementById("qr_canvas");
+
+			QRCode.toCanvas(canvas, url, {
+				width: 180
+			});
+
+			// テキスト
+			document.getElementById("qr_text").innerHTML =
+				"このQRで共有できます✨<br><small>" + safeHTML(url) + "</small>";
+
+			// 🔥 保存（コピー用）
+			window.currentQRUrl = url;
 		}
 
-        if(!data.result){
-            status.innerText = "エラー";
-            return;
-        }
-
-        await render(data);
-
-        status.innerText = "完了";
-
-        stream.getTracks().forEach(t=>t.stop());
-    };
-
-    recorder.start();
-    setTimeout(()=>recorder.stop(),5000);
-}
-
-// -------------------- 表示 --------------------
-let lastResult = null;
-
-async function render(data){
-
-    lastResult = data.result;
-
-//    lastResult = data;  // 保存
-
-	const r = adjustScores(
-		JSON.parse(JSON.stringify(data.result)),
-		currentMode
-	);
-    const s = r.scores;
-
-    const now = new Date();
-    const yyyy = now.getFullYear();
-    const mm = String(now.getMonth() + 1).padStart(2, "0");
-    const dd = String(now.getDate()).padStart(2, "0");
-    const hh = String(now.getHours()).padStart(2, "0");
-    const mi = String(now.getMinutes()).padStart(2, "0");
-    const time = `${yyyy}年${mm}月${dd}日 ${hh}:${mi}`;
-
-    const diffText = await loadDiff();
-
-    let html = `
-    <div class="card card-main">
-        <b>あなたの今の状態 🌿（%）</b>
-        <div class="time">${time}</div>
-        <div class="comment">${diffText}</div>
-		<div class="comment" style="color:${getStressColor(s.MentalStress)}">
-			心理ストレス：${s.MentalStress}
-		</div>
-
-		<div class="comment">総合ストレス：${s.Stress}</div>
-		<div class="comment">隠れストレス：${s.HiddenStress ?? 0}</div>
-        <div class="comment">元気：${s.Energy}</div>
-        <div class="comment">気持ち：${s.Emotion}</div>
-        <div class="comment">集中：${s.Focus}</div>
-    </div>
-
-	<div class="comment">環境騒音：${r.Noise ?? Math.round(currentDB)} dB</div>
-	<div class="comment">${r.EnvironmentFlag || ""}</div>
-
-    <div class="card card-main">
-        💭 今のあなたへ
-        <div class="comment">${formatCommentByMode(r.summary)}</div>
-
-        <input id="user_comment" maxlength="20"
-        placeholder="ひとことメモ（任意）"
-        style="margin-top:10px;width:90%;padding:10px;border-radius:10px;border:none;background:#f3f4f6;">
-
-        <button class="btn" onclick="saveComment()" style="margin-top:10px;">
-            💾 保存
-        </button>
-    </div>
-
-    <div id="detail"></div>
-    `;
-
-    document.getElementById("result").innerHTML = html;
-	
-	// 👇これを追加
-	window.lastScores = r.scores;
-	window.ringMeta = r.ring_meta;
-
-	// 🔥 ここ追加（超重要）
-	window.lastVector = r.vector192;
-	
-	drawAllAura(r.vector192);
-	
-	// 🔥 リング表示
-	document.getElementById("ringContainer").style.display = "block";
-	document.getElementById("mainImage").style.display = "none";
-	
-	llmData = null;	   // 👇コメントのキャッシュ　リセット
-}
-
-// -------------隠れストレス　判定関数 --------------------
-function getHiddenLabel(v){
-    if(v > 20) return "⚠️ 内面ストレス高（隠れ）";
-    if(v < -20) return "🌀 一時的変動";
-    return "🌿 安定";
-}
-
+		// =========================
+		// QR 圧縮コピー機能
+		// =========================
+		function copyQRLink() {
 
-// -------------------- 保存処理 --------------------
-async function saveComment(){
+			if (!window.currentQRUrl) {
+				alert("先にQRを生成してください");
+				return;
+			}
 
-    const comment = document.getElementById("user_comment").value;
+			navigator.clipboard.writeText(window.currentQRUrl);
 
-    if(!lastResult){
-        alert("先に測定してください");
-        return;
-    }
+			alert("リンクをコピーしました！");
+		}
 
-    if(comment.trim() === ""){
-        if(!confirm("コメント無しで保存しますか？")){
-            return;
-        }
-    }
+		// =========================
+		// QR読み込み
+		// =========================
+		function loadSharedData() {
 
-    await fetch("/api/save_comment",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-            scores: window.lastScores,
-            vector192:lastResult.vector192,
-            summary:lastResult.summary,
-            comment:comment
-        })
-    });
+			let params = new URLSearchParams(location.search);
+			let d = params.get("d");
 
-    alert("保存しました✨");
-    loadChart();
-}
+			if (!d) return;
 
+			try {
 
-// -------------------- 履歴--------------------
-async function loadHistory(){
+				// Base64デコード（安全）
+				let decoded = decodeURIComponent(escape(atob(d)));
 
-    const box = document.getElementById("history");
+				let arr = decoded.split(",").map(Number);
 
-    if(box.style.display === "block"){
-        box.style.display = "none";
-        return;
-    }
+				let dna = arr.map(v => v / 1000);
 
-    box.style.display = "block";
+				// =========================
+				// データ再構築
+				// =========================
+				data = {
+					dna: dna,
+					psy: dna.slice(),
+					aura: dna.slice()
+
+				};
+
+				// =========================
+				// 自動表示
+				// =========================
+				updateSummary();
+
+				// 👉 UX
+				document.getElementById("qr_text").innerText =
+					"共有データを読み込みました";
+
+			} catch (e) {
+				console.error("QR decode error", e);
+			}
+		}
+
+		// =========================
+		// QR比較関数
+		// =========================
+		function compareWithQR() {
+
+			if (!data || !data.dna) {
+				alert("先に解析してください");
+				return;
+			}
+
+			let input = document.getElementById("qr_input").value;
+
+			if (!input) {
+				alert("リンクを貼ってください");
+				return;
+			}
+
+			try {
 
-	let html = `
-	<div style="margin-bottom:10px;">
-		<button onclick="deleteAll()" 
-			style="background:#fecaca;border:none;border-radius:10px;padding:6px 10px;">
-			🗑 全削除
-		</button>
-	</div>
+				let d;
+
+				// =========================
+				// URL or 直接d 両対応
+				// =========================
+				if (input.includes("?")) {
+					let url = new URL(input);
+					d = url.searchParams.get("d");
+				} else {
+					d = input;
+				}
 
-	<div><b>📖 履歴</b></div>
-	`;
+				if (!d) throw "no data";
 
-    // 既存処理
+				// =========================
+				// デコード
+				// =========================
+				let decoded = decodeURIComponent(escape(atob(d)));
 
-    const res = await fetch("/api/sessions");
-    const json = await res.json();
+				let arr = decoded.split(",").map(Number);
 
-    json.data.forEach(d => {
+				// 🔥 データチェック
+				if (!Array.isArray(arr) || arr.length !== 192) {
+					throw "invalid data";
+				}
 
-        let emoji = "🌿";
-        if(d.energy > 60) emoji = "😊";
-        if(d.energy < 30) emoji = "😴";
+				let otherDNA = arr.map(v => v / 1000);
 
-        html += `
-		<div style="display:flex;justify-content:space-between;align-items:center;
-					padding:8px;border-bottom:1px solid #eee;">
+				// =========================
+				// 類似度計算
+				// =========================
+				let sim = cosineSimilarity(
+					normalize(data.dna),
+					normalize(otherDNA)
+				);
 
-			<div onclick="loadDetail('${d.id}')" style="cursor:pointer;">
-				${emoji} ${d.time}
-			</div>
+				let score = Math.round(sim * 100);
 
-			<button onclick="deleteOne('${d.id}')" 
-				style="background:#fee2e2;border:none;border-radius:10px;padding:4px 8px;">
-				✕
-			</button>
+				let diff = getDifferenceProfile(data.dna, otherDNA);
 
-		</div>
-		
-        `;
-    });
+				let type = getCompatibilityType(score, diff);
 
-    document.getElementById("history").innerHTML = html;
-}
+				// =========================
+				// コメント生成
+				// =========================
+				let comment =
+					score > 85 ? "💖 すごく気が合いそうで安心する関係ですね" :
+					score > 70 ? "😊 一緒にいて心地よい関係です" :
+					score > 50 ? "🙂 違いがあるからこそ楽しい関係かも" :
+					"✨ 新しい発見がある関係ですね";
 
-// -------------------- 履歴　1行削除　------------------
-async function deleteOne(id){
+				let diffComment =
+					diff.avg < 0.1 ? "かなり似てる関係" :
+					diff.avg < 0.2 ? "似てるけど個性あり" :
+					"違いがはっきりしている関係";
 
-    if(!confirm("この履歴を削除しますか？")) return;
+				// =========================
+				// 表示
+				// =========================
+				let name = document.getElementById("name_input").value || "あなた";
+				let target = document.getElementById("target_input").value || "気になる人";
 
-    await fetch("/api/delete_session/" + id, {
-        method:"DELETE"
-    });
+				document.getElementById("compare_result").innerHTML = `
+					<div style="font-size:18px;">💞 ${safeHTML(name)}さん × ${safeHTML(target)}さん</div>
+					<div class="big-score">相性：${score}%</div>
+					<div class="sub-text">
+						${safeHTML(comment)}<br><br>
+						${safeHTML(type)}<br><br>
+						${safeHTML(diffComment)}
+					</div>
+				`;
 
-    loadHistory(); // 🔥 再読み込み
-}
+			} catch (e) {
+				document.getElementById("compare_result").innerHTML =
+					"うまく読み取れませんでした🥺";
 
+				console.error(e);
+			}
+		}
 
-// -------------------- 履歴　全削除　------------------
-async function deleteAll(){
-
-    if(!confirm("すべて削除しますか？")) return;
-
-    await fetch("/api/delete_all_sessions", {
-        method:"DELETE"
-    });
-
-    document.getElementById("history").innerHTML = "";
-}
-
-
-// -------------------- 差分　表示--------------------
-async function loadDiff(){
-
-    const res = await fetch("/api/diff");
-    const json = await res.json();
-
-    const d = json.diff;
-
-    let text = "変化なし";
-    let emoji = "🌿";
-
-    if(d > 0){
-        text = `昨日より +${d}`;
-        emoji = "😊";
-    }else if(d < 0){
-        text = `昨日より ${d}`;
-        emoji = "😴";
-    }
-
-    return `${text} ${emoji}`;
-}
-
-
-
-// -------------------- 詳細表示--------------------
-async function loadDetail(id){
-
-    const canvas = document.getElementById("energyChart");
-
-    if(canvas.style.display === "block"){
-        canvas.style.display = "none";
-        return;
-    }
-
-    canvas.style.display = "block";
-
-    // 既存処理
-
-    const res = await fetch("/api/session/" + id);
-    const json = await res.json();
-
-    const d = json.data;
-
-    // 🔥 差分取得
-    const diff = await loadDetailDiff(id);
-
-    let html = `
-    <div class="card">
-        <b>🧠 詳細</b><br>
-        🕒 ${d.timestamp}<br><br>
-
-		${metric("元気", d.scores.Energy, diff?.Energy || 0)}
-		${metric("気持ち", d.scores.Emotion, diff?.Emotion || 0)}
-		${metric("集中", d.scores.Focus, diff?.Focus || 0)}
-		${metric("つながり", d.scores.Social, diff?.Social || 0)}
-		${metric("リラックス", d.scores.Calm, diff?.Calm || 0)}
-		${metric("ストレス", d.scores.Stress, diff?.Stress || 0)}
-        <br>
-        💬 ${d.user_comment || "（コメントなし）"}
-
-        <canvas id="detailChart" height="200"></canvas>
-    </div>
-    `;
-
-    document.getElementById("detail").innerHTML = html;
-
-    drawDetailChart(d);
-}
-
-
-// -------------------- 詳細表示 その2--------------------
-async function loadDetailDiff(id){
-
-    const res = await fetch("/api/session_diff/" + id);
-    const json = await res.json();
-
-    return json.diff || {};
-}
-
-// -------------------- 詳細表示 その3-------------------
-async function loadDaySummary(){
-
-    const res = await fetch("/api/day_summary");
-    const json = await res.json();
-
-    document.getElementById("daySummaryBox").innerText =
-        json.summary;
-}
-
-
-// -------------------- グラフ 1 --------------------
-function metric(name, v, d=0){
-
-    const stars = Math.round(v/20);
-
-    let color = "#86efac";
-    if(v <= 30) color = "#fda4af";
-    else if(v <= 60) color = "#fde68a";
-
-    let diffText = "";
-    if(d > 0) diffText = ` (+${d} 😊)`;
-    else if(d < 0) diffText = ` (${d} 😴)`;
-
-    return `
-    <div style="margin-top:10px;text-align:left;">
-        <b>${name}</b><br>
-
-        <span style="color:${color};font-size:16px;">
-            ${"★".repeat(stars)}${"☆".repeat(5-stars)}
-        </span>
-
-        <span style="font-size:12px;color:#888;margin-left:5px;">
-            ${v}${diffText}
-        </span>
-
-        <div style="height:6px;background:#eee;border-radius:10px;margin-top:5px;">
-            <div style="width:${v}%;background:${color};height:6px;border-radius:10px;"></div>
-        </div>
-    </div>
-    `;
-}
-
-
-// -------------------- グラフ 2--------------------
-let chart = null;
-
-async function loadChart(){
-
-    const canvas = document.getElementById("energyChart");
-
-    // 🔥 ここ追加（トグル）
-    if(canvas.style.display === "block"){
-        canvas.style.display = "none";
-        return;
-    }
-
-    canvas.style.display = "block";
-
-    // 🔥 これ追加
-    canvas.width = canvas.offsetWidth;
-    canvas.height = 200;
-
-    const res = await fetch("/api/energy_trend");
-    const json = await res.json();
-
-	const labels = json.data.map(d => {
-		const t = new Date(d.time);
-
-		const month = t.getMonth() + 1;
-		const day   = t.getDate();
-		const week = ["日","月","火","水","木","金","土"];
-		const w = week[t.getDay()];
-		const hour = String(t.getHours()).padStart(2,"0");
-		const min   = String(t.getMinutes()).padStart(2,"0");
-
-		return `${month}/${day}(${w}) ${d.zone} ${hour}:${min}`;
-	});
-
-    const values = json.data.map(d=>d.energy);
-
-    const ctx = canvas;
-
-    if(chart){
-        chart.destroy();
-    }
-
-    chart = new Chart(ctx,{
-        type:"line",
-        data:{
-            labels:labels,
-            datasets:[{
-                data:values,
-                tension:0.0
-            }]
-        },
-        options:{
-            plugins:{legend:{display:false}}
-        }
-    });
-}
-
-
-// -------------------- グラフ描画関数--------------------
-let detailChart = null;
-
-function drawDetailChart(d){
-
-    const ctx = document.getElementById("detailChart");
-
-    const labels = ["Energy","Emotion","Focus","Social","Calm","Stress"];
-    const values = [
-        d.scores.Energy,
-        d.scores.Emotion,
-        d.scores.Focus,
-        d.scores.Social,
-        d.scores.Calm,
-		d.scores.Stress
-		
-    ];
-
-    if(detailChart){
-        detailChart.destroy();
-    }
-
-    detailChart = new Chart(ctx,{
-        type:"radar",
-        data:{
-            labels:labels,
-            datasets:[{
-                data:values
-            }]
-        },
-        options:{
-            scales:{
-                r:{
-                    suggestedMin:0,
-                    suggestedMax:100
-                }
-            }
-        }
-    });
-}
-
-
-// ------------------ LLM フロント関数 （開閉＋取得→後でタブ制御）  --------------
-let llmData = null;
-let currentTab = "energy";
-
-async function toggleLLM(){
-
-    const box = document.getElementById("llmBox");
-
-    if(box.style.display === "block"){
-        box.style.display = "none";
-        return;
-    }
-
-    box.style.display = "block";
-
-    if(llmData === null){
-
-        if(!lastResult){
-            document.getElementById("llmCommentBox").innerText = "先に測定してください";
-            return;
-        }
-
-        try{
-            const res = await fetch("/api/llm_comment",{
-                method:"POST",
-                headers:{"Content-Type":"application/json"},
-                body: JSON.stringify({
-                    scores: lastResult.scores,
-                    mode: currentMode
-                })
+		// =========================
+		// 差分ヒート
+		// =========================
+		function getDifferenceProfile(dna1, dna2) {
+
+			if (!dna1 || !dna2) return { avg: 0, max: 0 };
+
+			let diff = dna1.map((v, i) => Math.abs(v - (dna2[i] || 0)));
+
+			let avg = diff.length
+				? diff.reduce((a, b) => a + b, 0) / diff.length
+				: 0;
+
+			let max = diff.length ? Math.max(...diff) : 0;
+
+			return { avg, max };
+		}
+
+		// =========================
+		// 相性タイプ
+		// =========================
+		function getCompatibilityType(score, diff) {
+
+			if (score > 85 && diff.avg < 0.1)
+				return "💖 シンクロ型（ほぼ同じ感覚）";
+
+			if (score > 70)
+				return "😊 共感型（分かり合える）";
+
+			if (score > 50)
+				return "🙂 補完型（違いが魅力）";
+
+			return "⚡ 刺激型（真逆で面白い）";
+		}
+
+		// =========================
+		// セクター比較
+		// =========================
+
+
+		// 追加　セクター
+		function getSectorComment(diffArr) {
+
+			let names = [
+				"直感","思考","論理","対人","会話","共感",
+				"自信","満足","身体","行動","活力","緊張"
+			];
+
+			let idx = diffArr
+				.map(Math.abs)
+				.indexOf(Math.max(...diffArr.map(Math.abs)));
+
+			return "ズレ：" + names[idx];
+		}
+
+		// =========================
+		// QRカメラ読み取り
+		// =========================
+		function startQRScanner() {
+
+			if (window.qrReader) {
+				window.qrReader.stop();
+			}
+
+			window.qrReader = new Html5Qrcode("qr-reader");
+
+			window.qrReader.start(
+				{ facingMode: "environment" }, // 背面カメラ
+				{
+					fps: 10,
+					qrbox: 200
+				},
+				(decodedText) => {
+
+					// 👉 textareaに入れる
+					document.getElementById("qr_input").value = decodedText;
+
+					// 👉 自動で比較
+					compareWithQR();
+
+					window.qrReader.stop();
+				},
+				(error) => {}  // 読み取り中のエラー（無視OK）
+			);
+		}
+
+		// =========================
+		// QR画像保存
+		// =========================
+		async function saveShareCard() {
+
+			const card = document.getElementById("share_card");
+			if (!card) return;
+
+			const canvas = await html2canvas(card, {
+				backgroundColor: "#ffffff",
+				scale: 2
+			});
+
+			const link = document.createElement("a");
+			link.download = "voiceaura_share.png";
+			link.href = canvas.toDataURL("image/png");
+			link.click();
+		}
+
+		// =========================
+		// QR画像共有
+		// =========================
+		async function shareShareCard() {
+
+			const card = document.getElementById("share_card");
+			if (!card) return;
+
+			const canvas = await html2canvas(card, {
+				backgroundColor: "#ffffff",
+				scale: 2
+			});
+
+			let now = new Date().toLocaleDateString();
+			document.querySelector(".date").innerText = now;
+
+			canvas.toBlob(async (blob) => {
+				if (!blob) return;
+
+				const file = new File([blob], "voiceaura_share.png", { type: "image/png" });
+
+				try {
+					if (navigator.canShare && navigator.canShare({ files: [file] })) {
+						await navigator.share({
+							title: "VoiceAura 相性チェック",
+							text: "VoiceAuraで相性をチェックしました✨",
+							files: [file]
+						});
+					} else {
+						await saveShareCard();
+					}
+				} catch (e) {
+					console.error(e);
+				}
+
+			});
+		}
+
+
+
+        // =========================
+        // サンプル タブ
+        // =========================
+		function loadSample(n) {
+
+			let samples = [
+				[0.1,0.2,0.3], // 仮（あとで192）
+				[0.2,0.1,0.4],
+				[0.3,0.2,0.1],
+				[0.4,0.3,0.2]
+			];
+
+			let base = samples[n-1];
+
+			// 👉 仮で192に拡張
+			let dna = Array(192).fill(base[0]);
+
+			data = {
+				dna: dna,
+				psy: dna.slice(),
+				aura: dna.slice()
+			};
+
+			updateSummary();
+		}
+
+
+        // =========================
+        // UI接続
+        // =========================
+        function setupGlobalResolution() {
+            const slider = document.getElementById("q_global");
+            const label = document.getElementById("label_global");
+
+            slider.addEventListener("input", (e) => {
+                const q = e.target.value;
+                const setting = globalResolutionMap[q];
+                globalRes = setting.value;
+                label.innerText = setting.label;
+                draw();
             });
-
-            const json = await res.json();
-
-            if(!res.ok || json.error){
-                document.getElementById("llmCommentBox").innerText = "AIコメント取得エラー";
-                return;
-            }
-
-            llmData = json;
-            showLLMTab("summary", document.querySelector(".llm-tab"));
-
-        }catch(e){
-            document.getElementById("llmCommentBox").innerText = "通信エラー";
         }
-    }
-}
 
-// ------------------ LLM フロント関数 （タブ制御）  --------------
-function showLLMTab(type, el){
+        function setupDensity(id, labelId, setter) {
+            document.getElementById(id).addEventListener("input", (e) => {
+                const q = e.target.value;
+                const setting = densityMap[q];
+                setter(setting.density);
+                document.getElementById(labelId).innerText = setting.label;
+                draw();
+            });
+        }
+
+        function setupBreath(id, labelId, map, setter) {
+            document.getElementById(id).addEventListener("input", (e) => {
+                const q = e.target.value;
+                const setting = map[q];
+                setter(setting.value);
+                document.getElementById(labelId).innerText = setting.label;
+            });
+        }
+
+        function setupAutoGain() {
+            document.getElementById("auto_gain").addEventListener("change", (e) => {
+                autoGain = e.target.checked;
+                draw();
+            });
+        }
+
+		function setupAnalysisSettings() {
+			["sigma", "upscale", "psy", "contrast"].forEach(id => {
+				const el = document.getElementById(id);
+				if (!el) return; // ←これ追加
+
+				el.addEventListener("input", updateAnalysisSettingLabels);
+				el.addEventListener("change", () => {
+					if (document.getElementById("audio")?.files?.[0]) {
+						analyze();
+					}
+				});
+			});
+		}
 
-    currentTab = type;
-
-    if(!llmData){
-        document.getElementById("llmCommentBox").innerText = "データなし";
-        return;
-    }
-
-    let text = "データなし";
-
-    if(type === "summary"){
-        text = llmData.summary ?? "データなし";
-    }else{
-        const jpMap = {
-            "energy": "元気",
-            "emotion": "気持ち",
-            "focus": "集中",
-            "stress": "声",
-            "mental": "心理"
-        };
-
-        const jp = jpMap[type];
-        text = getModeComment(jp);
-    }
-
-    // =====================================
-    // 🔥 ここ追加（for stress 限定）
-    // =====================================
-    if(currentMode === "stress" && type === "stress"){
-
-        const hidden = llmData.hidden ?? 0;
-        const label = getHiddenLabel(hidden);
-
-        text += `<br><br><b>隠れストレス：</b>${hidden.toFixed(1)} (${label})`;
-    }
-
-    // 以下　普通のコード
-    document.getElementById("llmCommentBox").innerHTML = text ?? "データなし";
-
-    document.querySelectorAll(".llm-tab").forEach(b=>b.classList.remove("active"));
-    el.classList.add("active");
-}
-
-
-// -------------------- リング 中核関数 no1--------------------
-function interpolate360(values){
-
-    const result = [];
-    const n = values.length;
-
-	const resolution = getResolution(); 
-
-    for(let i=0;i<resolution;i++){
-
-        const t = i / resolution * n;
-
-        const i0 = Math.floor(t);
-        const i1 = (i0 + 1) % n;
-
-        const frac = t - i0;
-
-        const v = values[i0]*(1-frac) + values[i1]*frac;
-
-        result.push(v);
-    }
-
-    return result;
-}
-
-
-// -------------------- リング 中核関数 no2--------------------
-function smoothArray(values){
-
-    const result = [];
-    const len = values.length;
-
-    for(let i=0;i<len;i++){
-
-		const noise = (Math.random() - 0.5) * 0.02;
-		const v = values[i] + noise;
-
-        const v0 = values[(i-2+len)%len];
-        const v1 = values[(i-1+len)%len];
-        const v2 = values[i];
-        const v3 = values[(i+1)%len];
-        const v4 = values[(i+2)%len];
-
-        // 🔥 重み付き（ここが違う）
-        const smooth = (v0 + 2*v1 + 3*v2 + 2*v3 + v4) / 9;
-
-        result.push(smooth);
-    }
-
-    return result;
-}
-
-
-// -------------------- リング 中核関数 no3--------------------
-function buildAura(vector){
-
-    // ========= 外リング =========
-    const dna = smoothArray(interpolate360(vector));
-
-    // ========= 中リング（12心理🔥） =========
-    const psy = [];
-
-    const groupSize = Math.floor(vector.length / 12);
-
-    for(let i=0;i<12;i++){
-
-        const start = i * groupSize;
-        const end   = start + groupSize;
-
-        const slice = vector.slice(start, end);
-
-        const avg = slice.reduce((a,b)=>a+b,0) / slice.length;
-
-        psy.push(avg);
-    }
-
-    // 🔥 12 → 360へ拡張
-    const psy360 = smoothArray(interpolate360(psy));
-
-    // ========= 内リング =========
-    const aura = smoothArray(interpolate360(psy));
-
-    return {
-        dna: dna,
-        psy: psy360,
-        aura: aura
-    };
-}
-
-
-// -------------------- リング 中核関数 no4--------------------
-function applySettingsAndRedraw(){
-
-    if(!isDirty){
-        alert("変更はありません");
-        return;
-    }
-
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-
-    isDirty = false;
-
-    // 🔥 表示更新
-    updateDirtyUI();
-}
-
-// -------------------- リング 中核関数 no4.2 状態表示関数----------------
-function updateDirtyUI(){
-
-    const el = document.getElementById("dirtyStatus");
-
-    if(!el) return;
-
-    if(isDirty){
-        el.innerHTML = "● 未反映";
-        el.style.color = "red";
-    }else{
-        el.innerHTML = "✔ 反映済み";
-        el.style.color = "#999";
-    }
-}
-
-// -------------------- リング 中核関数 no5--------------------
-function applyQuality(q){
-
-    appSettings.quality = q;
-	isDirty = true;  // 🔥ここ
-
-    // 🔥 ここ削除（再描画しない）　redraw();
-}
-
-
-// -------------------- 外リング　描画関数--------------------
-function drawAllAura(vector){
-
-    if(!vector || vector.length === 0) return;
-
-    const canvas = document.getElementById("auraRing");
-    const ctx = canvas.getContext("2d");
-
-    const size = canvas.offsetWidth;
-
-    canvas.width  = size;
-    canvas.height = size;
-
-    const cx = size / 2;
-    const cy = size / 2;
-
-    ctx.clearRect(0,0,size,size);
-
-    // 🔥 データはここで1回だけ
-    const { dna, psy, aura } = buildAura(vector);
-
-    // 外
-    {
-        const innerBase = size * 0.38;    // 元々 0.28
-        const outerMax  = size * 0.48;    // 元々 0.46
-
-        drawOuterAura(ctx, cx, cy, dna, innerBase, outerMax);
-    }
-
-    // 中
-    {
-        const innerBase = size * 0.25;    // 元々 0.22
-        const outerMax  = size * 0.34;    // 元々 0.34
-
-        drawMiddleAura(ctx, cx, cy, psy, innerBase, outerMax);
-    }
-
-    // 内
-    {
-        const innerBase = size * 0.12;    // 元々 0.12
-        const outerMax  = size * 0.20;    // 元々 0.20
-
-        drawInnerAura(ctx, cx, cy, aura, innerBase, outerMax);
-    }
-
-    // 凡例ラベル
-    if(showOuterLabel) drawLegend(ctx, cx, cy, size * 0.45);          // 外リングラベル
-    if(showMiddleLabel) drawMiddleLegend(ctx, cx, cy, size * 0.33);   // 中リングラベル
-    if(showInnerLabel) drawInnerLegend(ctx, cx, cy, size * 0.20);     // 内リングラベル
-
-}
-
-
-// =========================
-// 🔥 外リング（192ベクトル）
-// =========================
-function drawOuterAura(ctx, cx, cy, normData, innerBase, outerMax){
-
-    // =========================
-    // 正規化
-    // =========================
-    const min = Math.min(...normData);
-    const max = Math.max(...normData);
-
-    const norm = normData.map(v=>{
-        if(max - min === 0) return 0.5;
-        return (v - min) / (max - min);
-    });
-
-    const scale = appSettings.lineScale || 1.5;
-
-    // =========================
-    // 描画
-    // =========================
-    for(let i=0;i<norm.length;i++){
-
-        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
-
-        const boost  = appSettings.boost;
-        const breath = appSettings.breath * 0.05 * Math.sin(Date.now()/400);
-        const effect = appSettings.effect;
-        const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
-
-        const intensity = norm[i];
-
-        // 半径（外方向だけ）
-        const r = innerBase 
-            + Math.pow(intensity, boost) * (outerMax - innerBase)
-            + breath * 10;
 
         // =========================
-        // 🔥 内側ズレ防止（最重要）
+        // 音声準備
         // =========================
-        const safeInner = innerBase + 1.5;
+		let analyzeState = "idle"; 
+		// idle → count → record → processing
 
-        const x1 = cx + safeInner * Math.cos(angle);
-        const y1 = cy + safeInner * Math.sin(angle);
 
-        const x2 = cx + r * Math.cos(angle);
-        const y2 = cy + r * Math.sin(angle);
+		// =========================
+		// 🎬 カウント演出
+		// =========================
+		function showCount(n) {
+
+			const el = document.getElementById("countdown");
+			const circle = document.getElementById("count_circle");
+
+			el.innerText = n;
+
+			el.classList.remove("count-pop");
+			void el.offsetWidth;
+			el.classList.add("count-pop");
+
+			circle.classList.remove("circle-pulse");
+			void circle.offsetWidth;
+			circle.classList.add("circle-pulse");
+
+			// スマホ振動（任意）
+			// if (navigator.vibrate) navigator.vibrate(40);
+		}
 
         // =========================
-        // 🌈 虹色
+        // カウントダウン
         // =========================
-        const hue = (i / norm.length) * 360;
-        const color = `hsl(${hue}, 90%, 60%)`;
+		function startCountdown() {
+
+			setAnalyzeState("count");
+
+			let count = 3;
+
+			showCount(count); // ←最初の1回
+
+			const interval = setInterval(() => {
+
+				count--; // ←先に減らす（これが重要）
+
+				if (count < 0) {
+					clearInterval(interval);
+					startRecording();
+					return;
+				}
+
+				showCount(count);
+
+			}, 1000);
+		}
 
         // =========================
-        // 線
+        // 録音 5秒
         // =========================
-        ctx.strokeStyle = color;
-        ctx.lineWidth = Math.min(2, 0.6 + intensity * 1.0 * effect);
-
-        // =========================
-        // 🔥 外側オーラのみ
-        // =========================
-        ctx.shadowBlur = (2 + intensity * 6 + glow * 3) * scale;
-        ctx.shadowColor = color;
-
-        ctx.beginPath();
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-        ctx.stroke();
-    }
-
-    // =========================
-    // 外リング基準円（極細）
-    // =========================
-    ctx.shadowBlur = 0;
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
-    ctx.strokeStyle = "#eeeeee";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-}
-
-
-// -------------------- リング 凡例（外周ラベル）描画--------------------
-// 🌈 凡例（外周ラベル）
-function drawLegend(ctx, cx, cy, radius){
-
-    const labels = [
-        "創造","思考","冷静","対人","共感","自信",
-        "存在","満足","身体","行動","情熱","直感"
-    ];
-
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    for(let i=0;i<labels.length;i++){
-
-        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
-
-        const x = cx + radius * Math.cos(angle);
-        const y = cy + radius * Math.sin(angle);
-
-        const hue = (i / labels.length) * 360;
+		let mediaRecorder;
+		let audioChunks = [];
+		let prevLevel = 0;
+		let lastLevel = 0;
+		let mimeType;
 		
-		ctx.lineWidth = 3;
-		ctx.strokeStyle = "#000";   // 黒縁
+		let audioCtx = null;
 
-		ctx.strokeText(labels[i], x, y);  // 先に縁
-		ctx.fillStyle = `hsl(${hue}, 90%, 90%)`;
+		async function startRecording() {
 
-        ctx.fillText(labels[i], x, y);
-    }
-}
+			prevLevel = 0;
+			setAnalyzeState("record");
+			setProgress(0);
 
-// 🌈 凡例（外周ラベル）のon/off
-function toggleOuterLabel(){
+			let stream;
 
-    showOuterLabel = !showOuterLabel;
+			try {
+				stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			} catch (e) {
+				alert("🎤 マイクの許可をしてください（設定からON）");
+				console.error("mic error:", e);
+				return;
+			}
 
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
+			window.audioStream = stream;
 
-// 🌈 凡例とコメント（外周ラベル）のon/off
-function toggleOuter(){
+			mimeType = getSupportedMimeType();
 
-    // 🔥 状態反転
-    showOuterLabel = !showOuterLabel;
+			if (!mimeType) {
+				alert("このブラウザは録音非対応です");
+				return;
+			}
 
-    const legendBox = document.getElementById("legendBox");
+			mediaRecorder = new MediaRecorder(stream, {
+				mimeType: mimeType
+			});
 
-    // =========================
-    // 🔥 凡例と連動
-    // =========================
-    if(showOuterLabel){
+			audioChunks = [];
 
-        legendBox.innerHTML = `
-        外リング（音）<br>
-        　・声の微細特徴（192次元ベクトル）<br>
-        　・周波数・リズム・強弱などの情報<br>
-        `;
+			mediaRecorder.ondataavailable = e => {
+				if (e.data && e.data.size > 0) {
+					audioChunks.push(e.data);
+				}
+			};
 
-    }else{
+			mediaRecorder.onstop = async () => {
 
-        legendBox.innerHTML = "";
-    }
+				micAnimating = false;
 
-    // =========================
-    // 🔥 リング再描画
-    // =========================
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
+				// 🔥 追加（最重要）
+				if (window.audioStream) {
+					window.audioStream.getTracks().forEach(t => t.stop());
+					window.audioStream = null;
+				}
 
+				if (audioCtx && audioCtx.state !== "closed") {
+					try { await audioCtx.close(); } catch (e) {}
+				}
+				audioCtx = null;
 
-// =========================
-// 🔥 中リング（心理リング）
-// =========================
-function drawMiddleAura(ctx, cx, cy, normData, innerBase, outerMax){
+				setProcessingUI();
+				startFakeProgress();
 
-    const min = Math.min(...normData);
-    const max = Math.max(...normData);
+				const blob = new Blob(audioChunks, { type: mimeType });
+				sendAudio(blob);
+			};
 
-    const norm = normData.map(v=>{
-        if(max - min === 0) return 0.5;
-        return (v - min) / (max - min);
-    });
+			mediaRecorder.start();
+			startMicAnimation(stream);
 
-    const scale = appSettings.lineScale || 1.5;
-
-    // 🎯 12心理カラー
-    const psyColors = [
-        "#8F00FF","#001F54","#0077FF","#00B7C2",
-        "#7FFF00","#FFD300","#FFD700","#FF8C00",
-        "#FF6F61","#FF0000","#FF00FF","#00A86B"
-    ];
-
-    const sectorSize = Math.floor(norm.length / 12);
-
-    for(let i=0;i<norm.length;i++){
-
-        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
-
-        const boost  = appSettings.boost * 0.9;
-        const breath = appSettings.breath * 0.04 * Math.sin(Date.now()/400);
-        const effect = appSettings.effect;
-        const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
-
-        const intensity = norm[i];
-
-        const r = innerBase 
-            + Math.pow(intensity, boost) * (outerMax - innerBase)
-            + breath * 8;
-
-        // 🔥 内側ににじまない
-        const safeInner = innerBase + 1.2;
-
-        const x1 = cx + safeInner * Math.cos(angle);
-        const y1 = cy + safeInner * Math.sin(angle);
-
-        const x2 = cx + r * Math.cos(angle);
-        const y2 = cy + r * Math.sin(angle);
-
-        const sectorIndex = Math.floor(i / sectorSize) % 12;
-        const color = psyColors[sectorIndex];
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = Math.min(2, 0.6 + intensity * 0.8 * effect);
-
-        ctx.shadowBlur = (2 + intensity * 5 + glow * 2) * scale;
-        ctx.shadowColor = color;
-
-        ctx.beginPath();
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-        ctx.stroke();
-    }
-
-    // 基準円
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
-    ctx.strokeStyle = "#e5e7eb";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-}
-
-
-// -------------------- リング 凡例（中周ラベル）描画 --------------------
-// 🌈 凡例（中周ラベル）
-function drawMiddleLegend(ctx, cx, cy, radius){
-
-    const labels = [
-        "直感","分析","冷静","対人",
-        "共感","自信","存在感","満足",
-        "身体","行動","情熱","想像"
-    ];
-
-    const colors = [
-        "#8F00FF", "#001F54", "#0077FF", "#00B7C2",
-        "#7FFF00", "#FFD300", "#FFD700", "#FF8C00",
-        "#FF6F61", "#FF0000", "#FF00FF", "#00A86B"
-    ];
-
-    ctx.font = "12px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    for(let i=0;i<labels.length;i++){
-
-        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
-
-        const x = cx + radius * Math.cos(angle);
-        const y = cy + radius * Math.sin(angle);
-
-        // 🔥 縁（しっかり）
-		ctx.lineWidth = 1.2;
-		ctx.strokeStyle = "rgba(0,0,0,0.45)";
-		ctx.strokeText(labels[i], x, y);
-
-        // 🔥 色を薄く（方法②）
-        ctx.fillStyle = hexToRgba(colors[i], 0.35);
-        ctx.fillText(labels[i], x, y);
-    }
-}
-
-
-// -------------- リング 凡例（中周ラベル）描画 HEX対応版------------------
-function hexToRgba(hex, alpha){
-
-    const r = parseInt(hex.substring(1,3),16);
-    const g = parseInt(hex.substring(3,5),16);
-    const b = parseInt(hex.substring(5,7),16);
-
-    return `rgba(${r},${g},${b},${alpha})`;
-}
-
-
-// 🌈 凡例（中周ラベル）のon/off
-function toggleMiddleLabel(){
-
-    showMiddleLabel = !showMiddleLabel;
-
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
-
-// 🌈 凡例とコメント（中周ラベル）のon/off
-function toggleMiddle(){
-
-    // 🔥 状態反転
-    showMiddleLabel = !showMiddleLabel;
-
-    const legendBox = document.getElementById("legendBox");
-
-    // =========================
-    // 🔥 凡例と連動
-    // =========================
-    if(showMiddleLabel){
-
-        legendBox.innerHTML = `
-		中リング（心理）<br>
-		　・声から推定された心理状態（12分類）<br>
-		　・感情・集中・対人・ストレスなどの傾向<br>
-		　・隠れストレス = 心理ストレス − 声ストレス　±20仮定
-        `;
-
-    }else{
-
-        legendBox.innerHTML = "";
-    }
-
-    // =========================
-    // 🔥 リング再描画
-    // =========================
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
-
-
-// =========================
-// 🔥 小リング（意味リング）
-// =========================
-function drawInnerAura(ctx, cx, cy, normData, innerBase, outerMax){
-
-    const min = Math.min(...normData);
-    const max = Math.max(...normData);
-
-    const norm = normData.map(v=>{
-        if(max - min === 0) return 0.5;
-        return (v - min) / (max - min);
-    });
-
-    const scale = appSettings.lineScale || 1.5;
-
-    // 🔥 滑らか補間（重要）
-    const smooth = (arr, i)=>{
-        const prev = arr[(i-1+arr.length)%arr.length];
-        const curr = arr[i];
-        const next = arr[(i+1)%arr.length];
-        return (prev + curr + next) / 3;
-    };
-
-    for(let i=0;i<norm.length;i++){
-
-        const angle = (i / norm.length) * Math.PI * 2 - Math.PI/2;
-
-        const boost  = appSettings.boost * 0.7;
-        const breath = appSettings.breath * 0.03 * Math.sin(Date.now()/400);
-        const effect = appSettings.effect;
-        const glow   = appSettings.glow * Math.abs(Math.sin(Date.now()/500));
-
-        const intensity = smooth(norm, i);
-
-        const r = innerBase
-            + Math.pow(intensity, boost) * (outerMax - innerBase)
-            + breath * 6;
-
-        // 🔥 内側ににじまない
-        const safeInner = innerBase + 1;
-
-        const x1 = cx + safeInner * Math.cos(angle);
-        const y1 = cy + safeInner * Math.sin(angle);
-
-        const x2 = cx + r * Math.cos(angle);
-        const y2 = cy + r * Math.sin(angle);
-
-        // 🌈 なめらか虹
-        const hue = (i / norm.length) * 360;
-        const color = `hsl(${hue}, 70%, ${60 + intensity * 10}%)`;
-
-        ctx.strokeStyle = color;
-        ctx.lineWidth = Math.min(1.8, 0.5 + intensity * 0.7 * effect);
-
-        ctx.shadowBlur = (1.5 + intensity * 4 + glow * 2) * scale;
-        ctx.shadowColor = color;
-
-        ctx.beginPath();
-        ctx.moveTo(x1,y1);
-        ctx.lineTo(x2,y2);
-        ctx.stroke();
-    }
-
-    // 内円
-    ctx.shadowBlur = 0;
-    ctx.beginPath();
-    ctx.arc(cx, cy, innerBase, 0, Math.PI*2);
-    ctx.strokeStyle = "#f1f5f9";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-}
-
-
-// -------------------- リング 凡例（内周ラベル）描画--------------------
-// 🌈 凡例（内周ラベル）
-function drawInnerLegend(ctx, cx, cy, radius){
-
-    // =========================
-    // 🔥 12心理ラベル
-    // =========================
-    const labels = [
-        "直感","分析","冷静","対人",
-        "共感","自信","存在感","満足",
-        "身体","行動","情熱","想像"
-    ];
-
-    // =========================
-    // 🔥 カラー（内リングと統一）
-    // =========================
-    const colors = [
-        "#8F00FF", "#001F54", "#0077FF", "#00B7C2",
-        "#7FFF00", "#FFD300", "#FFD700", "#FF8C00",
-        "#FF6F61", "#FF0000", "#FF00FF", "#00A86B"
-    ];
-
-    ctx.font = "10px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-
-    // =========================
-    // 🔥 描画
-    // =========================
-    for(let i=0;i<labels.length;i++){
-
-        const angle = (i / labels.length) * Math.PI * 2 - Math.PI/2;
-
-        // 🔥 少し内側に配置
-        const r = radius - 10;
-
-        const x = cx + r * Math.cos(angle);
-        const y = cy + r * Math.sin(angle);
+			setTimeout(() => {
+				if (mediaRecorder && mediaRecorder.state !== "inactive") {
+					mediaRecorder.stop();
+				}
+			}, 5000);
+		}
 
         // =========================
-        // 🔥 縁取り（白で見やすく）
+        // 外リング（軽量）
+		async function startMicAnimation(stream) {
+
+			if (audioCtx && audioCtx.state !== "closed") {
+				try {
+					await audioCtx.close();
+				} catch (e) {}
+			}
+			audioCtx = null;
+
+			audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+			if (audioCtx.state === "suspended") {
+				try {
+					await audioCtx.resume();
+				} catch (e) {}
+			}
+
+			micAnimating = true;
+
+			const analyser = audioCtx.createAnalyser();
+			const source = audioCtx.createMediaStreamSource(stream);
+			source.connect(analyser);
+
+			analyser.fftSize = 256;
+			const buffer = new Uint8Array(analyser.frequencyBinCount);
+
+			const canvas = document.getElementById("mic_canvas");
+			resizeCanvas(canvas);
+
+			const ctx = canvas.getContext("2d");
+
+			function drawLevel() {
+
+				if (!micAnimating || analyzeState !== "record") return;
+
+				const cx = canvas.width / 2;
+				const cy = canvas.height / 2;
+
+				analyser.getByteFrequencyData(buffer);
+
+				// =========================
+				// 🔥 音量取得
+				// =========================
+				let sum = 0;
+				
+				for (let i = 0; i < buffer.length; i++) {
+					sum += buffer[i];
+				}
+
+				let level = sum / buffer.length / 255;
+
+				// 🔥 安定化（超重要）
+				level = level * 0.7 + prevLevel * 0.3;
+				prevLevel = level;
+				
+				lastLevel = level;     // 🔥 ここ追加（リアル音量を保存）
+
+				// 🔥 ゲイン
+				level *= 3.0;
+
+				// 🔥 カーブ
+				level = Math.pow(level, 1.2);
+
+				// 🔥 上限
+				level = Math.min(level, 1.0);
+
+				// 🔥 dB換算
+				let db = levelToDb(level);
+				window.lastDb = db;
+
+				// 🔥 テキスト更新
+				updateLevelText(level);
+
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+				// =========================
+				// 🔵 ベース円
+				// =========================
+				ctx.beginPath();
+				ctx.arc(cx, cy, 40, 0, Math.PI * 2);
+				ctx.strokeStyle = "rgba(255,255,255,0.2)";
+				ctx.lineWidth = 1;
+				ctx.stroke();
+
+				// =========================
+				// 🌈 レベルリング
+				// =========================
+				const segments = 60;
+
+				for (let i = 0; i < segments; i++) {
+
+					let ang = (i / segments) * Math.PI * 2 - Math.PI / 2;
+
+					let r1 = 40;
+					let r2 = 40 + level * 100;
+
+					let x1 = cx + Math.cos(ang) * r1;
+					let y1 = cy + Math.sin(ang) * r1;
+
+					let x2 = cx + Math.cos(ang) * r2;
+					let y2 = cy + Math.sin(ang) * r2;
+
+					let hue = (i / segments) * 360;
+
+					ctx.strokeStyle = `hsl(${hue},100%,60%)`;
+
+					ctx.beginPath();
+					ctx.moveTo(x1, y1);
+					ctx.lineTo(x2, y2);
+					ctx.stroke();
+				}
+
+				requestAnimationFrame(drawLevel);
+			}
+
+			drawLevel();
+		}
+
+
         // =========================
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = "#fff";
-        ctx.strokeText(labels[i], x, y);
+        // フェイク進行バー
+        // =========================
+		let micAnimating = false;
+		let progressTimer;
+
+		// 🔥 チラチラ防止状態
+		let levelState = "low"; // low / mid / high
+
+		function updateLevelText(level) {
+
+			// 🔥 状態ベース判定（ヒステリシス）
+			if (levelState === "low" && level > 0.08) {
+				levelState = "mid";
+			}
+			else if (levelState === "mid") {
+				if (level < 0.04) levelState = "low";
+				else if (level > 0.25) levelState = "high";
+			}
+			else if (levelState === "high" && level < 0.18) {
+				levelState = "mid";
+			}
+
+			const textEl = document.getElementById("record_text");
+			if (!textEl) return;
+
+			if (levelState === "low") {
+				textEl.innerText = "もっと話してください";
+				textEl.style.color = "#ff6666";
+			}
+			else if (levelState === "mid") {
+				textEl.innerText = "話してください...";
+				textEl.style.color = "#ffffff";
+			}
+			else {
+				textEl.innerText = "いい感じです";
+				textEl.style.color = "#44ccff";
+			}
+		}
+
+		function startFakeProgress() {
+
+			let p = 0;
+
+			clearInterval(progressTimer);
+
+			// 🔥 ここに移動
+			const text = document.getElementById("progress_text");
+			if (text) text.innerText = "解析中...";
+
+			progressTimer = setInterval(() => {
+				p += Math.random() * 10;
+
+				if (p > 90) p = 90; // 🔥 途中で止める（リアル感）
+
+				setProgress(p);
+
+				if (text) {
+					text.innerText = "解析中 " + Math.floor(p) + "%";
+				}
+
+			}, 200);
+		}
 
         // =========================
-        // 🔥 本体
+        // 完了時に100%
         // =========================
-        ctx.fillStyle = colors[i];
-        ctx.fillText(labels[i], x, y);
-    }
-}
+		function finishProgress() {
+			clearInterval(progressTimer);
 
+			setProgress(100);
 
-// 🌈 凡例（中周ラベル）のon/off
-function toggleInnerLabel(){
+			const text = document.getElementById("progress_text");
+			if (text) text.innerText = "解析完了しました";
+		}
 
-    showInnerLabel = !showInnerLabel;
+        // =========================
+        // 再解析
+        // =========================
+		function resetAnalyze() {
 
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
+			micAnimating = false;
 
-// 🌈 凡例とコメント（中周ラベル）のon/off
-function toggleInner(){
+			analyzeState = "idle";	// ① 状態リセット
 
-    // 🔥 状態反転
-    showInnerLabel = !showInnerLabel;
+			setAnalyzeState("idle");	// ② UIリセット
 
-    const legendBox = document.getElementById("legendBox");
+			data = null;	// ③ データ削除
 
-    // =========================
-    // 🔥 凡例と連動
-    // =========================
-    if(showInnerLabel){
+			// =========================
+			// ④ カウントダウン戻す
+			// =========================
+			const countEl = document.getElementById("countdown");
+			if (countEl) countEl.innerText = "3";
 
-        legendBox.innerHTML = `
-		内リング（人格）<br>
-		　・あなたの内面の特徴（人格プロファイル）<br>
-		　・思考・行動・共感などの軸<br>
-		　・あなたの本来のタイプ<br>
-        `;
-
-    }else{
-
-        legendBox.innerHTML = "";
-    }
-
-    // =========================
-    // 🔥 リング再描画
-    // =========================
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
-
-// =========================
-// 🔥 12セクター計算（外に出す）
-// =========================
-function compute12Sector(data){
-
-    const sectors = [];
-
-    const size = Math.max(1, Math.floor(data.length / 12));
-
-    for(let i=0;i<12;i++){
-
-        let sum = 0;
-        let count = 0;
-
-        for(let j=0;j<size;j++){
-            const idx = i*size + j;
-            if(idx < data.length){
-                sum += data[idx];
-                count++;
-            }
-        }
-
-        sectors.push(count > 0 ? sum / count : 0);
-    }
-
-    return sectors;
-}
-
-
-// =========================
-// モード切り替え　全体の色・ボタン　選択
-// =========================
-let currentMode = "balance";
-
-function setMode(mode){
-
-    currentMode = mode;
-
-    // 🔥 bodyクラス切替
-    document.body.classList.remove("mode-balance","mode-stress","mode-focus");
-    document.body.classList.add("mode-" + mode);
-
-    // 🔥 ボタン色
-    document.querySelectorAll("#modeSelector button")
-        .forEach(b=>b.classList.remove("active"));
-
-    document.getElementById("btn_" + mode).classList.add("active");
-
-    // 🔥 subtitle変更
-    const sub = document.getElementById("modeSubtitle");
-
-    if(mode === "balance"){sub.innerHTML = "for You 🌸　ベータ版 v.4.0";}
-    if(mode === "stress"){sub.innerHTML = "for Stress 🔥　ベータ版 v.4.0";}
-    if(mode === "focus"){sub.innerHTML = "for Focus 🧊　ベータ版 v.4.0";}
-
-    // 🔥 subtext変更
-	const desc = document.getElementById("modeDesc");
-
-	if(mode === "balance"){desc.innerText = "あなたの声から、やさしく心の状態を感じとります";}
-	if(mode === "stress"){desc.innerText = "ストレス状態を検出し、無理のサインを見つけます";}
-	if(mode === "focus"){desc.innerText = "集中状態を解析し、パフォーマンスを可視化します";}
-
-    // 🔥 パラメータ切替
-    if(mode === "balance"){
-        appSettings.boost = 1.5;
-        appSettings.breath = 1;
-        appSettings.effect = 1;
-        appSettings.glow = 1;
-    }
-
-    if(mode === "stress"){
-        appSettings.boost = 2.2;   // 強調
-        appSettings.breath = 0.5;  // 呼吸弱め
-        appSettings.effect = 1.5;
-        appSettings.glow = 2;
-    }
-
-    if(mode === "focus"){
-        appSettings.boost = 1.2;
-        appSettings.breath = 0.3;
-        appSettings.effect = 0.8;
-        appSettings.glow = 0.5;
-    }
-
-    redraw();
-
-
-    if(lastResult){
-//        render(lastResult);
-    }
-}
-
-// =========================
-// モード切り替え　サマリー　チェンジ
-// =========================
-function getModeComment(tab){
-
-    const data = llmData;
-    if(!data) return "データなし";
-
-    if(tab === "総合"){
-        return data.summary ?? "データなし";
-    }
-
-    const tabMap = {
-        "声": "stress",
-        "心理": "mental",
-        "元気": "energy",
-        "気持ち": "emotion",
-        "集中": "focus"
-    };
-
-    const key = tabMap[tab];
-    if(!key) return "データなし";
-
-    return data[key] ?? "データなし";
-}
-
-// =========================
-// 🔥 ボタン　ホーバー凡例
-// =========================
-function showLegend(type){
-
-    // 🔥 同じボタンならOFF
-    if(currentLegend === type){
-        document.getElementById("legendBox").innerHTML = "";
-        currentLegend = "";
-        return;
-    }
-
-    currentLegend = type;
-
-    let html = "";
-
-    if(type === "commentword"){
-        html = `
-		🗣 例題<br><br>
-		<div style="text-align:left; line-height:1.6; padding:15px;">
-		1. おはようございます。こんにちは。では、さようなら。<br>
-		2. こんにちは。今日は、ちょっと、暑いです。<br>
-		3. こんにちは。今日も、もっと、頑張りましょう。<br>
-		4. こんばんは。昨日は、よく、寝れましたか。<br>
-		5. 私は、○○○です。仕事は○○○です。<br>
-		・  自由に、なんでも、しゃべってみて下さい。<br>
-		<br>
-		</div>
-        `;
-    }
-
-
-    if(type === "outer"){
-        html = `
-        外リング<br><br>
-        声の微細特徴（192次元ベクトル）
-        `;
-    }
-
-    if(type === "middle"){
-        html = `
-        中リング<br><br>
-        元気：エネルギー<br>
-        感情：気持ちの動き<br>
-        集中：注意力<br>
-        対人：コミュ力<br>
-        安定：落ち着き<br>
-        ストレス：負荷
-        `;
-    }
-
-    if(type === "inner"){
-        html = `
-        内リング<br><br>
-        創造・思考・共感・行動など<br>
-        12方向の心理分類
-        `;
-    }
-
-    document.getElementById("legendBox").innerHTML = html;
-}
-
-// =========================
-// 🔥 画面　切り替え
-// ========================
-function toggleView(){
-
-    const ring = document.getElementById("ringContainer");
-    const img = document.getElementById("mainImage");
-
-    if(showRing){
-
-        ring.style.opacity = 0;
-
-        setTimeout(()=>{
-            ring.style.display = "none";
-            img.style.display = "block";
-            img.style.opacity = 1;
-        },200);
-		
-    }else{
-
-        img.style.opacity = 0;
-
-        setTimeout(()=>{
-            img.style.display = "none";
-            ring.style.display = "block";
-            ring.style.opacity = 1;
-        },200);
-    }
-
-    showRing = !showRing;
-}
-
-
-// =========================
-// 🔥 波形描画（コア🔥）
-// ========================
-let isRecording = false;
-let waveAnimationId = null;
-
-function drawWave(analyser, dataArray){
-	measureDB(analyser, dataArray);
-
-    const canvas = document.getElementById("waveCanvas");
-    const ctx = canvas.getContext("2d");
-
-    const width = canvas.width;
-    const height = canvas.height;
-
-    analyser.getByteTimeDomainData(dataArray);
-
-    ctx.clearRect(0,0,width,height);
-
-    const centerY = height / 2;
-
-    ctx.beginPath();
-
-    for(let i=0;i<dataArray.length;i++){
-
-        const x = (i / dataArray.length) * width;
-
-        const v = dataArray[i] / 255.0;
-        const y = centerY + (v - 0.5) * 120;
-
-        if(i === 0){
-            ctx.moveTo(x,y);
-        }else{
-            // 🌸 なめらか曲線
-            const prevX = ((i-1) / dataArray.length) * width;
-            const prevY = centerY + ((dataArray[i-1]/255.0)-0.5)*120;
-
-            const cx = (prevX + x) / 2;
-
-            ctx.quadraticCurveTo(prevX, prevY, cx, (prevY + y)/2);
-        }
-    }
-	
-
-    // =========================
-    // 🌈 グラデーション（可愛い）
-    // =========================
-    const grad = ctx.createLinearGradient(0,0,width,0);
-    grad.addColorStop(0,"#ff9ecb");
-    grad.addColorStop(0.5,"#fda4af");
-    grad.addColorStop(1,"#ff7eb3");
-
-    ctx.strokeStyle = grad;
-
-    // =========================
-    // ✨ ぼかし
-    // =========================
-    ctx.shadowBlur = 25;
-    ctx.shadowColor = "#ff9ecb";
-
-    // =========================
-    // 💗 太さ
-    // =========================
-    ctx.lineWidth = 6;
-
-    ctx.stroke();
-
-    // =========================
-    // 🌸 内側の細い線（2重）
-    // =========================
-    ctx.shadowBlur = 0;
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = "#ffffffaa";
-
-    ctx.stroke();
-
-    // =========================
-    // 🔥 アニメーション
-    // =========================
-    if(isRecording){
-        waveAnimationId = requestAnimationFrame(()=>{
-            drawWave(analyser, dataArray);
-        });
-    }
-}
-
-
-// =========================
-// 🔥 疑似animate描画
-// ========================
-function animate(){
-
-    //  呼吸が見えるように
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-
-    requestAnimationFrame(animate);
-}
-
-
-// =========================
-// 🔥 redraw関数
-// =======================
-function redraw(){
-    if(window.lastVector){
-        drawAllAura(window.lastVector);
-    }
-}
-
-// =========================
-// 🔥 設定画面
-// =======================
-function toggleSettings(){
-
-    const box = document.getElementById("specialsetting");
-
-    if(box.style.display === "none"){
-
-        box.style.display = "block";
-
-        box.innerHTML = `
-        <div class="comment">
-
-			🔧 設定<br><br>
+			// =========================
+			// ⑤ キャンバス完全クリア
+			// =========================
+			const canvas = document.getElementById("mic_canvas");
+			resizeCanvas(canvas);
 			
-			<div style="margin-top:10px;">
-				<button class="btn" onclick="applySettingsAndRedraw()">
-					🔄 再描画
-				</button>
+			if (canvas) {
+				const ctx = canvas.getContext("2d");
+				ctx.clearRect(0, 0, canvas.width, canvas.height);
+			}
+
+			// =========================
+			// ⑥ 音声ストリーム完全停止
+			// =========================
+			if (window.audioStream) {
+				window.audioStream.getTracks().forEach(track => track.stop());
+				window.audioStream = null;
+			}
+
+			// =========================
+			// ⑦ Recorder停止（念のため）
+			// =========================
+			if (typeof mediaRecorder !== "undefined" && mediaRecorder) {
+				try {
+					mediaRecorder.stop();
+				} catch (e) {}
+				mediaRecorder = null;
+			}
+
+			audioChunks = [];	// ⑧ 配列リセット
+
+			// =========================
+			// ⑨ ステータス消す
+			// =========================
+			const status = document.getElementById("status");
+			if (status) status.innerText = "";
+
+			// =========================
+			// 🔥 ⑩ Analyzeタブへ
+			// =========================
+			resetMedicalUI();   // ←これ追加
+			showTab(0);
+		}
+
+
+        // =========================
+        // 送信 → 自動遷移
+        // =========================
+		async function sendAudio(blob) {
+			const fd = new FormData();
+			
+			let ext = mimeType.includes("mp4") ? "mp4" : "webm";
+			fd.append("audio", blob, "voice." + ext);
+
+			let res;
+
+			try {
+				res = await fetch("/analyze", {
+					method: "POST",
+					body: fd
+				});
+			} catch (e) {
+				alert("通信エラー（ネットワーク）");
+				return;
+			}
+
+			let json;
+
+			try {
+				json = await res.json();
+			} catch (e) {
+				alert("サーバーエラー");
+				return;
+			}
+
+			finishProgress(); // ←追加
+
+			if (!json.ok) {
+				alert(json.error || "エラー");
+				return;
+			}
+
+			data = json;
+
+			draw();
+			updateReport();
+			updateSummary();
+			updateKarte();
+			updatePsychology();
+			updateMentalUI();
+			updateMedicalUI();
+
+			// 🔥 解析完了表示
+			setAnalyzeState("done");
+
+			saveSession(); // ←個々のjson セーブ　追加
+
+		}
+
+        // =========================
+        // 年齢モデル 解析
+        // =========================
+		const typeMap = [
+			"直感主導型",
+			"思考分析型",
+			"論理安定型",
+			"対人調和型",
+			"会話活性型",
+			"共感感受型",
+			"自信主導型",
+			"満足安定型",
+			"身体感覚型",
+			"行動推進型",
+			"エネルギー型",
+			"ストレス感受型"
+		];
+
+		function updatePsychology() {
+
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+
+			// 平均
+			let dna_mean = data.dna.reduce((a,b)=>a+b,0)/data.dna.length;
+			let psy_mean = data.psy.reduce((a,b)=>a+b,0)/data.psy.length;
+			let aura_mean = data.aura.reduce((a,b)=>a+b,0)/data.aura.length;
+
+			// 年齢計算
+			let age = 20 + psy_mean*40 + aura_mean*20 - dna_mean*30;
+
+			age = Math.max(18, Math.min(80, Math.round(age)));
+
+			// セクター
+			let [idx1, idx2] = getTopSectors(data.aura);
+
+			let type =
+				typeMap[idx1] + " × " + typeMap[idx2];
+
+			// 表示
+			document.getElementById("age_text").innerText = "✨ 心理年齢：" + age + "歳";
+//			document.getElementById("type_text").innerText = "タイプ：" + type;
+			document.getElementById("type_text").innerText =
+				"タイプ：" + type + "｜" + getAgeComment(age);			
+		}
+
+        // =========================
+        // 煽りコメント 年齢モデル 解析
+        // =========================
+		const spiceMap = [
+			"ひらめきが鋭すぎて、周りがついてこれないかも",
+			"考えすぎて逆に迷いやすい傾向があります",
+			"冷静すぎて感情が見えにくいタイプです",
+			"人に合わせすぎて疲れていませんか？",
+			"話しすぎて本音が薄れることも",
+			"優しすぎて損をしやすいタイプです",
+			"自信が強く、少し押しが強いかも",
+			"満足しやすく、成長が止まりがちです",
+			"感覚派すぎて論理が抜けることも",
+			"勢いで動きすぎる傾向があります",
+			"エネルギー過多で空回り注意",
+			"ストレスを溜め込みやすい状態です"
+		];
+
+		function getAgeComment(age) {
+
+			if (age < 25) return "かなり若々しい状態です（良くも悪くも）";
+			if (age < 40) return "バランスの良い状態です";
+			if (age < 60) return "落ち着いた大人の状態です";
+			return "かなり達観しています（悟り気味）";
+			
+		}
+
+        // =========================
+        // 3リング 解析
+        // =========================
+
+        // =========================
+        // セクター 解析
+        // =========================
+		function getSectorSummary(arr) {
+
+			const sectors = new Array(12).fill(0);
+			const size = Math.floor(arr.length / 12);
+
+			// セクター平均
+			for (let i = 0; i < 12; i++) {
+				let sum = 0;
+				for (let j = 0; j < size; j++) {
+					sum += arr[i * size + j];
+				}
+				sectors[i] = sum / size;
+			}
+
+			// 最大セクター
+			let maxIdx = sectors.indexOf(Math.max(...sectors));
+
+			return maxIdx;
+		}
+
+		const summaryMap = [
+			"直感が鋭く、ひらめきに強い状態です",
+			"深く考える力が強く、思考が冴えています",
+			"論理的で落ち着いた判断ができています",
+			"対人感覚が優れており、周囲との距離感が良好です",
+			"会話がスムーズで、伝達力が高い状態です",
+			"共感力が高く、人の気持ちに寄り添える状態です",
+			"自信に満ちており、存在感が強く出ています",
+			"満足感が高く、安定した状態です",
+			"身体感覚が鋭く、感覚が研ぎ澄まされています",
+			"行動力が高く、積極的に動ける状態です",
+			"エネルギーが高く、活発な状態です",
+			"ややストレスを抱えている可能性があります"
+		];
+
+		function getTopSectors(arr) {
+
+			const sectors = new Array(12).fill(0);
+			const size = Math.floor(arr.length / 12);
+
+			for (let i = 0; i < 12; i++) {
+				let sum = 0;
+				for (let j = 0; j < size; j++) {
+					sum += arr[i * size + j];
+				}
+				sectors[i] = sum / size;
+			}
+
+			// インデックス付きでソート
+			const indexed = sectors.map((v, i) => ({ v, i }));
+			indexed.sort((a, b) => b.v - a.v);
+
+			return [indexed[0].i, indexed[1].i];
+		}
+
+        // =========================
+        // 描画
+        // =========================
+        function draw() {
+            if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+
+            const canvas = document.getElementById("canvas");
+            const ctx = canvas.getContext("2d");
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const cx = canvas.width / 2;
+            const cy = canvas.height / 2;
+
+            drawBaseCircle(ctx, cx, cy, 100);
+            drawBaseCircle(ctx, cx, cy, 150);
+            drawBaseCircle(ctx, cx, cy, 200);
+
+            const stepDNA = calcStep(globalRes, densityDNA);
+            const stepPSY = calcStep(globalRes, densityPSY);
+            const stepAURA = calcStep(globalRes, densityAURA);
+
+            drawAuraVectorRing(ctx, data.dna, cx, cy, 100, 40, stepDNA);
+            drawAuraVectorRing(ctx, data.psy, cx, cy, 150, 50, stepPSY);
+            drawAuraVectorRing(ctx, data.aura, cx, cy, 200, 60, stepAURA);
+			drawSectorLabels(ctx, cx, cy, 230);
+        }
+
+        function drawAuraVectorRing(ctx, arr, cx, cy, r, amp, stepAngle) {
+            if (!arr || arr.length === 0) return;
+
+            const n = arr.length;
+            const breath = Math.sin(time) * breathAmp;
+
+            let max = 1;
+            if (autoGain) {
+                max = Math.max(...arr);
+                if (max === 0) max = 1;
+            }
+
+			for (let ang = -Math.PI / 2; ang < Math.PI * 2 - Math.PI / 2; ang += stepAngle) {
+
+				let t = (ang + Math.PI / 2) / (Math.PI * 2); // 0〜1
+				t = t - Math.floor(t); // ← これが超重要（ループ補正）
+
+				let idx = Math.floor(t * n);
+
+				let v = arr[idx] ?? 0;
+                v = Math.max(0, v);
+
+                if (autoGain) {
+                    v = v / max;
+                }
+
+                const x1 = cx + Math.cos(ang) * r;
+                const y1 = cy + Math.sin(ang) * r;
+
+                const x2 = cx + Math.cos(ang) * (r + breath + v * amp);
+                const y2 = cy + Math.sin(ang) * (r + breath + v * amp);
+
+                const hue = ((ang + Math.PI / 2) / (Math.PI * 2) * 360) % 360;
+
+                ctx.strokeStyle = `hsl(${hue},100%,60%)`;
+                ctx.lineWidth = 0.8 + v * 0.2;
+
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.stroke();
+            }
+        }
+
+		function drawSectorLabels(ctx, cx, cy, radius) {
+
+			const labels = [
+				"直感","思考","論理","対人",
+				"会話","共感","自信","満足",
+				"身体","行動","活力","緊張"
+			];
+
+			ctx.font = "12px sans-serif";
+			ctx.textAlign = "center";
+			ctx.textBaseline = "middle";
+
+			for (let i = 0; i < 12; i++) {
+
+				// 30°ごとの中心角
+				let ang = (i * 30) * Math.PI / 180 - Math.PI / 2;
+
+				// 🔥 外リングより少し外
+				let r = radius + 20;	// 🔥 外リングより少し外 25でも良い
+
+				let x = cx + Math.cos(ang) * r;
+				let y = cy + Math.sin(ang) * r;
+
+				// 色（リングと連動）
+				let hue = i * 30;
+				ctx.fillStyle = `hsl(${hue},100%,70%)`;
+
+				ctx.fillText(labels[i], x, y);
+			}
+		}
+
+        function drawBaseCircle(ctx, cx, cy, r, color = "rgba(255,255,255,0.2)") {
+            ctx.beginPath();
+            ctx.arc(cx, cy, r, 0, Math.PI * 2);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        // =========================
+        // レポート 声が大きい → Energy上がる 声が弱い → Energy低い 人間の直感と一致するUI
+        // =========================
+		function updateReport() {
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+
+			let baseEnergy = data.dna.reduce((a,b)=>a+b,0)/data.dna.length * 100;
+			let baseEmotion = data.psy.reduce((a,b)=>a+b,0)/data.psy.length * 100;
+			let basePresence = data.aura.reduce((a,b)=>a+b,0)/data.aura.length * 100;
+
+			// 🔥 音量補正（ここが本体）
+			let volumeBoost = lastLevel * 20; // 0〜20くらい
+
+			let energy = baseEnergy + volumeBoost;
+			let emotion = baseEmotion + volumeBoost * 0.5;
+			let presence = basePresence + volumeBoost * 1.2;
+
+			document.getElementById("energy").innerText =
+				"✨ 元気度： " + energy.toFixed(1) + "（今の活力）";
+
+			document.getElementById("emotion").innerText =
+				"💗 感情のゆらぎ： " + emotion.toFixed(1) + "（心の動き）";
+
+			document.getElementById("presence").innerText =
+				"🌿 存在感（オーラ）： " + presence.toFixed(1) + "（周りへの印象）";
+		}
+
+        // =========================
+        // 設定保存
+        // =========================
+        function getCurrentSettings() {
+            return {
+                globalRes,
+                densityDNA,
+                densityPSY,
+                densityAURA,
+                breathAmp,
+                breathSpeed,
+                autoGain
+            };
+        }
+
+        function applySettings(s) {
+            globalRes = s.globalRes;
+            densityDNA = s.densityDNA;
+            densityPSY = s.densityPSY;
+            densityAURA = s.densityAURA;
+            breathAmp = s.breathAmp;
+            breathSpeed = s.breathSpeed;
+            autoGain = s.autoGain;
+
+            updateUIFromSettings();
+            draw();
+        }
+
+        function saveSettings(userId) {
+            const settings = getCurrentSettings();
+            localStorage.setItem("voiceaura_" + userId, JSON.stringify(settings));
+            localStorage.setItem("last_user", userId);
+            alert("保存しました：" + userId);
+        }
+
+        function loadSettings(userId) {
+            const saved = localStorage.getItem("voiceaura_" + userId);
+
+            if (saved) {
+                const settings = JSON.parse(saved);
+                applySettings(settings);
+                localStorage.setItem("last_user", userId);
+            } else {
+                applySettings(defaultSettings);
+            }
+        }
+
+        function resetSettings() {
+            applySettings(defaultSettings);
+        }
+
+        function updateUIFromSettings() {
+            const keyGlobal = String(globalRes === 360 ? 1 : 2);
+            document.getElementById("q_global").value = keyGlobal;
+            document.getElementById("label_global").innerText = globalResolutionMap[keyGlobal].label;
+
+            const keyDNA = String(Object.keys(densityMap).find(k => densityMap[k].density === densityDNA) || 3);
+            const keyPSY = String(Object.keys(densityMap).find(k => densityMap[k].density === densityPSY) || 3);
+            const keyAURA = String(Object.keys(densityMap).find(k => densityMap[k].density === densityAURA) || 3);
+
+            document.getElementById("q_dna").value = keyDNA;
+            document.getElementById("q_psy").value = keyPSY;
+            document.getElementById("q_aura").value = keyAURA;
+
+            document.getElementById("label_dna").innerText = densityMap[keyDNA].label;
+            document.getElementById("label_psy_view").innerText = densityMap[keyPSY].label;
+            document.getElementById("label_aura").innerText = densityMap[keyAURA].label;
+
+            const keyAmp = String(Object.keys(breathAmpMap).find(k => breathAmpMap[k].value === breathAmp) || 2);
+            const keySpeed = String(Object.keys(breathSpeedMap).find(k => breathSpeedMap[k].value === breathSpeed) || 2);
+
+            document.getElementById("breath_amp").value = keyAmp;
+            document.getElementById("breath_speed").value = keySpeed;
+
+            document.getElementById("label_breath_amp").innerText = breathAmpMap[keyAmp].label;
+            document.getElementById("label_breath_speed").innerText = breathSpeedMap[keySpeed].label;
+
+            document.getElementById("auto_gain").checked = autoGain;
+        }
+
+
+
+        // ≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+		// 4. 状態解析エンジン
+        // ≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡≡
+        // =========================
+		// 【4.1】 基礎
+        // =========================
+        // -------------------------
+		// 4.1.1 正規化
+        // -------------------------
+		function normalize(vec) {
+
+			let sum = 0;
+
+			for (let i = 0; i < vec.length; i++) {
+				sum += vec[i] * vec[i];
+			}
+
+			let norm = Math.sqrt(sum);
+
+			// 🔥 ゼロ対策
+			if (norm === 0) return vec.map(() => 0);
+
+			return vec.map(v => v / norm);
+		}
+
+        // -------------------------
+		// 4.1.2 コサイン類似度
+        // -------------------------
+		function cosineSimilarity(a, b) {
+
+			let dot = 0;
+			let normA = 0;
+			let normB = 0;
+
+			for (let i = 0; i < a.length; i++) {
+				dot += a[i] * b[i];
+				normA += a[i] * a[i];
+				normB += b[i] * b[i];
+			}
+
+			normA = Math.sqrt(normA);
+			normB = Math.sqrt(normB);
+
+			// 🔥 ゼロ対策（超重要）
+			if (normA === 0 || normB === 0) return 0;
+
+			return dot / (normA * normB);
+		}
+
+        // =========================
+		// 【4.2】 データ
+        // =========================
+        // ------------------------
+        // 4.2.1 セッション保存
+        // ------------------------
+		function saveSession() {
+
+			if (!data || !data.dna) return;
+
+			const session = {
+				id: Date.now(),
+				timestamp: new Date().toLocaleString(),
+
+				dna: data.dna,
+				psy: data.psy,
+				aura: data.aura,
+
+				summary: document.getElementById("summary_text").innerText,
+
+				meta: {
+					level: typeof lastLevel !== "undefined" ? lastLevel : 0
+				}
+			};
+
+			let sessions = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
+
+			if (!Array.isArray(sessions)) sessions = [];
+			sessions.push(session);
+
+			// 🔥 ここ追加（重要）
+			if (sessions.length > 50) {
+				sessions.shift(); // 古いの削除
+			}
+
+			localStorage.setItem("voiceaura_sessions", JSON.stringify(sessions));
+		}
+
+        // -------------------------
+        // 4.2.2 前回との差（ガチ機能）
+        // -------------------------
+		function getPreviousSession() {
+
+			let sessions = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
+
+			if (sessions.length < 2) return null;
+
+			return sessions[sessions.length - 2];
+		}
+
+        // =========================
+		// 【4.3】 分析
+        // =========================
+		// =========================
+		// 4.3.1 類似検索
+		// =========================
+		function findSimilarSession(currentDNA) {
+
+			let sessions = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
+
+			if (sessions.length < 2) return null;
+
+			let best = null;
+			let bestScore = -1;
+
+			let normCurrent = normalize(currentDNA);
+
+			for (let i = 0; i < sessions.length - 1; i++) {
+
+				let s = sessions[i];
+				if (!s.dna) continue;
+
+				let normPast = normalize(s.dna);
+
+				let score = cosineSimilarity(normCurrent, normPast);
+
+				// 🔥 音量補正
+				if (s.meta && typeof s.meta.level !== "undefined" && typeof lastLevel !== "undefined") {
+					let diff = Math.abs(s.meta.level - lastLevel);
+					let penalty = 1 - Math.min(diff, 0.5);
+					score *= penalty;
+				}
+
+				if (score > bestScore) {
+					bestScore = score;
+					best = s;
+				}
+			}
+
+			return {
+				session: best,
+				score: bestScore
+			};
+		}
+
+
+        // -------------------------
+        // 4.3.3 ストレス算出
+        // -------------------------
+		function vectorDiff(a, b) {
+			let sum = 0;
+			for (let i = 0; i < a.length; i++) {
+				let d = a[i] - b[i];
+				sum += d * d;
+			}
+			return Math.sqrt(sum / a.length);
+		}
+
+        // 4.3.4 ストレス算出 元気＋大声:低ストレス 元気＋小声:中ストレス 不安＋小声:高ストレス
+		function calculateStress(dna, psy) {
+
+			if (!dna || !psy) return 0;
+
+			let diff = vectorDiff(dna, psy);
+			let stress = diff * 200;
+
+			// 🔥 小声補正（ここが本命）
+			if (getSafeLevel() < 0.08) {
+				stress += 15;
+			}
+			else if (lastLevel < 0.15) {
+				stress += 8;
+			}
+
+			return Math.min(stress, 100);
+		}
+
+        // -------------------------
+		// 4.3.4 隠れストレス判定 （本命）
+        // -------------------------
+		function detectHiddenStress(currentDNA, currentPSY) {
+
+			let sim = findSimilarSession(currentDNA);
+			if (!sim || !sim.session) return null;
+
+			let similarity = sim.score || 0;
+			let stress = calculateStress(currentDNA, currentPSY) || 0;
+
+			// 🔥 信頼性チェック
+			if (similarity < 0.6) {
+				return {
+					similarity,
+					stress,
+					hidden: 0,
+					label: "比較不可"
+				};
+			}
+
+			// 🔥 安全計算
+			let hiddenScore = similarity * Math.pow(stress / 100, 1.5);
+
+			let label =
+				hiddenScore > 0.65 ? "⚠ 強い隠れストレス" :
+				hiddenScore > 0.45 ? "⚠ 隠れストレス" :
+				hiddenScore > 0.30 ? "軽度ストレス" :
+				"安定";
+
+			return {
+				similarity,
+				stress,
+				hidden: hiddenScore || 0,
+				label
+			};
+		}
+
+        // -------------------------
+        // 4.3.5 前回との差 分析（ガチ機能）
+        // -------------------------
+		function calculateDelta(currentDNA) {
+
+			let prev = getPreviousSession();
+			if (!prev || !prev.dna) return null;
+
+			let sim = cosineSimilarity(
+				normalize(currentDNA),
+				normalize(prev.dna)
+			);
+
+			return 1 - sim; // 差
+		}
+
+        // -------------------------
+        // 4.3.5 メンタル状態判定
+        // -------------------------
+		function analyzeMentalState(dna, psy) {
+
+			if (!dna || !psy) return null;
+
+			// =========================
+			// 基本指標
+			// =========================
+			let energy = dna.reduce((a,b)=>a+b,0)/dna.length;
+			let fluct = vectorDiff(dna, psy);
+			let volume = getSafeLevel();
+
+			let f = Math.min(fluct * 5, 1);
+			let v = Math.min(volume * 3, 1);
+
+			let state = "";
+			let score = 0;
+			let flag = "";
+
+			// =========================
+			// 4象限ベース
+			// =========================
+			if (f > 0.5 && v > 0.5) {
+				state = "興奮・不安定型";
+				score = 80;
+			}
+			else if (f > 0.5 && v <= 0.5) {
+				state = "隠れストレス型";
+				score = 90;
+			}
+			else if (f <= 0.5 && v > 0.5) {
+				state = "安定・活性型";
+				score = 20;
+			}
+			else {
+				state = "低活性・疲労型";
+				score = 60;
+			}
+
+			// =========================
+			// 🔥 追加：異常検出
+			// =========================
+
+			// ⚠ 無理してる
+			if (energy > 0.7 && volume < 0.1) {
+				state = "⚠ 無理して元気";
+				score = 95;
+				flag = "overcompensation";
+			}
+
+			// 😴 抑うつ傾向
+			else if (energy < 0.3 && volume < 0.1) {
+				state = "抑うつ傾向";
+				score = 85;
+				flag = "depression_risk";
+			}
+
+			// ⚡ 焦燥型（危険）
+			else if (f > 0.8 && v > 0.7) {
+				state = "⚡ 焦燥・過活動";
+				score = 95;
+				flag = "agitation";
+			}
+
+			return {
+				state,
+				stressScore: score,
+				fluctuation: f,
+				volume: v,
+				energy,
+				flag
+			};
+		}
+
+        // -------------------------
+        // 4.3.6 メンタル状態判定 UI表示
+        // -------------------------
+		function updateMentalUI() {
+
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+			
+			let m = analyzeMentalState(data.dna, data.psy);
+			if (!m) return;
+
+			let color =
+				m.flag === "agitation" ? "#ff4444" :
+				m.flag === "depression_risk" ? "#6666ff" :
+				m.flag === "overcompensation" ? "#ffaa00" :
+				"#44ccff";
+
+			// =========================
+			// 基本
+			// =========================
+			let text = `
+			<div style="color:${color}; font-weight:bold;">
+			🧠 メンタル状態：${m.state}
 			</div>
+			📊 ストレス：${m.stressScore}<br>
+			🌊 揺らぎ：${m.fluctuation.toFixed(2)}<br>
+			🔊 音量：${m.volume.toFixed(2)}
+			`;
 
-			<div id="dirtyStatus" style="font-size:12px;color:#999;">
-				✔ 反映済み
-			</div>
+			// =========================
+			// dB
+			// =========================
+			if (typeof lastDb !== "undefined") {
 
-			【画質】（※再描画が必要）<br>
-			<div class="radio-group">
-				<label><input type="radio" name="quality" value="low"> 低</label>
-				<label><input type="radio" name="quality" value="mid" checked> 中</label>
-				<label><input type="radio" name="quality" value="high"> 高</label>
-				<label></label><label></label>
-			</div><br>
+				let dbComment =
+					lastDb > 70 ? "（大）" :
+					lastDb > 50 ? "（中）" :
+					lastDb > 30 ? "（小）" :
+					"（極小）";
+
+				text += `<br>🔊 dB：${lastDb.toFixed(1)} ${dbComment}`;
+			}
+
+			// =========================
+			// 真ストレス
+			// =========================
+			let trueStress = calculateTrueStress(data.dna, data.psy);
+			let visibleStress = calculateVisibleStress(data.aura);
+			let gap = calculateHiddenGap(trueStress, visibleStress);
+
+			text += `
+			<br><br>
+			🧠 本当のストレス：${trueStress.toFixed(1)}<br>
+			👀 見た目のストレス：${visibleStress.toFixed(1)}<br>
+			⚠ ギャップ：${gap.toFixed(1)}
+			`;
+
+			// =========================
+			// 医療スコア
+			// =========================
+			let score = calculateMedicalScore(data.dna, data.psy, data.aura);
+
+			let level =
+				score > 80 ? "🚨 要注意" :
+				score > 60 ? "⚠ 注意" :
+				score > 40 ? "△ 軽度" :
+				"◎ 良好";
+
+			text += `
+			<br><br>
+			🏥 医療スコア：${score.toFixed(1)}<br>
+			判定：${level}
+			`;
+
+			// =========================
+			// 表示（1回だけ）
+			// =========================
+			document.getElementById("mental_box").innerHTML = text;
+		}
+
+        // -------------------------
+        // 4.3.7 本当のストレス vs 見た目のストレス 計算
+        // -------------------------
+        // 4.3.7.1  -----------------------
+		function calculateTrueStress(dna, psy) {
+			return Math.min(vectorDiff(dna, psy) * 200, 100);
+		}
+
+        // 4.3.7.2  -----------------------
+		function calculateVisibleStress(aura) {
+			return Math.min(
+				(aura.reduce((a,b)=>a+b,0)/aura.length) * 100,
+				100
+			);
+		}
+
+        // 4.3.7.3  -----------------------
+		function calculateHiddenGap(trueStress, visibleStress) {
+			return trueStress - visibleStress;
+		}
+
+        // -------------------------
+        // 4.3.9 dB　変換
+        // -------------------------
+		function levelToDb(level) {
+			return 20 * Math.log10(level + 1e-6) + 60;
+		}
+
+        // -------------------------
+        // 4.3.10 医療スコア 医療スコア = ストレス + 揺らぎ + 音量異常 + ギャップ
+        // -------------------------
+		function calculateMedicalScore(dna, psy, aura) {
+
+			let trueStress = calculateTrueStress(dna, psy);
+			let visibleStress = calculateVisibleStress(aura);
+			let gap = calculateHiddenGap(trueStress, visibleStress);
+
+			let fluct = vectorDiff(dna, psy) * 100;
+			let volumeRisk = (getSafeLevel() < 0.1) ? 20 : 0;
+
+			let energy = dna.reduce((a,b)=>a+b,0)/dna.length * 100;
+
+			let score =
+				trueStress * 0.35 +
+				Math.abs(gap) * 0.25 +
+				fluct * 0.2 +
+				volumeRisk * 0.1 +
+				(1 - energy/100) * 0.1; // ←追加
+
+			return Math.min(score, 100);
+		}
 
 
-			【長さを相対強調（boost）】 個性の強さ / 感情の振れ幅（情動変動 / 活性度）<br>
-			<div class="radio-group">
-				<label><input type="radio" name="boost" value="0">0</label>
-				<label><input type="radio" name="boost" value="0.5">0.5</label>
-				<label><input type="radio" name="boost" value="1">1</label>
-				<label><input type="radio" name="boost" value="1.5">1.5</label>
-			</div>
-			<div class="radio-group">
-				<label><input type="radio" name="boost" value="2" checked>2</label>
-				<label><input type="radio" name="boost" value="2.5">2.5</label>
-				<label><input type="radio" name="boost" value="3">3</label>
-				<label><input type="radio" name="boost" value="3.5">3.5</label>
-			</div><br>
+        // =========================
+		// 【4.4】 生成
+        // =========================
+        // -------------------------
+        // 4.4.1 サマリー生成　update
+        // -------------------------
+		function updateSummary() {
 
-			【呼吸】　リズム / 自律神経（リズム / 自律神経）<br>				
-			<div class="radio-group">
-				<label><input type="radio" name="breath" value="0">なし</label>
-				<label><input type="radio" name="breath" value="1" checked>弱</label>
-				<label><input type="radio" name="breath" value="2">強</label>			
-			</div><br>
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
 
-			【効果】　副交感神経 / リラックス（表現力 / 声の圧）<br>				
-			<div class="radio-group">
-				<label><input type="radio" name="c-long" value="0">なし</label>
-				<label><input type="radio" name="c-long" value="1" checked>弱</label>
-				<label><input type="radio" name="c-long" value="2">強</label>			
-			</div><br>
+			const el = document.getElementById("summary_text");
 
-			【光のゆらぎ】　覚醒レベル / 緊張（感情の揺れ / 不安定さ）<br>
-			<div class="radio-group">		
-				<label><input type="radio" name="d-long" value="0">なし</label>
-				<label><input type="radio" name="d-long" value="1" checked>弱</label>
-				<label><input type="radio" name="d-long" value="2">強</label>			
-			</div><br>
-		
+			let text = "直感が鋭く、バランスの良い状態です。";
 
-        </div>
-        `;
+			// =========================
+			// 類似
+			// =========================
+			let sim = findSimilarSession(data.dna);
 
-        // 🔥 イベント接続
-        document.querySelectorAll('input[name="quality"]').forEach(el=>{
-            el.addEventListener("change",(e)=>{
-                applyQuality(e.target.value);
-            });
-        });
+			if (sim && sim.session) {
 
-        document.querySelectorAll('input[name="boost"]').forEach(el=>{
-            el.addEventListener("change",(e)=>{
-                appSettings.boost = parseFloat(e.target.value);
-				isDirty = true;
-				updateDirtyUI();
-            });
-        });
+				let simScore = sim.score;
+				let simPercent = (simScore * 100).toFixed(1);
 
-        document.querySelectorAll('input[name="breath"]').forEach(el=>{
-            el.addEventListener("change",(e)=>{
-                appSettings.breath = parseFloat(e.target.value);
-				isDirty = true;
-				updateDirtyUI();
-            });
-        });
+				// 🧠 状態解釈
+				let simLabel = "";
+				let simComment = "";
 
-		document.querySelectorAll('input[name="c-long"]').forEach(el=>{
-			el.addEventListener("change",(e)=>{
-				appSettings.effect = parseFloat(e.target.value);
-				isDirty = true;
-				updateDirtyUI();
+				if (simScore >= 0.9) {
+					simLabel = "ほぼ同じ状態";
+					simComment = "非常に安定しています";
+				} else if (simScore >= 0.8) {
+					simLabel = "かなり似ています";
+					simComment = "安定した状態です 👍";
+				} else if (simScore >= 0.65) {
+					simLabel = "やや似ています";
+					simComment = "少し変化があります";
+				} else if (simScore >= 0.5) {
+					simLabel = "変化しています";
+					simComment = "コンディションに揺らぎあり";
+				} else {
+					simLabel = "大きく変化しています";
+					simComment = "状態がかなり変わっています ⚠️";
+				}
+
+				text += `<br><br>🧬 前回との近さ ${simPercent}%（${simLabel}）`;
+				text += `<br>${simComment}`;
+			}
+
+			// =========================
+			// ストレス
+			// =========================
+			let stress = calculateStress(data.dna, data.psy);
+			text += `<br><br>🧠 ストレス ${stress.toFixed(1)}`;
+
+			// =========================
+			// 隠れストレス
+			// =========================
+			let hs = detectHiddenStress(data.dna, data.psy);
+
+			if (hs) {
+				text += `<br><br>⚠ 隠れストレス ${(hs.hidden * 100).toFixed(1)}%（${hs.label}）`;
+			}
+
+			// =========================
+			// 前回との差
+			// =========================
+			let delta = calculateDelta(data.dna);
+
+			if (delta !== null) {
+				text += buildDeltaComment(data.dna);
+				text += `<br>${buildDeltaFun(delta)}`;
+			}
+
+			// =========================
+			// 遊び（1回だけ）
+			// =========================
+			text += buildFunComment(
+				data.aura,
+				stress,
+				hs ? hs.hidden : 0
+			) || "";
+
+			// 表示
+			el.innerHTML = text;
+
+			// カルテ更新
+			updateKarte();
+		}
+
+        // -------------------------
+        // 4.4.2 遊びコメント　関数
+        // -------------------------
+		function buildFunComment(aura, stress, hidden) {
+
+			if (!aura) return "";
+
+			let [idx1, idx2] = getTopSectors(aura);
+
+			let text1 = summaryMap[idx1];
+			let text2 = summaryMap[idx2];
+
+			let text = text1 + "／また、" + text2;
+
+			let spice = spiceMap[idx1] || "";
+
+			// 🔥 ストレス連動
+			if (stress > 70) {
+				spice += " ⚠ ちょっと頑張りすぎかも";
+			}
+
+			// 🔥 隠れストレス連動（本命）
+			if (hidden > 0.5) {
+				spice += "（無理してる感じ出てます）";
+			}
+
+			// 🔥 軽い遊び
+			if (Math.random() > 0.5) {
+				spice += "（心当たりありますよね？）";
+			}
+
+			return `<br><br>✨ ${text}<br>${spice}`;
+		}
+
+        // 4.4.3 
+		function buildDeltaFun(delta) {
+
+			if (!delta) return "";
+
+			if (delta > 0.4) return "今日は別人レベルですね😏";
+			if (delta > 0.2) return "ちょっと変化してますね";
+			return "安定してます👍";
+		}
+
+        // 4.4.4
+		function buildDeltaComment(currentDNA) {
+
+			let delta = calculateDelta(currentDNA);
+			if (delta === null) return "";
+
+			let percent = (delta * 100).toFixed(1);
+
+			let label =
+				percent > 40 ? "大きく変化" :
+				percent > 20 ? "やや変化" :
+				"安定";
+
+			return `<br><br>📊 前回との差 ${percent}%（${label}）`;
+		}
+
+        // =========================
+        // 4.4.5 カルテ内容生成
+        // =========================
+		function buildKarteText() {
+
+			if (!data || !data.dna) return "";
+
+			let hs = detectHiddenStress(data.dna, data.psy);
+			if (!hs) return "";
+
+			let text = `
+			類似度：${(hs.similarity * 100).toFixed(1)}%<br>
+			ストレス：${hs.stress.toFixed(1)}<br>
+			隠れストレス：${(hs.hidden * 100).toFixed(1)}%（${hs.label}）
+			`;
+
+			return text;
+		}
+
+        // =========================
+        // 4.4.6 カルテの「プラン（治療）」生成
+        // =========================
+		function buildPlan(data) {
+
+			if (!data || !data.dna) return "（データなし）";
+
+			let stress = calculateStress(data.dna, data.psy);
+			let hs = detectHiddenStress(data.dna, data.psy);
+			let delta = calculateDelta(data.dna);
+
+			let plan = [];
+
+			// =========================
+			// ① 強ストレス
+			// =========================
+			if (stress > 70) {
+				plan.push("🛌 今日は無理せず休息を優先");
+			}
+
+			// =========================
+			// ② 隠れストレス（本命）
+			// =========================
+			if (hs && hs.hidden > 0.5) {
+				plan.push("⚠ 無理している可能性あり → 深呼吸・リラックス");
+			}
+
+			// =========================
+			// ③ 変化（重要）
+			// =========================
+			if (delta !== null && delta > 0.4) {
+				plan.push("🔄 状態変化大 → 今日は慎重に行動");
+			}
+
+			// =========================
+			// ④ 安定
+			// =========================
+			if (stress < 40 && (!hs || hs.hidden < 0.3)) {
+				plan.push("✨ 良好状態 → 通常通りでOK");
+			}
+
+			// =========================
+			// ⑤ デフォルト
+			// =========================
+			if (plan.length === 0) {
+				plan.push("🙂 大きな問題なし、自然に過ごしましょう");
+			}
+
+			// =========================
+			// 🔥 性格（AURA）補正
+			// =========================
+			if (data.aura) {
+
+				let [idx] = getTopSectors(data.aura);
+
+				// 行動強い
+				if (idx === 10) {
+					plan.push("🔥 行動力高 → オーバーワーク注意");
+				}
+
+				// 共感強い
+				if (idx === 5) {
+					plan.push("🤝 対人疲労に注意 → 一人時間も大切");
+				}
+
+				// 思考強い
+				if (idx === 2) {
+					plan.push("🧠 考えすぎ傾向 → 少しリラックス");
+				}
+
+				// 直感強い
+				if (idx === 0) {
+					plan.push("✨ ひらめき型 → アイデア活かすと良い");
+				}
+
+				// 隠れストレス連動
+				if (idx === 5 && hs && hs.hidden > 0.5) {
+					plan.push("🤝 無理に合わせている可能性 → 少し距離を");
+				}
+
+				// ストレスと掛け合わせ
+				if (idx === 10 && stress > 60) {
+					plan.push("🔥 行動力×高ストレス → 強制的に休むべき");
+				}
+
+			}
+
+			return plan.join("<br>");
+			if (!plan.length) return "問題なし";
+		}
+
+        // =========================
+		// 【4.5】 表示
+        // =========================
+        // -------------------------
+        // 4.5.1 サマリー＋カルテ 統合　update
+        // -------------------------
+
+        // -------------------------
+        // 4.5.2 カルテ　update
+        // -------------------------
+		function updateKarte() {
+
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+
+			let hs = detectHiddenStress(data.dna, data.psy);
+			let stress = calculateStress(data.dna, data.psy);
+
+			// =========================
+			// 本日
+			// =========================
+			document.getElementById("karte_today").innerHTML = `
+				時刻：${new Date().toLocaleTimeString()}
+			`;
+
+			// =========================
+			// 履歴
+			// =========================
+			let sessions = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
+
+			if (sessions.length === 0) {
+				document.getElementById("karte_history").innerHTML = "履歴なし";
+			} else {
+				document.getElementById("karte_history").innerHTML =
+					`記録数：${sessions.length}`;
+			}
+
+			// =========================
+			// ストレス分析
+			// =========================
+			if (hs) {
+				document.getElementById("karte_stress").innerHTML = `
+					類似度：${(hs.similarity * 100).toFixed(1)}%<br>
+					ストレス：${stress.toFixed(1)}<br>
+					隠れストレス：${(hs.hidden * 100).toFixed(1)}%（${hs.label}）
+				`;
+			}
+
+			// =========================
+			// プラン
+			// =========================
+			document.getElementById("karte_plan").innerHTML =
+				buildPlan(data);
+
+			// =========================
+			// グラフ
+			// =========================
+			drawHistoryChart();
+		}
+
+        // =========================
+		// 【4.6】 描画
+        // =========================
+        // =========================
+		// 【4.6.1】 グラフ描画関数（軽量Canvas版）
+        // =========================
+		function drawHistoryChart() {
+
+			let canvas = document.getElementById("karte_chart");
+			if (!canvas) return;
+
+			let ctx = canvas.getContext("2d");
+
+			let sessions = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
+
+			if (!Array.isArray(sessions) || sessions.length < 2) return;
+
+			let dataList = sessions.slice(-20);
+
+			let stressList = [];
+			let hiddenList = [];
+
+			for (let s of dataList) {
+
+				if (!s || !s.dna || !s.psy) continue;
+
+				let stress = calculateStress(s.dna, s.psy) || 0;
+				let hs = detectHiddenStress(s.dna, s.psy);
+
+				stressList.push(stress);
+				hiddenList.push(hs ? hs.hidden * 100 : 0);
+			}
+
+			if (!stressList.length) return;
+
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+			let w = canvas.width;
+			let h = canvas.height;
+
+			let stepX = w / (stressList.length - 1);
+
+			// =========================
+			// 🔥 危険ライン（先に描く）
+			// =========================
+			let dangerY = h - (70 / 100) * h;
+
+			ctx.beginPath();
+			ctx.strokeStyle = "rgba(255,0,0,0.5)";
+			ctx.lineWidth = 1;
+			ctx.setLineDash([5, 5]);
+
+			ctx.moveTo(0, dangerY);
+			ctx.lineTo(w, dangerY);
+			ctx.stroke();
+
+			// ラベル
+			ctx.fillStyle = "#ff6666";
+			ctx.font = "10px sans-serif";
+			ctx.fillText("Stress 70", 5, dangerY - 5);
+
+			ctx.setLineDash([]); // ←戻す（重要）
+
+			// =========================
+			// 🔵 ストレス
+			// =========================
+			ctx.beginPath();
+			ctx.strokeStyle = "#44ccff";
+			ctx.lineWidth = 2;
+
+			stressList.forEach((v, i) => {
+
+				let x = i * stepX;
+				let y = h - ((v || 0) / 100) * h;
+
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+
+				// 🔥 点（青）
+				ctx.fillStyle = "#44ccff";
+				ctx.fillRect(x - 2, y - 2, 4, 4);
 			});
-		});
 
-		document.querySelectorAll('input[name="d-long"]').forEach(el=>{
-			el.addEventListener("change",(e)=>{
-				appSettings.glow = parseFloat(e.target.value);
-				isDirty = true;
-				updateDirtyUI();
+			ctx.stroke();
+
+			// =========================
+			// 🔴 隠れストレス
+			// =========================
+			ctx.beginPath();
+			ctx.strokeStyle = "#ff6666";
+
+			hiddenList.forEach((v, i) => {
+
+				let x = i * stepX;
+				let y = h - ((v || 0) / 100) * h;
+
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
 			});
-		});
+
+			ctx.stroke();
+		}
 
 
-    }else{
-        box.style.display = "none";
-    }
-}
+        // =========================
+        // アニメーション
+        // =========================
+        function animate() {
+            time += breathSpeed;
+            draw();
+            requestAnimationFrame(animate);
+        }
 
-// =========================
-// JSON save, load
-// =======================
-function saveSettings(){
-    localStorage.setItem("voiceAuraSettings", JSON.stringify(appSettings));
-}
+        function startAnimationOnce() {
+            if (animationStarted) return;
+            animationStarted = true;
+            animate();
+        }
 
-function loadSettings(){
-    const s = localStorage.getItem("voiceAuraSettings");
-    if(s){
-        appSettings = JSON.parse(s);
-    }
-}
+        // =========================
+        // 起動時
+        // =========================
+		window.onload = () => {
 
-let t = 0;
+			document.body.classList.add("mode-soft"); // ←これ追加
 
-function animateWave(){
+			updateCanvasBackground();   // ←追加
+			updateAnimationMode();      // ←追加
 
-    t += 0.05;
+			loadSharedData();
 
-    const base = Math.sin(t) * 10;
+			setupGlobalResolution();
+			setupDensity("q_dna", "label_dna", v => densityDNA = v);
+			setupDensity("q_psy", "label_psy_view", v => densityPSY = v);
+			setupDensity("q_aura", "label_aura", v => densityAURA = v);
+			setupBreath("breath_amp", "label_breath_amp", breathAmpMap, v => breathAmp = v);
+			setupBreath("breath_speed", "label_breath_speed", breathSpeedMap, v => breathSpeed = v);
 
-    // 波形に加算するだけでOK
-}
+			setupAutoGain();
+			setupAnalysisSettings();
+			updateAnalysisSettingLabels();
 
+			const lastUser = localStorage.getItem("last_user") || "user1";
+			document.getElementById("user_select").value = lastUser;
+			loadSettings(lastUser);
+			updateUIFromSettings();
 
-// =========================
-// 🔥 dB測定（改善版）
-// =========================
-let currentDB = 0;
-let smoothedDB = 0;
-let baselineDB = null;
+			startAnimationOnce();
 
-function measureDB(analyser, dataArray){
+			// 🔥 canvas再サイズ
+			setupCanvasResize();
+			
+			// 🔥 スワイプ検出
+			const modalRoot = document.getElementById("settings_modal");
 
-    analyser.getByteTimeDomainData(dataArray);
+			if (modalRoot) {
+				const modal = modalRoot.querySelector(".modal-content");
 
-    let sum = 0;
+				modal.addEventListener("touchstart", e => {
+					startX = e.touches[0].clientX;
+				});
 
-    for(let i=0;i<dataArray.length;i++){
-        const v = (dataArray[i] - 128) / 128.0;
-        sum += v * v;
-    }
+				modal.addEventListener("touchend", e => {
+					let endX = e.changedTouches[0].clientX;
+					let dx = endX - startX;
 
-    const rms = Math.sqrt(sum / dataArray.length);
+					if (Math.abs(dx) < 50) return;
 
-    // 🔥 生dB（物理寄り）
-    let dbRaw = 20 * Math.log10(rms + 1e-6);
+					if (dx < 0) {
+						currentTab = Math.min(currentTab + 1, 3);
+					} else {
+						currentTab = Math.max(currentTab - 1, 0);
+					}
 
-    // 🔥 スケーリング（現実寄り）
-    let db = (dbRaw + 60) * 1.5;
-
-
-	//  dBを現実寄り
-	let adjusted = db;
-	
-    // 🔥 baseline補正（初回のみ記録）
-//    if(baselineDB === null){
-//        baselineDB = db;
-//    }
-//    let adjusted = db - baselineDB + 40; // 中央を40付近に
-
-
-    // 🔥 スムージング（重要）
-    smoothedDB = smoothedDB * 0.8 + adjusted * 0.2;
-
-    currentDB = Math.max(20, Math.min(90, Math.round(smoothedDB)));
-}
-
-// =========================
-// 🔥 ストレス　アラーム
-// =========================
-function getStressColor(v){
-    if(v > 70) return "#ef4444";   // 赤
-    if(v > 40) return "#facc15";   // 黄
-    return "#22c55e";              // 緑
-}
-
-
-
-// =========================
-// ストレス、フォーカル　パラメータ切り替え
-// =========================
-function adjustScores(r, mode){
-
-    if(!r || !r.scores) return r;
-
-    if(mode === "stress"){
-        r.scores.Stress = Math.min(100, r.scores.Stress * 1.3);
-        r.scores.Energy *= 0.9;
-    }
-
-    if(mode === "focus"){
-        r.scores.Focus = Math.min(100, r.scores.Focus * 1.3);
-    }
-
-    return r;
-}
-
-
-// =========================
-// ストレス、フォーカル　フロント切り替え
-// =========================
-function formatCommentByMode(text){
-
-    if(currentMode === "stress"){
-        return "⚠️ 少し注意です。\n" + text + "\n無理しすぎないでください。";
-    }
-
-    if(currentMode === "focus"){
-        return "🧊 集中状態です。\n" + text + "\nこのまま継続しましょう。";
-    }
-
-    // balance
-    return "🌿 今の状態です。\n" + text;
-}
-
-
-
-
-
-
-
-// 🔥 一番最後にこれ
-animate();
-
-</script>
-
+					showSettingTab(currentTab);
+				});
+			}
+			
+		}
+    </script>
 </body>
 </html>
