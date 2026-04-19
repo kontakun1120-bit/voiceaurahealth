@@ -1062,11 +1062,17 @@ canvas {
 // ユーティリティ        // ユーティリティ
         // =========================
 		function getScaledAmp(baseAmp, canvas) {
-			return baseAmp * (canvas.width / BASE_SIZE);
+
+			const rect = canvas.getBoundingClientRect(); // ←変更
+
+			return baseAmp * (rect.width / BASE_SIZE);
 		}
 
 		function getScaledR(baseR, canvas) {
-			return baseR * (canvas.width / BASE_SIZE);
+
+			const rect = canvas.getBoundingClientRect(); // ←変更
+
+			return baseR * (rect.width / BASE_SIZE);
 		}
 
 		function showTab(index) {
