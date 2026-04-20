@@ -1,6 +1,2 @@
 flask
-flask-cors
-pydub
-numpy
 gunicorn
-scipy
