@@ -2445,18 +2445,21 @@ canvas {
         // =========================
         // 描画
         // =========================
-        function draw() {
-            if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
+		function draw() {
 
-            const canvas = document.getElementById("canvas");
-			resizeCanvas(canvas);  // ←これ必須
-			
-            const ctx = canvas.getContext("2d");
+			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
 
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+			const canvas = document.getElementById("canvas");
+			resizeCanvas(canvas);
 
-            const cx = canvas.width / 2;
-            const cy = canvas.height / 2;
+			const ctx = canvas.getContext("2d");
+
+			const rect = canvas.getBoundingClientRect();
+
+			ctx.clearRect(0, 0, rect.width, rect.height);
+
+			const cx = rect.width / 2;
+			const cy = rect.height / 2;
 			
 			// =========================
 			// 🔥 ここ追加（最重要）
@@ -2476,9 +2479,9 @@ canvas {
 			drawBaseCircle(ctx, cx, cy, r2);
 			drawBaseCircle(ctx, cx, cy, r3);
 
-            const stepDNA = calcStep(globalRes, densityDNA);
-            const stepPSY = calcStep(globalRes, densityPSY);
-            const stepAURA = calcStep(globalRes, densityAURA);
+			const stepDNA = calcStep(globalRes, densityDNA);
+			const stepPSY = calcStep(globalRes, densityPSY);
+			const stepAURA = calcStep(globalRes, densityAURA);
 
 			// =========================
 			// 🔥 ここも変更
