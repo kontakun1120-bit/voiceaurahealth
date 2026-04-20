@@ -2446,7 +2446,10 @@ canvas {
 			const cx = size.width / 2;
 			const cy = size.height / 2;
 
-			const maxR = Math.min(size.width, size.height) / 2 - 28;
+			const maxR = Math.max(
+				Math.min(size.width, size.height) / 2 - 28,
+				10   // ← 最低サイズ保証
+			);
 			
 			// =========================
 			// 🔥 ここ追加（最重要）
