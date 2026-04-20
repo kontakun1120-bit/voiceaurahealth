@@ -1062,16 +1062,12 @@ canvas {
 // ユーティリティ        // ユーティリティ
         // =========================
 		function getScaledAmp(baseAmp, canvas) {
-
-			const rect = canvas.getBoundingClientRect(); // ←変更
-
+			const rect = canvas.getBoundingClientRect();
 			return baseAmp * (rect.width / BASE_SIZE);
 		}
 
 		function getScaledR(baseR, canvas) {
-
-			const rect = canvas.getBoundingClientRect(); // ←変更
-
+			const rect = canvas.getBoundingClientRect();
 			return baseR * (rect.width / BASE_SIZE);
 		}
 
@@ -1289,10 +1285,8 @@ canvas {
 			document.getElementById("analyze_processing_bottom").style.display = "block";
 		}
 
-		function resizeCanvas(canvas) {
-
+		function resizeMainCanvas(canvas) {
 			const rect = canvas.getBoundingClientRect();
-
 			const scale = window.devicePixelRatio || 1;
 
 			canvas.width = rect.width * scale;
@@ -1300,26 +1294,45 @@ canvas {
 
 			const ctx = canvas.getContext("2d");
 			ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+			return {
+				width: rect.width,
+				height: rect.height
+			};
+		}
+
+		function resizeMicCanvas(canvas) {
+
+			const rect = canvas.parentElement.getBoundingClientRect(); // ←変更
+
+			const size = Math.min(rect.width, 300); // ←変更
+
+			const scale = window.devicePixelRatio || 1;
+
+			canvas.style.width = size + "px";
+			canvas.style.height = size + "px";
+
+			canvas.width = size * scale;
+			canvas.height = size * scale;
+
+			const ctx = canvas.getContext("2d");
+			ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+			return {
+				width: size,
+				height: size
+			};
 		}
 
 		function setupCanvasResize() {
-
 			const canvas = document.getElementById("mic_canvas");
 
 			function resize() {
-
 				if (!canvas) return;
-
-				const size = Math.min(window.innerWidth * 0.6, 300);
-
-				canvas.width = size;
-				canvas.height = size;
+				resizeMicCanvas(canvas);
 			}
 
-			// 初回
 			resize();
-
-			// スマホ回転・画面変更
 			window.addEventListener("resize", resize);
 		}
 
@@ -2022,74 +2035,51 @@ canvas {
 			const buffer = new Uint8Array(analyser.frequencyBinCount);
 
 			const canvas = document.getElementById("mic_canvas");
-			resizeCanvas(canvas);
-
+			const size = resizeMicCanvas(canvas);
 			const ctx = canvas.getContext("2d");
 
 			function drawLevel() {
-
 				if (!micAnimating || analyzeState !== "record") return;
 
-				const cx = canvas.width / 2;
-				const cy = canvas.height / 2;
+				const cx = size.width / 2;
+				const cy = size.height / 2;
 
 				analyser.getByteFrequencyData(buffer);
 
-				// =========================
-				// 🔥 音量取得
-				// =========================
 				let sum = 0;
-				
 				for (let i = 0; i < buffer.length; i++) {
 					sum += buffer[i];
 				}
 
 				let level = sum / buffer.length / 255;
-
-				// 🔥 安定化（超重要）
 				level = level * 0.7 + prevLevel * 0.3;
 				prevLevel = level;
-				
-				lastLevel = level;     // 🔥 ここ追加（リアル音量を保存）
+				lastLevel = level;
 
-				// 🔥 ゲイン
 				level *= 3.0;
-
-				// 🔥 カーブ
 				level = Math.pow(level, 1.2);
-
-				// 🔥 上限
 				level = Math.min(level, 1.0);
 
-				// 🔥 dB換算
 				let db = levelToDb(level);
 				window.lastDb = db;
 
-				// 🔥 テキスト更新
 				updateLevelText(level);
 
-				ctx.clearRect(0, 0, canvas.width, canvas.height);
+				ctx.clearRect(0, 0, size.width, size.height);
 
-				// =========================
-				// 🔵 ベース円
-				// =========================
 				ctx.beginPath();
 				ctx.arc(cx, cy, 40, 0, Math.PI * 2);
 				ctx.strokeStyle = "rgba(255,255,255,0.2)";
 				ctx.lineWidth = 1;
 				ctx.stroke();
 
-				// =========================
-				// 🌈 レベルリング
-				// =========================
 				const segments = 60;
 
 				for (let i = 0; i < segments; i++) {
-
 					let ang = (i / segments) * Math.PI * 2 - Math.PI / 2;
 
 					let r1 = 40;
-					let r2 = 40 + level * 100;
+					let r2 = 40 + level * 60;
 
 					let x1 = cx + Math.cos(ang) * r1;
 					let y1 = cy + Math.sin(ang) * r1;
@@ -2100,7 +2090,6 @@ canvas {
 					let hue = (i / segments) * 360;
 
 					ctx.strokeStyle = `hsl(${hue},100%,60%)`;
-
 					ctx.beginPath();
 					ctx.moveTo(x1, y1);
 					ctx.lineTo(x2, y2);
@@ -2446,31 +2435,29 @@ canvas {
         // 描画
         // =========================
 		function draw() {
-
 			if (!data || !Array.isArray(data.dna) || !Array.isArray(data.psy) || !Array.isArray(data.aura)) return;
 
 			const canvas = document.getElementById("canvas");
-			resizeCanvas(canvas);
-
+			const size = resizeMainCanvas(canvas);
 			const ctx = canvas.getContext("2d");
 
-			const rect = canvas.getBoundingClientRect();
+			ctx.clearRect(0, 0, size.width, size.height);
 
-			ctx.clearRect(0, 0, rect.width, rect.height);
+			const cx = size.width / 2;
+			const cy = size.height / 2;
 
-			const cx = rect.width / 2;
-			const cy = rect.height / 2;
+			const maxR = Math.min(size.width, size.height) / 2 - 28;
 			
 			// =========================
 			// 🔥 ここ追加（最重要）
 			// =========================
-			const r1 = getScaledR(100, canvas);
-			const r2 = getScaledR(150, canvas);
-			const r3 = getScaledR(200, canvas);
+			const r1 = maxR * 0.42;
+			const r2 = maxR * 0.64;
+			const r3 = maxR * 0.86;
 
-			const amp1 = getScaledAmp(40, canvas);
-			const amp2 = getScaledAmp(50, canvas);
-			const amp3 = getScaledAmp(60, canvas);
+			const amp1 = maxR * 0.10;
+			const amp2 = maxR * 0.12;
+			const amp3 = maxR * 0.14;
 
 			// =========================
 			// ベース円
@@ -2490,7 +2477,7 @@ canvas {
 			drawAuraVectorRing(ctx, data.psy, cx, cy, r2, amp2, stepPSY);
 			drawAuraVectorRing(ctx, data.aura, cx, cy, r3, amp3, stepAURA);
 
-			drawSectorLabels(ctx, cx, cy, r3 + 30);
+			drawSectorLabels(ctx, cx, cy, r3 + 22);
         }
 
         function drawAuraVectorRing(ctx, arr, cx, cy, r, amp, stepAngle) {
