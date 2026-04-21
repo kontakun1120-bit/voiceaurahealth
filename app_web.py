@@ -12,8 +12,8 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB
 
-def convert_to_wav(input_path: str, output_path: str, mime=None):
 
+def convert_to_wav(input_path: str, output_path: str, mime=None):
     ext = os.path.splitext(input_path)[1].lower()
 
     fmt = None
@@ -52,9 +52,6 @@ def index():
     return render_template("index.html")
 
 
-# =========================
-# 安全解析API
-# =========================
 @app.route("/analyze", methods=["POST"])
 def analyze():
     raw_path = None
@@ -62,12 +59,12 @@ def analyze():
 
     try:
         if "audio" not in request.files:
-            return jsonify({"ok": False, "error": "audioなし"})
+            return jsonify({"ok": False, "error": "audioなし"}), 400
 
         file = request.files["audio"]
 
         if not file or file.filename == "":
-            return jsonify({"ok": False, "error": "ファイル未選択"})
+            return jsonify({"ok": False, "error": "ファイル未選択"}), 400
 
         ext = os.path.splitext(file.filename)[1].lower()
         if ext == "":
@@ -79,10 +76,8 @@ def analyze():
 
         file.save(raw_path)
 
-        # wav化
         convert_to_wav(raw_path, wav_path, mime=file.content_type)
 
-        # パラメータ取得
         sigma = float(request.form.get("sigma", 2))
         upscale = int(request.form.get("upscale", 1))
         psy_weight = float(request.form.get("psy", 0.5))
@@ -102,15 +97,14 @@ def analyze():
         })
 
     except Exception as e:
-        print("🔥 ERROR:", e)   # ←追加
-
+        print("🔥 ERROR:", e)
         import traceback
-        traceback.print_exc()  # ←追加（神）
-        
+        traceback.print_exc()
+
         return jsonify({
             "ok": False,
             "error": str(e)
-        })
+        }), 500
 
     finally:
         for p in [raw_path, wav_path]:
