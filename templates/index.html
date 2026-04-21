@@ -12,6 +12,7 @@
 	}
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 	<script src="https://unpkg.com/html5-qrcode"></script>
 
 	
@@ -549,7 +550,7 @@ canvas {
             <button onclick="showTab(0)">分　析</button>
             <button onclick="showTab(1)">判　定</button>
             <button onclick="showTab(2)">レポート</button>
-            <button onclick="showTab(3)">Sample</button>
+            <button onclick="showTab(3)">色占い</button>
         </div>
 		<div class="nav nav-bottom">
 			<button onclick="showTab(4)">メンタル</button>
@@ -876,10 +877,20 @@ canvas {
 			</div>
         </div>
 
-		<!-- Sample -->
+		<!-- 色占い -->
 		<div class="tab">
 			<div class="report-box">
-				<h3>🎨 色占い（準備中）</h3>
+
+				<h3>🎭 有名人タイプ診断</h3>
+
+				<div id="celeb_result" style="margin:20px; font-size:18px;">
+					ボタンを押して診断
+				</div>
+
+				<button onclick="runCelebDiagnosis()">
+					🎲 タイプ診断
+				</button>
+
 			</div>
 		</div>
 
@@ -1114,6 +1125,248 @@ canvas {
 				breathAmp = 2;
 				breathSpeed = 0.02;
 			}
+		}
+
+		// ===== 色占いJS　色
+		function showColorFortune() {
+
+			const colors = [
+				{ name: "🔥 レッド", msg: "今日は行動力MAX！攻めましょう" },
+				{ name: "💙 ブルー", msg: "冷静で判断力が冴えてます" },
+				{ name: "💚 グリーン", msg: "安定＆癒しの状態です" },
+				{ name: "💛 イエロー", msg: "自信と輝きが出ています" },
+				{ name: "💜 パープル", msg: "直感力が鋭い日です" },
+				{ name: "🧡 オレンジ", msg: "楽しむと運気UP！" }
+			];
+
+			const c = colors[Math.floor(Math.random() * colors.length)];
+
+			document.getElementById("color_result").innerHTML = `
+				<div style="font-size:24px;">${c.name}</div>
+				<div style="margin-top:10px;">${c.msg}</div>
+			`;
+		}
+
+		// ===== 色占いJS　タイプ
+		function runCelebDiagnosis() {
+
+			// =========================
+			// 色占いJS　タイプ一覧
+			// =========================
+
+			const types = [
+				{ name:"直感型", celeb:"スティーブ・ジョブズ系", msg:"ビジョンと創造性が強い" },
+				{ name:"分析型", celeb:"孫正義系", msg:"構造理解と戦略に優れる" },
+				{ name:"論理型", celeb:"ビル・ゲイツ系", msg:"冷静で合理的判断" },
+				{ name:"対人型", celeb:"タモリ系", msg:"人との距離感が絶妙" },
+				{ name:"共感型", celeb:"綾瀬はるか系", msg:"優しさと共感力が強い" },
+				{ name:"癒し型", celeb:"新垣結衣系", msg:"安心感を与える存在" },
+				{ name:"自信型", celeb:"大谷翔平系", msg:"自己肯定と実行力" },
+				{ name:"存在感型", celeb:"マツコ系", msg:"圧倒的な個性と影響力" },
+				{ name:"満足型", celeb:"所ジョージ系", msg:"自然体で幸福度が高い" },
+				{ name:"身体型", celeb:"武井壮系", msg:"フィジカルと行動力" },
+				{ name:"行動型", celeb:"イーロン・マスク系", msg:"突破力と挑戦精神" },
+				{ name:"探究型", celeb:"イチロー系", msg:"継続と極める力" }
+			];
+
+			let result, second, third;
+
+			// =========================
+			// 🔥 VoiceAura連動
+			// =========================
+			if (data && Array.isArray(data.aura) && data.aura.length > 0) {
+
+				let [i1, i2, i3] = getTop3Sectors(data.aura);
+
+				if (i1 >= types.length) i1 = 0;
+				if (i2 >= types.length) i2 = 0;
+				if (i3 >= types.length) i3 = 0;
+
+				result = types[i1];
+				second = types[i2];
+				third = types[i3];
+
+			} else {
+
+				let r = Math.floor(Math.random() * types.length);
+				result = types[r];
+				second = result;
+				third = result;
+			}
+
+			const shareText = generateShareText(result, second, third);
+
+			document.getElementById("celeb_result").innerHTML = `
+				<div style="font-size:26px; font-weight:bold;">
+					🏆 ${result.name}
+				</div>
+
+				<div style="margin-top:8px;">
+					（${result.celeb}）
+				</div>
+
+				<div style="margin-top:12px;">
+					${safeHTML(result.msg)}
+				</div>
+
+				<hr style="margin:20px 0; opacity:0.3;">
+
+				<div style="font-size:14px;">
+					🥈 ${second.name}（サブタイプ）<br>
+					🥉 ${third.name}（潜在タイプ）
+				</div>
+
+				<div style="margin-top:20px;">
+					<textarea id="share_text" style="width:100%; height:100px;">${shareText}</textarea>
+					<button onclick="copyShare()">コピー</button>
+				</div>
+				
+			`;
+		}
+
+		// ===== 色占いJS シェア
+		function copyShare() {
+			const text = document.querySelector("#share_text").value;
+			navigator.clipboard.writeText(text);
+			alert("コピーしました！");
+		}
+
+		// ===== 色占いJS 2位・3位表示
+		function getTop3Sectors(arr) {
+
+			const sectors = new Array(12).fill(0);
+			if (!arr || arr.length < 12) return [0,0,0];
+			const size = Math.floor(arr.length / 12);
+
+			for (let i = 0; i < 12; i++) {
+				let sum = 0;
+				for (let j = 0; j < size; j++) {
+					sum += arr[i * size + j];
+				}
+				sectors[i] = sum / size;
+			}
+
+			const indexed = sectors.map((v, i) => ({ v, i }));
+			indexed.sort((a, b) => b.v - a.v);
+
+			return [indexed[0].i, indexed[1].i, indexed[2].i];
+		}
+
+		// ===== 色占いJS バズ用シェア文 曜日補正 スコア補正 絵文字ランダム
+		function generateShareText(result, second, third) {
+
+			const now = new Date();
+			const day = now.getDay(); // 0=日曜
+
+			// =========================
+			// 曜日補正
+			// =========================
+			let dayMsg = "";
+			if (day === 1) dayMsg = "月曜スタート、無理せずいきましょう💪";
+			if (day === 5) dayMsg = "金曜テンション高め🔥";
+			if (day === 0) dayMsg = "日曜リラックス🌿";
+
+			// =========================
+			// スコア補正（存在すれば）
+			// =========================
+			let stressMsg = "";
+
+			if (data?.result?.stress != null) {
+				const stress = data.result.stress;
+
+				if (stress > 70) stressMsg = "ちょっとお疲れ気味かも😌";
+				else if (stress < 30) stressMsg = "かなり良い状態✨";
+			}
+
+			// =========================
+			// 絵文字ランダム
+			// =========================
+			const emojis = ["🔥","💖","⚡","🎯","🌿","🧠"];
+			const e = emojis[Math.floor(Math.random() * emojis.length)];
+	
+			// =========================
+			// テンプレ
+			// =========================
+			const templates = [
+
+				// 王道
+				(r,s,t) => `${e} 私は「${r.name}」タイプでした！
+		（${r.celeb}）
+
+		🥈 ${s.name}
+		🥉 ${t.name}
+
+		${stressMsg}
+		${dayMsg}
+
+		#VoiceAura
+		https://mini.voiceaurahealth.com`,
+
+				// ② 短文バズ
+				(r,s,t) => `${e} 私 → ${r.name}
+		（${r.celeb}）
+
+		あなたは？
+
+		#VoiceAura`,
+
+				// ③ 煽り系（拡散強い）
+				(r,s,t) => `${e} これ当たってるかも…
+
+		私は「${r.name}」でした😳
+		（${r.celeb}）
+
+		#VoiceAura`,
+
+				// ④ 感情系
+				(r,s,t) => `${e} え、ちょっと待って…
+
+		「${r.name}」って言われた😂
+		（${r.celeb}）
+
+		#VoiceAura`,
+
+				// ⑤ 比較誘導
+				(r,s,t) => `${e} VoiceAuraやってみた👇
+
+		私：${r.name}
+		（${r.celeb}）
+
+		みんなは何タイプ？
+
+		#VoiceAura`,
+
+				// ⑥ ガチ感（あなた向け）
+				(r,s,t) => `${e} 音声解析結果
+
+		主タイプ：${r.name}
+		副タイプ：${s.name}
+		潜在：${t.name}
+
+		（${r.celeb}）
+
+		${stressMsg}
+
+		#VoiceAura`,
+
+				// ⑦ SNS特化（最強）
+				(r,s,t) => `🎙 VoiceAura診断
+
+		🏆 ${r.name}
+		🥈 ${s.name}
+		🥉 ${t.name}
+
+		（${r.celeb}）
+
+		あなたは何タイプ？
+
+		#VoiceAura`
+			];
+
+			// ランダム選択
+			const t = templates[Math.floor(Math.random() * templates.length)];
+
+			return t(result, second, third).trim();
 		}
 
 		// ===== 医療JS
@@ -1444,8 +1697,9 @@ canvas {
 			});
 
 			// テキスト
-			document.getElementById("qr_text").innerHTML =
-				"このQRで共有できます✨<br><small>" + safeHTML(url) + "</small>";
+			const el = document.getElementById("qr_text");
+			el.innerHTML = "このQRで共有できます✨<br><small></small>";
+			el.querySelector("small").innerText = url;
 
 			// 🔥 保存（コピー用）
 			window.currentQRUrl = url;
@@ -1479,7 +1733,11 @@ canvas {
 			try {
 
 				// Base64デコード（安全）
-				let decoded = decodeURIComponent(escape(atob(d)));
+				let decoded = decodeURIComponent(
+					Array.prototype.map.call(atob(d), c =>
+						'%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+					).join('')
+				);
 
 				let arr = decoded.split(",").map(Number);
 
@@ -1545,7 +1803,11 @@ canvas {
 				// =========================
 				// デコード
 				// =========================
-				let decoded = decodeURIComponent(escape(atob(d)));
+				let decoded = decodeURIComponent(
+					Array.prototype.map.call(atob(d), c =>
+						'%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+					).join('')
+				);
 
 				let arr = decoded.split(",").map(Number);
 
