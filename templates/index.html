@@ -2238,24 +2238,29 @@ canvas {
         // =========================
 		async function sendAudio(blob) {
 			const fd = new FormData();
-			
+
 			let ext = mimeType.includes("mp4") ? "mp4" : "webm";
 			fd.append("audio", blob, "voice." + ext);
 
-			let res;
+			const controller = new AbortController();
+			const timeoutId = setTimeout(() => controller.abort(), 15000);
 
+			let res;
 			try {
 				res = await fetch("/analyze", {
 					method: "POST",
-					body: fd
+					body: fd,
+					signal: controller.signal
 				});
 			} catch (e) {
+				clearTimeout(timeoutId);
 				alert("通信エラー（ネットワーク）");
 				return;
 			}
 
-			let json;
+			clearTimeout(timeoutId);
 
+			let json;
 			try {
 				json = await res.json();
 			} catch (e) {
@@ -2263,7 +2268,7 @@ canvas {
 				return;
 			}
 
-			finishProgress(); // ←追加
+			finishProgress();
 
 			if (!json.ok) {
 				alert(json.error || "エラー");
@@ -2280,11 +2285,8 @@ canvas {
 			updateMentalUI();
 			updateMedicalUI();
 
-			// 🔥 解析完了表示
 			setAnalyzeState("done");
-
-			saveSession(); // ←個々のjson セーブ　追加
-
+			saveSession();
 		}
 
         // =========================
