@@ -114,6 +114,10 @@ def analyze():
                 except Exception:
                     pass
 
+@app.route("/lp")
+def lp():
+    return render_template("lp.html")
+
 
 if __name__ == "__main__":
     app.run(debug=True)
