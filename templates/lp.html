@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VoiceAura</title>
+
+<style>
+body{
+    margin:0;
+    font-family:sans-serif;
+    background: linear-gradient(180deg,#0f172a,#1e293b);
+    color:white;
+    text-align:center;
+}
+
+.hero{
+    padding:60px 20px;
+}
+
+h1{
+    font-size:32px;
+    margin-bottom:20px;
+}
+
+p{
+    opacity:0.9;
+    line-height:1.8;
+}
+
+button{
+    margin-top:30px;
+    padding:14px 24px;
+    border:none;
+    border-radius:30px;
+    font-size:16px;
+    background:linear-gradient(135deg,#ff7edb,#6fa8ff);
+    color:white;
+    cursor:pointer;
+}
+
+.section{
+    padding:50px 20px;
+    background:#111827;
+}
+
+.card{
+    max-width:500px;
+    margin:20px auto;
+    padding:20px;
+    background:#1f2937;
+    border-radius:16px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="hero">
+	<p style="margin-top:40px;opacity:0.5;">
+	↓ スクロール
+	</p>
+
+	<div style="margin-top:30px;">
+		<img src="/static/screen1.png" 
+			 style="width:90%; max-width:400px; border-radius:20px;">
+	</div>
+
+    <h1>あなたの今の状態、見えていますか？</h1>
+
+    <p>
+    声には、今のあなたがそのまま表れています。<br>
+    でも、それに気づける人はほとんどいません。
+    </p>
+
+	<div style="margin-top:20px; font-size:22px; font-weight:bold;">
+		Stress 72 / Energy 48
+	</div>
+	
+	<p style="margin-top:20px;">
+	あなたは、本当に大丈夫ですか？
+	</p>
+
+    <button onclick="location.href='/'">
+        🎙 5秒で自分を知る
+    </button>
+</div>
+
+<div class="section">
+
+	<p style="margin-top:30px; opacity:0.7;">
+	※ SNSで話題の音声解析
+	</p>
+
+    <div class="card">
+        <h3>5秒で分かる</h3>
+        <p>話すだけで、ストレス・エネルギーを可視化</p>
+    </div>
+
+    <div class="card">
+        <h3>直感で理解</h3>
+        <p>3リング構造で状態を一目で把握</p>
+    </div>
+
+    <div class="card">
+        <h3>気づきが変わる</h3>
+        <p>「まだ大丈夫」が「そろそろ休もう」に変わる</p>
+    </div>
+
+	<div style="margin-top:40px;">
+		<button onclick="location.href='/'">
+			👉 今すぐチェック（5秒）
+		</button>
+	</div>
+
+	<button onclick="navigator.share ? navigator.share({title:'VoiceAura', url:location.href}) : alert('共有未対応')">
+		📤 シェア
+	</button>
+
+</div>
+
+<div class="hero">
+    <h2>これは診断ではありません</h2>
+    <p>
+    あなた自身が「気づく」ためのツールです
+    </p>
+
+	<p style="margin-top:40px;opacity:0.5;">
+	↓ スクロール
+	</p>
+
+    <button onclick="location.href='/'">
+        🎙 今すぐチェック（5秒）
+    </button>
+</div>
+
+</body>
+</html>
