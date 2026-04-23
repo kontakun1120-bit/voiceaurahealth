@@ -1822,6 +1822,17 @@ html {
 		  };
 		});
 
+		// グラフの日時時間
+		function formatTime(date) {
+
+			const m = String(date.getMonth() + 1).padStart(2, '0');
+			const d = String(date.getDate()).padStart(2, '0');
+			const h = String(date.getHours()).padStart(2, '0');
+			const min = String(date.getMinutes()).padStart(2, '0');
+
+			return `${m}/${d} ${h}:${min}`;
+		}
+
 
 
 // QR生成
@@ -3125,7 +3136,7 @@ html {
 
 			const session = {
 				id: Date.now(),
-				timestamp: new Date().toLocaleString(),
+				timestamp: formatTime(new Date()),
 
 				dna: data.dna,
 				psy: data.psy,
@@ -3783,7 +3794,7 @@ html {
 			// 本日
 			// =========================
 			document.getElementById("karte_today").innerHTML = `
-				時刻：${new Date().toLocaleTimeString()}
+				時刻：${formatTime(new Date())}
 			`;
 
 			// =========================
@@ -3862,6 +3873,7 @@ html {
 			let h = canvas.height;
 
 			let stepX = w / (stressList.length - 1);
+			let labels = dataList.map(s => s.timestamp || "");
 
 			// =========================
 			// 🔥 危険ライン（先に描く）
@@ -3922,6 +3934,28 @@ html {
 			});
 
 			ctx.stroke();
+
+			// =========================
+			// 🕒 ここに追加（最後）
+			// =========================
+			let labels = dataList.map(s => s.timestamp || "");
+
+			ctx.fillStyle = "#666";
+			ctx.font = "10px sans-serif";
+
+			labels.forEach((t, i) => {
+
+				if (i % 3 !== 0) return; // ←間引き（超重要）
+
+				let x = i * stepX;
+				let y = h - 5;
+
+				ctx.save();
+				ctx.translate(x, y);
+				ctx.rotate(-Math.PI / 4);
+				ctx.fillText(t, 0, 0);
+				ctx.restore();
+			});
 		}
 
 
