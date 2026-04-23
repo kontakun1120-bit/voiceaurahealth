@@ -3,7 +3,7 @@ import os
 import uuid
 from pydub import AudioSegment
 from datetime import datetime
-from zoneinfo import ZoneInfo
+from zoneinfo import ZoneInfo    # Python3.9+
 from core.aura_engine import AuraEngine
 
 app = Flask(__name__)
@@ -14,9 +14,17 @@ os.makedirs(TEMP_DIR, exist_ok=True)
 
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB
 
-def now_jst():
+
+def get_jst_now():
     return datetime.now(ZoneInfo("Asia/Tokyo"))
 
+def get_timestamp_pair():
+    now = get_jst_now()
+
+    timestamp_full = now.strftime("%Y-%m-%d %H:%M")  # JSON保存用
+    timestamp_short = now.strftime("%m-%d %H:%M")    # 表示用
+
+    return timestamp_full, timestamp_short
 
 def convert_to_wav(input_path: str, output_path: str, mime=None):
     ext = os.path.splitext(input_path)[1].lower()
@@ -96,8 +104,15 @@ def analyze():
             contrast=contrast,
         )
 
+        # =========================
+        # 🔥 時刻追加（ここ）
+        # =========================
+        timestamp_full, timestamp_short = get_timestamp_pair()
+
         return jsonify({
             "ok": True,
+            "time_full": timestamp_full,
+            "time_short": timestamp_short,
             **result
         })
 
