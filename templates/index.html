@@ -3127,14 +3127,24 @@ html {
 
 			if (!data || !data.dna) return;
 
+			const stress = calculateStress(data.dna, data.psy);
+			const hs = detectHiddenStress(data.dna, data.psy);
+
 			const session = {
 				id: Date.now(),
-//				timestamp: new Date().toLocaleString(),
+
 				time_full: data.time_full,
 				time_short: data.time_short || new Date().toLocaleTimeString(),
+				
+				stress: stress,
+				hidden: hs ? hs.hidden : 0,
+				hidden_label: hs ? hs.label : "比較不可",
+				similarity: hs ? hs.similarity : 0,
+				
 				dna: data.dna,
 				psy: data.psy,
 				aura: data.aura,
+				
 				summary: document.getElementById("summary_text").innerText,
 				meta: {
 					level: typeof lastLevel !== "undefined" ? lastLevel : 0
@@ -3821,7 +3831,7 @@ html {
 			// =========================
 			// グラフ
 			// =========================
-			drawHistoryChart();
+			drawHistoryChart(sessions);
 		}
 
         // =========================
@@ -3830,106 +3840,106 @@ html {
         // =========================
 		// 【4.6.1】 グラフ描画関数（軽量Canvas版）
         // =========================
-		function drawHistoryChart() {
+		function drawHistoryChart(dataList) {
 
-			let canvas = document.getElementById("karte_chart");
+			const canvas = document.getElementById("karte_chart");
 			if (!canvas) return;
 
-			let ctx = canvas.getContext("2d");
+			const ctx = canvas.getContext("2d");
 
-			let sessions = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
+			// =========================
+			// サイズ調整（レスポンシブ）
+			// =========================
+			canvas.width = canvas.parentElement.offsetWidth || 300;
+			canvas.height = 200;
 
-			if (!Array.isArray(sessions) || sessions.length < 2) return;
+			const w = canvas.width;
+			const h = canvas.height;
 
-			let dataList = sessions.slice(-20);
+			ctx.clearRect(0, 0, w, h);
 
+			if (!dataList || dataList.length === 0) return;
+
+			// =========================
+			// データ抽出
+			// =========================
 			let stressList = [];
 			let hiddenList = [];
+			let timeLabels = [];
 
-			for (let s of dataList) {
+			dataList.forEach(s => {
 
-				if (!s || !s.dna || !s.psy) continue;
+				// ストレス
+				stressList.push(s.stress || 0);
 
-				let stress = calculateStress(s.dna, s.psy) || 0;
-				let hs = detectHiddenStress(s.dna, s.psy);
+				// 隠れストレス（安全処理＋非線形）
+				let hs = s.hidden ?? 0;
+				hs = Math.max(0, Math.min(hs, 1)); // 0〜1にクリップ
+				let hiddenCorrected = Math.pow(hs, 1.15) * 100;
+				hiddenList.push(hiddenCorrected);
 
-				stressList.push(stress);
-//				hiddenList.push(hs ? hs.hidden * 100 : 0);    //強すぎる可能性
-				hiddenList.push(hs ? Math.pow(hs.hidden, 1.2) * 100 : 0);	//パワー関数（γ補正）1.1～1.2調整
-			}
+				// 時間ラベル（安全）
+				if (!s.time_short) {
+					timeLabels.push("--");
+				} else {
+					let t = s.time_short.trim();
+					timeLabels.push(t.length > 0 ? t : "--");
+				}
+			});
 
-			if (!stressList.length) return;
-
-			ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-			let w = canvas.width;
-			let h = canvas.height;
+			// =========================
+			// レイアウト
+			// =========================
+			let paddingX = 30;
+			let paddingY = 25;
 
 			let stepX = (stressList.length > 1)
-				? w / (stressList.length - 1)
+				? (w - paddingX * 2) / (stressList.length - 1)
 				: w;
-			
-			let timeLabels = dataList.map(s => {
-				if (!s.time_short) return "--";
-
-				let t = s.time_short.trim();
-
-				return (t.length > 0) ? t : "--";
-			});
 
 			// =========================
-			// 🔥 危険ライン（先に描く）
+			// 背景グリッド（薄く）
 			// =========================
-			let dangerY = h - (70 / 100) * h;
-
-			ctx.beginPath();
-			ctx.strokeStyle = "rgba(255,0,0,0.5)";
+			ctx.strokeStyle = "#eee";
 			ctx.lineWidth = 1;
-			ctx.setLineDash([5, 5]);
 
-			ctx.moveTo(0, dangerY);
-			ctx.lineTo(w, dangerY);
-			ctx.stroke();
+			[0, 50, 100].forEach(v => {
+				let y = h - paddingY - (v / 100) * (h - paddingY * 2);
 
-			// ラベル
-			ctx.fillStyle = "#ff6666";
-			ctx.font = "10px sans-serif";
-			ctx.fillText("Stress 70", 5, dangerY - 5);
-
-			ctx.setLineDash([]); // ←戻す（重要）
-
-			// =========================
-			// 🔵 ストレス
-			// =========================
-			ctx.beginPath();
-			ctx.strokeStyle = "#44ccff";
-			ctx.lineWidth = 2;
-
-			stressList.forEach((v, i) => {
-
-				let x = i * stepX;
-				let y = h - ((v || 0) / 100) * h;
-
-				if (i === 0) ctx.moveTo(x, y);
-				else ctx.lineTo(x, y);
-
-				// 🔥 点（青）
-				ctx.fillStyle = "#44ccff";
-				ctx.fillRect(x - 2, y - 2, 4, 4);
+				ctx.beginPath();
+				ctx.moveTo(paddingX, y);
+				ctx.lineTo(w - paddingX, y);
+				ctx.stroke();
 			});
 
+			// =========================
+			// 危険ライン（70）
+			// =========================
+			let dangerY = h - paddingY - (70 / 100) * (h - paddingY * 2);
+
+			ctx.strokeStyle = "rgba(255,0,0,0.3)";
+			ctx.setLineDash([6, 6]);
+
+			ctx.beginPath();
+			ctx.moveTo(paddingX, dangerY);
+			ctx.lineTo(w - paddingX, dangerY);
 			ctx.stroke();
 
+			ctx.setLineDash([]);
+
 			// =========================
-			// 🔴 隠れストレス
+			// 隠れストレス（先に描く）
 			// =========================
+			ctx.strokeStyle = "rgba(255,100,100,0.4)";
+			ctx.lineWidth = 2;
+			ctx.lineJoin = "round";
+			ctx.lineCap = "round";
+
 			ctx.beginPath();
-			ctx.strokeStyle = "#ff6666";
 
 			hiddenList.forEach((v, i) => {
-
-				let x = i * stepX;
-				let y = h - ((v || 0) / 100) * h;
+				let x = paddingX + i * stepX;
+				let y = h - paddingY - (v / 100) * (h - paddingY * 2);
 
 				if (i === 0) ctx.moveTo(x, y);
 				else ctx.lineTo(x, y);
@@ -3938,33 +3948,53 @@ html {
 			ctx.stroke();
 
 			// =========================
-			// 🕒 時間ラベル
+			// ストレス（メイン）
+			// =========================
+			ctx.strokeStyle = "#ff4d4d";
+			ctx.lineWidth = 2;
+
+			ctx.beginPath();
+
+			stressList.forEach((v, i) => {
+				let x = paddingX + i * stepX;
+				let y = h - paddingY - (v / 100) * (h - paddingY * 2);
+
+				if (i === 0) ctx.moveTo(x, y);
+				else ctx.lineTo(x, y);
+
+				// 点
+				ctx.fillStyle = "#ff4d4d";
+				ctx.fillRect(x - 3, y - 3, 6, 6);
+			});
+
+			ctx.stroke();
+
+			// =========================
+			// 時間ラベル
 			// =========================
 			ctx.fillStyle = "#666";
 			ctx.font = "10px sans-serif";
-
+			ctx.textAlign = "center";
 
 			let skip = Math.ceil(timeLabels.length / 6);
 
 			timeLabels.forEach((t, i) => {
 				if (i % skip !== 0) return;
 
-				let x = i * stepX;
-				ctx.fillText(t, x - 10, h - 2);
+				let x = paddingX + i * stepX;
+				ctx.fillText(t, x, h - 5);
 			});
 
-//			【バグ】二重ループ（時間ラベル）
-//			timeLabels.forEach((t, i) => {
-//				let x = i * stepX;
-//				let y = h - 2;
-//				// 間引き（多すぎ防止）
-//				let skip = Math.ceil(timeLabels.length / 6);
-//				timeLabels.forEach((t, i) => {
-//					if (i % skip !== 0) return;
-//					let x = i * stepX;
-//					ctx.fillText(t, x - 10, h - 2);
-//				});
-//			});
+			// =========================
+			// Y軸ラベル
+			// =========================
+			ctx.fillStyle = "#aaa";
+			ctx.textAlign = "left";
+
+			[0, 50, 100].forEach(v => {
+				let y = h - paddingY - (v / 100) * (h - paddingY * 2);
+				ctx.fillText(v, 5, y + 3);
+			});
 
 		}
 
