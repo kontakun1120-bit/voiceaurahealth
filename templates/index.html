@@ -4056,29 +4056,20 @@ html {
             animate();
         }
 
-
-		let startX = 0;
-		let startY = 0;
-		let currentTab = 0;
-		
         // =========================
         // 起動時
         // =========================
 		window.onload = () => {
 
+			showTab(0); // ←初期タブ表示
+			loadLabView();
+
 			document.body.classList.add("mode-soft"); // ←これ追加
 
-			// ===== 安全初期化 =====
-			if (typeof updateCanvasBackground === "function") {
-				updateCanvasBackground();
-			}
+			updateCanvasBackground();   // ←追加
+			updateAnimationMode();      // ←追加
 
-			if (typeof updateAnimationMode === "function") {
-				updateAnimationMode();
-			}
-
-			// ===== UI設定 =====
-			if (typeof loadSharedData === "function") loadSharedData();
+			loadSharedData();
 
 			setupGlobalResolution();
 			setupDensity("q_dna", "label_dna", v => densityDNA = v);
@@ -4088,9 +4079,7 @@ html {
 			setupBreath("breath_speed", "label_breath_speed", breathSpeedMap, v => breathSpeed = v);
 
 			setupAutoGain();
-
-			if (typeof setupAnalysisSettings === "function") setupAnalysisSettings();
-
+			setupAnalysisSettings();
 			updateAnalysisSettingLabels();
 
 			const lastUser = localStorage.getItem("last_user") || "user1";
@@ -4102,42 +4091,32 @@ html {
 
 			// 🔥 canvas再サイズ
 			setupCanvasResize();
-
-
+			
 			// 🔥 スワイプ検出
 			const modalRoot = document.getElementById("settings_modal");
 
 			if (modalRoot) {
 				const modal = modalRoot.querySelector(".modal-content");
 
-				if (modal) {
-					modal.addEventListener("touchstart", e => {
-						startX = e.touches[0].clientX;
-						startY = e.touches[0].clientY;  // ←これ追加
-					}, { passive: true });
+				modal.addEventListener("touchstart", e => {
+					startX = e.touches[0].clientX;
+				});
 
-					modal.addEventListener("touchend", e => {
-						let endX = e.changedTouches[0].clientX;
-						let endY = e.changedTouches[0].clientY;
+				modal.addEventListener("touchend", e => {
+					let endX = e.changedTouches[0].clientX;
+					let dx = endX - startX;
 
-						let dx = endX - startX;
-						let dy = endY - startY;   // ←追加（重要）
+					if (Math.abs(dx) < 50) return;
 
-						// 🔥 横スワイプだけ反応
-						if (Math.abs(dx) < 50 || Math.abs(dy) > 50) return;
+					if (dx < 0) {
+						currentTab = Math.min(currentTab + 1, 3);
+					} else {
+						currentTab = Math.max(currentTab - 1, 0);
+					}
 
-						if (dx < 0) {
-							currentTab = Math.min(currentTab + 1, 3);
-						} else {
-							currentTab = Math.max(currentTab - 1, 0);
-						}
-
-						showSettingTab(currentTab);
-					});
-				}
+					showSettingTab(currentTab);
+				});
 			}
-			if (typeof showTab === "function") showTab(0);
-			if (typeof loadLabView === "function") loadLabView();
 			
 		}
     </script>
