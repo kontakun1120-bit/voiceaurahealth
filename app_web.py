@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, jsonify
 import os
 import uuid
 from pydub import AudioSegment
+from datetime import datetime
+from zoneinfo import ZoneInfo
 from core.aura_engine import AuraEngine
 
 app = Flask(__name__)
@@ -11,6 +13,9 @@ TEMP_DIR = "temp"
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 app.config["MAX_CONTENT_LENGTH"] = 5 * 1024 * 1024  # 5MB
+
+def now_jst():
+    return datetime.now(ZoneInfo("Asia/Tokyo"))
 
 
 def convert_to_wav(input_path: str, output_path: str, mime=None):
