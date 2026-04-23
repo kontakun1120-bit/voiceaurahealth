@@ -996,6 +996,7 @@ html {
         <!-- ラボ -->
         <div class="tab">
 			<div class="report-box">
+
 				<h3>🧠 本日の状態</h3>
 				<div id="karte_today"></div>
 
@@ -1014,18 +1015,6 @@ html {
 				<div id="karte_plan">
 					<!-- ここは今は空でOK -->
 				</div>
-			</div>
-			<div id="lab_view" style="display:none;">
-
-			  <div class="card">
-				<h3>📊 履歴グラフ</h3>
-				<canvas id="lab_history_canvas" width="600" height="200"></canvas>
-			  </div>
-
-			  <div class="card">
-				<h3>🧠 最新状態</h3>
-				<div id="lab_latest"></div>
-			  </div>
 
 			</div>
         </div>
@@ -1258,77 +1247,6 @@ html {
 			 }
 			updateCanvasBackground(); // ←追加
 			updateAnimationMode(); // ←これ追加
-
-			// =========================
-			// 🔥 ここ追加（ラボ自動表示）
-			// =========================
-			if (index === 3) {   // ←ラボタブの番号に合わせる
-				loadLabView();
-				setTimeout(loadLabView, 500); // ←保険
-			}
-
-		}
-
-		function loadLabView(){
-
-			let list = JSON.parse(localStorage.getItem("voiceaura_sessions") || "[]");
-
-			if(list.length === 0){
-				document.getElementById("lab_latest").innerText = "データなし";
-				return;
-			}
-
-			// 最新
-			let latest = list[list.length - 1];
-
-			document.getElementById("lab_latest").innerHTML = `
-				時刻：${latest.timestamp}<br>
-				ストレス：${latest.stress?.toFixed(1)}<br>
-				隠れストレス：${latest.hidden?.toFixed(1)}
-			`;
-
-			// グラフ描画（既存流用）
-			drawLabChart(list);
-		}
-
-		function drawLabChart(list){
-
-			const canvas = document.getElementById("lab_history_canvas");
-			const ctx = canvas.getContext("2d");
-
-			const w = canvas.width;
-			const h = canvas.height;
-
-			ctx.clearRect(0,0,w,h);
-
-			let stress = list.map(s => s.stress);
-			let hidden = list.map(s => s.hidden);
-
-			let stepX = w / (stress.length - 1);
-
-			// stress
-			ctx.beginPath();
-			ctx.strokeStyle = "#4cc9f0";
-
-			stress.forEach((v,i)=>{
-				let x = i * stepX;
-				let y = h - v/100*h;
-				i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-			});
-
-			ctx.stroke();
-
-			// hidden
-			ctx.beginPath();
-			ctx.strokeStyle = "#f94144";
-
-			hidden.forEach((v,i)=>{
-				let x = i * stepX;
-				let y = h - v/100*h;
-				i===0 ? ctx.moveTo(x,y) : ctx.lineTo(x,y);
-			});
-
-			ctx.stroke();
 		}
 
 		function updateCanvasBackground() {
@@ -1903,17 +1821,6 @@ html {
 			window.open(img.src, '_blank');
 		  };
 		});
-
-		// グラフの日時時間
-		function formatTime(date) {
-
-			const m = String(date.getMonth() + 1).padStart(2, '0');
-			const d = String(date.getDate()).padStart(2, '0');
-			const h = String(date.getHours()).padStart(2, '0');
-			const min = String(date.getMinutes()).padStart(2, '0');
-
-			return `${m}/${d} ${h}:${min}`;
-		}
 
 
 
@@ -3218,7 +3125,7 @@ html {
 
 			const session = {
 				id: Date.now(),
-				timestamp: formatTime(new Date()),
+				timestamp: new Date().toLocaleString(),
 
 				dna: data.dna,
 				psy: data.psy,
@@ -3876,7 +3783,7 @@ html {
 			// 本日
 			// =========================
 			document.getElementById("karte_today").innerHTML = `
-				時刻：${formatTime(new Date())}
+				時刻：${new Date().toLocaleTimeString()}
 			`;
 
 			// =========================
@@ -3955,7 +3862,6 @@ html {
 			let h = canvas.height;
 
 			let stepX = w / (stressList.length - 1);
-			let labels = dataList.map(s => s.timestamp || "");
 
 			// =========================
 			// 🔥 危険ライン（先に描く）
@@ -4016,28 +3922,6 @@ html {
 			});
 
 			ctx.stroke();
-
-			// =========================
-			// 🕒 ここに追加（最後）
-			// =========================
-			let labels = dataList.map(s => s.timestamp || "");
-
-			ctx.fillStyle = "#666";
-			ctx.font = "10px sans-serif";
-
-			labels.forEach((t, i) => {
-
-				if (i % 3 !== 0) return; // ←間引き（超重要）
-
-				let x = i * stepX;
-				let y = h - 5;
-
-				ctx.save();
-				ctx.translate(x, y);
-				ctx.rotate(-Math.PI / 4);
-				ctx.fillText(t, 0, 0);
-				ctx.restore();
-			});
 		}
 
 
@@ -4056,11 +3940,6 @@ html {
             animate();
         }
 
-
-		let startX = 0;
-		let startY = 0;
-		let currentTab = 0;
-		
         // =========================
         // 起動時
         // =========================
@@ -4068,17 +3947,10 @@ html {
 
 			document.body.classList.add("mode-soft"); // ←これ追加
 
-			// ===== 安全初期化 =====
-			if (typeof updateCanvasBackground === "function") {
-				updateCanvasBackground();
-			}
+			updateCanvasBackground();   // ←追加
+			updateAnimationMode();      // ←追加
 
-			if (typeof updateAnimationMode === "function") {
-				updateAnimationMode();
-			}
-
-			// ===== UI設定 =====
-			if (typeof loadSharedData === "function") loadSharedData();
+			loadSharedData();
 
 			setupGlobalResolution();
 			setupDensity("q_dna", "label_dna", v => densityDNA = v);
@@ -4088,9 +3960,7 @@ html {
 			setupBreath("breath_speed", "label_breath_speed", breathSpeedMap, v => breathSpeed = v);
 
 			setupAutoGain();
-
-			if (typeof setupAnalysisSettings === "function") setupAnalysisSettings();
-
+			setupAnalysisSettings();
 			updateAnalysisSettingLabels();
 
 			const lastUser = localStorage.getItem("last_user") || "user1";
@@ -4102,42 +3972,32 @@ html {
 
 			// 🔥 canvas再サイズ
 			setupCanvasResize();
-
-
+			
 			// 🔥 スワイプ検出
 			const modalRoot = document.getElementById("settings_modal");
 
 			if (modalRoot) {
 				const modal = modalRoot.querySelector(".modal-content");
 
-				if (modal) {
-					modal.addEventListener("touchstart", e => {
-						startX = e.touches[0].clientX;
-						startY = e.touches[0].clientY;  // ←これ追加
-					}, { passive: true });
+				modal.addEventListener("touchstart", e => {
+					startX = e.touches[0].clientX;
+				});
 
-					modal.addEventListener("touchend", e => {
-						let endX = e.changedTouches[0].clientX;
-						let endY = e.changedTouches[0].clientY;
+				modal.addEventListener("touchend", e => {
+					let endX = e.changedTouches[0].clientX;
+					let dx = endX - startX;
 
-						let dx = endX - startX;
-						let dy = endY - startY;   // ←追加（重要）
+					if (Math.abs(dx) < 50) return;
 
-						// 🔥 横スワイプだけ反応
-						if (Math.abs(dx) < 50 || Math.abs(dy) > 50) return;
+					if (dx < 0) {
+						currentTab = Math.min(currentTab + 1, 3);
+					} else {
+						currentTab = Math.max(currentTab - 1, 0);
+					}
 
-						if (dx < 0) {
-							currentTab = Math.min(currentTab + 1, 3);
-						} else {
-							currentTab = Math.max(currentTab - 1, 0);
-						}
-
-						showSettingTab(currentTab);
-					});
-				}
+					showSettingTab(currentTab);
+				});
 			}
-			if (typeof showTab === "function") showTab(0);
-			if (typeof loadLabView === "function") loadLabView();
 			
 		}
     </script>
