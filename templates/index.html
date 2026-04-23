@@ -11,6 +11,11 @@
 		navigator.serviceWorker.register('/static/service_worker.js');
 	}
 	</script>
+	<script>
+	document.querySelectorAll('.slide-container img').forEach(img => {
+	  img.onclick = () => window.open(img.src, '_blank');
+	});
+	</script>
 	<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
 	<script src="https://unpkg.com/html5-qrcode"></script>
@@ -534,6 +539,25 @@ canvas {
      background: #ffebee;
      color: #c62828;
 }
+
+/* =========================
+   8. 投資　スライド
+========================= */
+.slide-container {
+    display: flex;
+    overflow-x: auto;
+    gap: 16px;
+    padding: 10px;
+}
+
+.slide-container img {
+    width: 280px;
+    border-radius: 12px;
+    flex-shrink: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+    cursor: pointer;
+}
+
 
 </style>
 
@@ -1059,6 +1083,29 @@ canvas {
 				・ 論文版（準備中）
 				</div>
 			</div>
+
+			<div style="margin-top:60px;">
+				<h3>📊 VoiceAuraとは？</h3>
+
+				<div class="slide-container">
+					<img src="/static/slides/VoiceAura_slide01.png">
+					<img src="/static/slides/VoiceAura_slide02.png">
+					<img src="/static/slides/VoiceAura_slide03.png">
+					<img src="/static/slides/VoiceAura_slide04.png">
+					<img src="/static/slides/VoiceAura_slide05.png">
+					<img src="/static/slides/VoiceAura_slide06.png">
+					<img src="/static/slides/VoiceAura_slide07.png">
+					<img src="/static/slides/VoiceAura_slide08.png">
+					<img src="/static/slides/VoiceAura_slide09.png">
+					<img src="/static/slides/VoiceAura_slide10.png">
+				</div>
+			</div>
+			<div style="margin-top:20px;">
+				<button onclick="goToAnalyze()">
+				  🎙 今すぐ体験する（5秒）
+				</button>
+			</div>
+			
 		</div>
 
 		<!-- 管理室 -->
@@ -1743,6 +1790,14 @@ canvas {
 
 			return "";
 		}
+
+		// スライド連動
+		document.querySelectorAll('.slide-container img').forEach(img => {
+		  img.onclick = () => {
+			window.open(img.src, '_blank');
+		  };
+		});
+
 
 
 // QR生成
