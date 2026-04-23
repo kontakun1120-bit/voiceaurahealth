@@ -12,8 +12,10 @@
 	}
 	</script>
 	<script>
-	document.querySelectorAll('.slide-container img').forEach(img => {
-	  img.onclick = () => window.open(img.src, '_blank');
+	window.addEventListener("DOMContentLoaded", () => {
+		document.querySelectorAll('.slide-container img').forEach(img => {
+			img.onclick = () => window.open(img.src, '_blank');
+		});
 	});
 	</script>
 	<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
@@ -2546,7 +2548,9 @@ html {
 			}
 			else if (levelState === "mid") {
 				textEl.innerText = "話してください...";
-				textEl.style.color = "#ffffff";
+				textEl.style.color = document.body.classList.contains("mode-medical")
+					? "#333"
+					: "#ffffff";
 			}
 			else {
 				textEl.innerText = "いい感じです";
@@ -2696,7 +2700,7 @@ html {
 				return;
 			}
 
-			data = json;
+			data = json.result || json;   // 旧・新 json両対応
 
 			draw();
 			updateReport();
@@ -2966,7 +2970,7 @@ html {
 			let basePresence = data.aura.reduce((a,b)=>a+b,0)/data.aura.length * 100;
 
 			// 🔥 音量補正（ここが本体）
-			let volumeBoost = lastLevel * 20; // 0〜20くらい
+			let volumeBoost = (typeof lastLevel !== "undefined" ? lastLevel : 0) * 20; // 0〜20くらい
 
 			let energy = baseEnergy + volumeBoost;
 			let emotion = baseEmotion + volumeBoost * 0.5;
@@ -3125,14 +3129,13 @@ html {
 
 			const session = {
 				id: Date.now(),
-				timestamp: new Date().toLocaleString(),
-
+//				timestamp: new Date().toLocaleString(),
+				time_full: data.time_full,
+				time_short: data.time_short || new Date().toLocaleTimeString(),
 				dna: data.dna,
 				psy: data.psy,
 				aura: data.aura,
-
 				summary: document.getElementById("summary_text").innerText,
-
 				meta: {
 					level: typeof lastLevel !== "undefined" ? lastLevel : 0
 				}
@@ -3783,7 +3786,7 @@ html {
 			// 本日
 			// =========================
 			document.getElementById("karte_today").innerHTML = `
-				時刻：${new Date().toLocaleTimeString()}
+				時刻：${data.time_short || "--"}
 			`;
 
 			// =========================
@@ -3851,7 +3854,8 @@ html {
 				let hs = detectHiddenStress(s.dna, s.psy);
 
 				stressList.push(stress);
-				hiddenList.push(hs ? hs.hidden * 100 : 0);
+//				hiddenList.push(hs ? hs.hidden * 100 : 0);    //強すぎる可能性
+				hiddenList.push(hs ? Math.pow(hs.hidden, 1.2) * 100 : 0);	//パワー関数（γ補正）1.1～1.2調整
 			}
 
 			if (!stressList.length) return;
@@ -3861,7 +3865,17 @@ html {
 			let w = canvas.width;
 			let h = canvas.height;
 
-			let stepX = w / (stressList.length - 1);
+			let stepX = (stressList.length > 1)
+				? w / (stressList.length - 1)
+				: w;
+			
+			let timeLabels = dataList.map(s => {
+				if (!s.time_short) return "--";
+
+				let t = s.time_short.trim();
+
+				return (t.length > 0) ? t : "--";
+			});
 
 			// =========================
 			// 🔥 危険ライン（先に描く）
@@ -3922,6 +3936,36 @@ html {
 			});
 
 			ctx.stroke();
+
+			// =========================
+			// 🕒 時間ラベル
+			// =========================
+			ctx.fillStyle = "#666";
+			ctx.font = "10px sans-serif";
+
+
+			let skip = Math.ceil(timeLabels.length / 6);
+
+			timeLabels.forEach((t, i) => {
+				if (i % skip !== 0) return;
+
+				let x = i * stepX;
+				ctx.fillText(t, x - 10, h - 2);
+			});
+
+//			【バグ】二重ループ（時間ラベル）
+//			timeLabels.forEach((t, i) => {
+//				let x = i * stepX;
+//				let y = h - 2;
+//				// 間引き（多すぎ防止）
+//				let skip = Math.ceil(timeLabels.length / 6);
+//				timeLabels.forEach((t, i) => {
+//					if (i % skip !== 0) return;
+//					let x = i * stepX;
+//					ctx.fillText(t, x - 10, h - 2);
+//				});
+//			});
+
 		}
 
 
