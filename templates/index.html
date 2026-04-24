@@ -1249,6 +1249,11 @@ html {
 			 }
 			updateCanvasBackground(); // ←追加
 			updateAnimationMode(); // ←これ追加
+
+			// 🔥 ここ追加（重要）
+			if (index === 3) {   // ←ラボタブの番号に合わせる
+				updateKarte();
+			}
 		}
 
 		function updateCanvasBackground() {
