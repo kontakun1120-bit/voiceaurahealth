@@ -1000,22 +1000,26 @@ html {
 			<div class="report-box">
 
 				<h3>🧠 本日の状態</h3>
-				<div id="karte_today"></div>
-
-				<h3>📊 履歴</h3>
-				<div id="karte_history"></div>
+				<div id="karte_today">
+				</div>
 
 				<h3>📈 状態グラフ</h3>
 				<canvas id="karte_chart" width="300" height="150"></canvas>
 
 				<h3>⚠ ストレス分析</h3>
-				<div id="karte_stress"></div>
+				<div id="karte_stress">
+				</div>
 
 				<hr style="margin:20px 0; opacity:0.3;">
 
 				<h3>📝 プラン</h3>
 				<div id="karte_plan">
-					<!-- ここは今は空でOK -->
+				</div>
+
+				<hr style="margin:20px 0; opacity:0.3;">
+
+				<h3>📊 履歴</h3>
+				<div id="karte_history">		
 				</div>
 
 			</div>
@@ -1249,11 +1253,6 @@ html {
 			 }
 			updateCanvasBackground(); // ←追加
 			updateAnimationMode(); // ←これ追加
-
-			// 🔥 ここ追加（重要）
-			if (index === 5) {   // ←ラボタブの番号に合わせる
-				updateKarte();
-			}
 		}
 
 		function updateCanvasBackground() {
