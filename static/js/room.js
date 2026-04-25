@@ -128,7 +128,7 @@ window.onload = function(){
 
     // Welcome
     document.getElementById("welcome").innerText =
-      `${name}さん、お疲れさまでした`;
+      `${name}さん、今日もお疲れさまでした`;
 
     // main表示（まだ透明）
     const main = document.getElementById("room_main");
