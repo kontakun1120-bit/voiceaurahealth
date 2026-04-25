@@ -9,10 +9,13 @@ DATA_PATH = "data/sessions.json"
 
 
 def load_sessions():
-    if not os.path.exists(DATA_PATH):
+    try:
+        if not os.path.exists(DATA_PATH):
+            return []
+        with open(DATA_PATH, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except:
         return []
-    with open(DATA_PATH, "r", encoding="utf-8") as f:
-        return json.load(f)
 
 
 def save_session(session):
