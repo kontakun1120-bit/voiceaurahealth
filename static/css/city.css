@@ -1,1 +1,141 @@
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background:
+    radial-gradient(circle at top, #25345c 0%, #0b1020 45%, #050711 100%);
+  color: white;
+}
 
+.city-shell {
+  min-height: 100vh;
+  padding: 32px 18px;
+  box-sizing: border-box;
+}
+
+.city-hero {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.12);
+  font-size: 13px;
+  margin-bottom: 14px;
+}
+
+.city-hero h1 {
+  font-size: 42px;
+  margin: 0;
+  letter-spacing: 0.04em;
+}
+
+.city-hero p {
+  opacity: 0.85;
+  font-size: 16px;
+}
+
+.city-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+.city-card {
+  text-decoration: none;
+  color: white;
+  padding: 24px;
+  border-radius: 24px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  backdrop-filter: blur(18px);
+  transition: 0.25s ease;
+}
+
+.city-card:hover {
+  transform: translateY(-4px);
+  background: rgba(255,255,255,0.16);
+}
+
+.icon {
+  font-size: 42px;
+}
+
+.city-card h2 {
+  margin-bottom: 6px;
+}
+
+.city-card p {
+  opacity: 0.82;
+}
+
+.room {
+  background: linear-gradient(145deg, rgba(80,150,255,0.24), rgba(255,255,255,0.08));
+}
+
+.health {
+  background: linear-gradient(145deg, rgba(255,80,120,0.24), rgba(255,255,255,0.08));
+}
+
+.lab {
+  background: linear-gradient(145deg, rgba(170,100,255,0.24), rgba(255,255,255,0.08));
+}
+
+.team {
+  background: linear-gradient(145deg, rgba(255,180,60,0.24), rgba(255,255,255,0.08));
+}
+
+.mini-link {
+  text-align: center;
+  margin-top: 34px;
+  opacity: 0.9;
+}
+
+.mini-link a {
+  color: #8fd3ff;
+}
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 18px;
+}
+
+.back {
+  color: #8fd3ff;
+  text-decoration: none;
+}
+
+.panel,
+.history-card {
+  margin-top: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.16);
+}
+
+button {
+  padding: 12px 18px;
+  border: none;
+  border-radius: 999px;
+  background: white;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .city-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .city-hero h1 {
+    font-size: 34px;
+  }
+}
