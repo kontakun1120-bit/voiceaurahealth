@@ -248,6 +248,27 @@ button {
   cursor: pointer;
 }
 
+.notice {
+  margin-top: 12px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.08);
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+.room-links {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.room-links button {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
 @media (max-width: 640px) {
   .city-grid {
     grid-template-columns: 1fr;
