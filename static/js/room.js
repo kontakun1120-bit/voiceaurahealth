@@ -73,6 +73,13 @@ function goHealth(){
 function openProfile(){
   document.querySelector(".modal-box h2").innerText = "プロフィール変更";
   document.getElementById("profile_modal").style.display = "flex";
+
+  // 既存データをフォームに戻す
+  const profile = JSON.parse(localStorage.getItem("va_profile") || "{}");
+
+  document.getElementById("nickname").value = profile.name || "";
+  document.getElementById("age").value = profile.age || "";
+  document.getElementById("gender").value = profile.gender || "";
 }
 
 // 初回判定
