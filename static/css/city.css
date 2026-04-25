@@ -120,6 +120,68 @@ body {
   border: 1px solid rgba(255,255,255,0.16);
 }
 
+/* 背景ぼかし */
+.blur-bg {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #25345c, #050711);
+  filter: blur(12px);
+  transition: 1s ease;
+}
+
+.blur-bg.clear {
+  filter: blur(0px);
+}
+
+/* モーダル */
+.modal {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-box {
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(20px);
+  padding: 24px;
+  border-radius: 20px;
+  width: 90%;
+  max-width: 320px;
+}
+
+.modal-box input,
+.modal-box select {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border-radius: 10px;
+  border: none;
+}
+
+.modal-box button {
+  margin-top: 12px;
+  width: 100%;
+}
+
+.skip {
+  background: transparent;
+  color: #ccc;
+}
+
+/* メイン */
+.room-main {
+  position: relative;
+  z-index: 2;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.hidden {
+  display: none;
+}
+
 button {
   padding: 12px 18px;
   border: none;
