@@ -71,6 +71,7 @@ function goHealth(){
 }
 
 function openProfile(){
+  document.querySelector(".modal-box h2").innerText = "プロフィール変更";
   document.getElementById("profile_modal").style.display = "flex";
 }
 
