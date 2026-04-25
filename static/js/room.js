@@ -1,4 +1,9 @@
+let started = false;
+
 function startRoom(skip=false){
+
+  if(started) return;
+  started = true;
 
   let name = document.getElementById("nickname").value || "匿名";
   let age = document.getElementById("age").value || "";
@@ -18,7 +23,7 @@ function startRoom(skip=false){
   document.getElementById("welcome").innerText =
     `${name}さん、お疲れさまでした`;
 
-  // ③ main表示
+  // ③ main表示（まだ透明）
   document.getElementById("room_main").classList.remove("hidden");
 
   // ④ 遅延で背景クリア（ここがミソ）
