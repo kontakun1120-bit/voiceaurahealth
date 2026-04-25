@@ -11,16 +11,24 @@ function startRoom(skip=false){
   const profile = {name, age, gender};
   localStorage.setItem("va_profile", JSON.stringify(profile));
 
+  // ① モーダル閉じる
   document.getElementById("profile_modal").style.display = "none";
 
-  // 背景をくっきり
-  document.getElementById("blur_bg").classList.add("clear");
-
-  // メイン表示
-  document.getElementById("room_main").classList.remove("hidden");
-
+  // ② Welcome先に入れる
   document.getElementById("welcome").innerText =
     `${name}さん、お疲れさまでした`;
+
+  // ③ main表示
+  document.getElementById("room_main").classList.remove("hidden");
+
+  // ④ 遅延で背景クリア（ここがミソ）
+  setTimeout(() => {
+    document.getElementById("blur_bg").classList.add("clear");
+
+  // ⑤ その後にフェードイン
+    document.getElementById("room_main").classList.add("show");
+
+  }, 300);
 
   loadRoomState();
 }
