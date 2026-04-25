@@ -146,6 +146,15 @@ h1 {
   display: flex;
   justify-content: center;
   align-items: center;
+
+  /* 🔥 ここ強化 */
+  background: rgba(5, 10, 20, 0.85);
+
+  backdrop-filter: blur(12px);
+
+  opacity: 1;
+  transition: 0.3s;
+  z-index: 9999; /* ← これ超重要 */
 }
 
 .modal-box {
@@ -169,6 +178,11 @@ h1 {
 .modal-box button {
   margin-top: 12px;
   width: 100%;
+}
+
+.modal.hide {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* スキップ・編集 */
