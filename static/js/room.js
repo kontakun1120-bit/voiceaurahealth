@@ -21,7 +21,7 @@ function startRoom(skip=false){
 
   // ② Welcome先に入れる
   document.getElementById("welcome").innerText =
-    `${name}さん、お疲れさまでした`;
+    `${name}さん、今日もお疲れさまでした`;
 
   // ③ main表示（まだ透明）
   document.getElementById("room_main").classList.remove("hidden");
