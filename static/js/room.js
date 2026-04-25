@@ -106,6 +106,14 @@ function openProfile(){
   document.getElementById("gender").value = profile.gender || "";
 }
 
+function goLab(){
+  window.location.href = "/lab";
+}
+
+function goTeam(){
+  window.location.href = "/team";
+}
+
 // 初回判定
 window.onload = function(){
 
