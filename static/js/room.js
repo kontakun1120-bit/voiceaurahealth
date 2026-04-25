@@ -42,6 +42,12 @@ function startRoom(skip=false){
 async function loadRoomState(){
 
   const res = await fetch("/api/sessions");
+  
+  if(!res.ok){
+    console.log("APIエラー");
+    return;
+  }
+  
   const json = await res.json();
 
   const sessions = json.sessions || [];
