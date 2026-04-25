@@ -1,23 +1,51 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-  <meta charset="UTF-8">
-  <title>My Room | VoiceAura City</title>
-  <link rel="stylesheet" href="/static/css/city.css">
+<meta charset="UTF-8">
+<title>My Room | VoiceAura City</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="/static/css/city.css">
 </head>
+
 <body>
 
-<div class="page">
-  <a href="/" class="back">← Cityへ戻る</a>
+<div id="blur_bg" class="blur-bg"></div>
 
-  <h1>🏠 My Room</h1>
-  <p>あなたの声の履歴が、ここに積み上がります。</p>
+<div class="room-container">
 
-  <button onclick="saveDummySession()">サンプル記録を保存</button>
+  <!-- プロフィール入力 -->
+  <div id="profile_modal" class="modal">
+    <div class="modal-box">
+      <h2>ようこそ</h2>
+      <p>簡単なプロフィール（任意）</p>
 
-  <div id="history" class="history"></div>
+      <input id="nickname" placeholder="ニックネーム（匿名OK）">
+      <input id="age" placeholder="年齢（例：30代）">
+      
+      <select id="gender">
+        <option value="">性別（任意）</option>
+        <option>男性</option>
+        <option>女性</option>
+        <option>不明</option>
+      </select>
+
+      <button onclick="startRoom()">はじめる</button>
+      <button class="skip" onclick="startRoom(true)">スキップ</button>
+    </div>
+  </div>
+
+  <!-- メイン -->
+  <div id="room_main" class="room-main hidden">
+
+    <h1 id="welcome"></h1>
+
+    <div id="content_area"></div>
+
+  </div>
+
 </div>
 
-<script src="/static/js/city.js"></script>
+<script src="/static/js/room.js"></script>
+
 </body>
 </html>
