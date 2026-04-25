@@ -70,6 +70,9 @@ function goHealth(){
   window.location.href = "/health";
 }
 
+function openProfile(){
+  document.getElementById("profile_modal").style.display = "flex";
+}
 
 // 初回判定
 window.onload = function(){
