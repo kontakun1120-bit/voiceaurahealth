@@ -30,6 +30,9 @@ function startRoom(skip=false){
   setTimeout(() => {
     document.getElementById("blur_bg").classList.add("clear");
 
+  // ① モーダル フェードアウト
+  document.getElementById("profile_modal").classList.add("hide");
+
   // ⑤ その後にフェードイン
     document.getElementById("room_main").classList.add("show");
 
@@ -92,6 +95,7 @@ function goHealth(){
 function openProfile(){
   started = false;  // ←これ追加 再入力がちゃんと動く
   document.querySelector(".modal-box h2").innerText = "プロフィール変更";
+  document.getElementById("profile_modal").classList.remove("hide");
   document.getElementById("profile_modal").style.display = "flex";
 
   // 既存データをフォームに戻す
@@ -104,21 +108,36 @@ function openProfile(){
 
 // 初回判定
 window.onload = function(){
+
   const profile = localStorage.getItem("va_profile");
 
   if(profile){
+
     const p = JSON.parse(profile);
 
-    document.getElementById("profile_modal").style.display = "none";
-	
-    document.getElementById("welcome").innerText =
-      `${p.name}さん、お疲れさまでした`;
+    // 名前安全化
+    const name = (p.name || "匿名").trim() || "匿名";
 
-    document.getElementById("room_main").classList.remove("hidden");
+    // モーダルをフェードアウト
+    const modal = document.getElementById("profile_modal");
+    modal.classList.add("hide");
 
     setTimeout(() => {
+      modal.style.display = "none";
+    }, 300);
+
+    // Welcome
+    document.getElementById("welcome").innerText =
+      `${name}さん、お疲れさまでした`;
+
+    // main表示（まだ透明）
+    const main = document.getElementById("room_main");
+    main.classList.remove("hidden");
+
+    // 世界を開く演出
+    setTimeout(() => {
       document.getElementById("blur_bg").classList.add("clear");
-      document.getElementById("room_main").classList.add("show");
+      main.classList.add("show");
     }, 100);
 
     loadRoomState();
