@@ -74,6 +74,23 @@ body {
   opacity: 0.82;
 }
 
+.top-bar {
+  position: fixed;
+  top: 12px;
+  right: 16px;
+  z-index: 10000;
+}
+
+.back-city {
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  text-decoration: none;
+  backdrop-filter: blur(10px);
+}
+
 .room {
   background: linear-gradient(145deg, rgba(80,150,255,0.24), rgba(255,255,255,0.08));
 }
