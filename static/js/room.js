@@ -141,5 +141,13 @@ window.onload = function(){
     }, 100);
 
     loadRoomState();
+  }else {
+
+    // 🔥 初回演出（ここ）
+    setTimeout(() => {
+      document.getElementById("blur_bg").classList.add("clear");
+    }, 500);
+
   }
+  
 };
