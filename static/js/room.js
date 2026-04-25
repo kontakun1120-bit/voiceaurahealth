@@ -5,7 +5,7 @@ function startRoom(skip=false){
   if(started) return;
   started = true;
 
-  let name = document.getElementById("nickname").value || "匿名";
+  let name = document.getElementById("nickname").value.trim() || "匿名";
   let age = document.getElementById("age").value || "";
   let gender = document.getElementById("gender").value || "";
 
@@ -84,6 +84,7 @@ function goHealth(){
 }
 
 function openProfile(){
+  started = false;  // ←これ追加 再入力がちゃんと動く
   document.querySelector(".modal-box h2").innerText = "プロフィール変更";
   document.getElementById("profile_modal").style.display = "flex";
 
@@ -103,11 +104,16 @@ window.onload = function(){
     const p = JSON.parse(profile);
 
     document.getElementById("profile_modal").style.display = "none";
-    document.getElementById("blur_bg").classList.add("clear");
-    document.getElementById("room_main").classList.remove("hidden");
-
+	
     document.getElementById("welcome").innerText =
       `${p.name}さん、お疲れさまでした`;
+
+    document.getElementById("room_main").classList.remove("hidden");
+
+    setTimeout(() => {
+      document.getElementById("blur_bg").classList.add("clear");
+      document.getElementById("room_main").classList.add("show");
+    }, 100);
 
     loadRoomState();
   }
