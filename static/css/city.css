@@ -133,6 +133,12 @@ body {
   filter: blur(0px);
 }
 
+h1 {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 /* モーダル */
 .modal {
   position: fixed;
@@ -180,12 +186,21 @@ body {
   cursor: pointer;
 }
 
-/* メイン */
+/* room メイン */
 .room-main {
   position: relative;
   z-index: 2;
   padding: 40px 20px;
   text-align: center;
+}
+
+#room_main {
+  opacity: 0;
+  transition: 0.6s ease;
+}
+
+#room_main.show {
+  opacity: 1;
 }
 
 .hidden {
