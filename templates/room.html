@@ -19,7 +19,7 @@
 <div class="room-container">
 
   <!-- プロフィール入力 -->
-  <div id="profile_modal" class="modal">
+  <div id="profile_modal" class="modal hidden">
     <div class="modal-box">
       <h2>ようこそ</h2>
       <p>簡単なプロフィール（任意）</p>
@@ -36,6 +36,13 @@
 
       <button onclick="startRoom()">はじめる</button>
       <button class="skip" onclick="startRoom(true)">スキップ</button>
+			<button class="reset-btn" 
+				onmousedown="startResetPress(event)" 
+				onmouseup="cancelResetPress(event)" 
+				ontouchstart="startResetPress(event)" 
+				ontouchend="cancelResetPress(event)">
+				長押しでリセット
+			</button>
     </div>
   </div>
 
