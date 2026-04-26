@@ -1,0 +1,61 @@
+/* 🔥 基本リセット */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  overflow-x: hidden;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(circle at top, #25345c 0%, #0b1020 45%, #050711 100%);
+  color: white;
+}
+
+/* 共通レイアウト */
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 18px;
+}
+
+/* トップバー */
+.top-bar {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  z-index: 10000;
+}
+
+.back-city {
+  font-size: 14px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.15);
+  color: white;
+  text-decoration: none;
+  backdrop-filter: blur(10px);
+}
+
+/* ボタン */
+button {
+  padding: 12px 18px;
+  width: 100%;
+  border: none;
+  border-radius: 999px;
+  background: white;
+  color: #111;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* スマホ対応 */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 28px;
+  }
+}
