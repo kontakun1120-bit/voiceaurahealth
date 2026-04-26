@@ -249,6 +249,22 @@ button {
   cursor: pointer;
 }
 
+.welcome-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+#welcome {
+  flex: 1;
+  line-height: 1.6;
+}
+
+.edit-btn {
+  margin-top: 4px;
+}
+
 .notice {
   margin-top: 12px;
   padding: 10px 16px;
