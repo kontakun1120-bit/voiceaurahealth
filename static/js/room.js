@@ -144,6 +144,35 @@ function getJapanGreetingMessage(name){
   `;
 }
 
+// 無料天気APIへ問い合わせ
+async function loadWeather(){
+  if(!navigator.geolocation){
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(async pos => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+
+    const url =
+      `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&current_weather=true&timezone=Asia%2FTokyo`;
+
+    const res = await fetch(url);
+    const data = await res.json();
+
+    const weather = data.current_weather;
+    if(!weather) return;
+
+    document.getElementById("weather_box").innerHTML = `
+      <div class="weather-box">
+        🌤 外の気温：${weather.temperature}℃　
+        風速：${weather.windspeed} km/h
+      </div>
+    `;
+  });
+}
+
+
 
 // 初回判定
 window.onload = function(){
