@@ -114,6 +114,37 @@ function goTeam(){
   window.location.href = "/team";
 }
 
+// 挨拶＋日本時間＋改行
+function getJapanGreetingMessage(name){
+  const now = new Date();
+
+  const jp = new Date(
+    now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
+  );
+
+  const y = jp.getFullYear();
+  const m = jp.getMonth() + 1;
+  const d = jp.getDate();
+  const h = jp.getHours();
+  const min = String(jp.getMinutes()).padStart(2, "0");
+
+  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
+  const w = weekdays[jp.getDay()];
+
+  let greet = "こんにちは";
+  if(h < 11) greet = "おはようございます";
+  else if(h >= 17) greet = "こんばんは";
+
+  return `
+    ${name}さん。<br>
+    ${greet}。今日もお疲れさまでした。<br>
+    <span class="today-text">
+      今日は ${y}年${m}月${d}日（${w}）${h}:${min}
+    </span>
+  `;
+}
+
+
 // 初回判定
 window.onload = function(){
 
