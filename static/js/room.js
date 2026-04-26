@@ -1,41 +1,58 @@
 let started = false;
-
 function startRoom(skip=false){
 
   if(started) return;
   started = true;
 
-  let name = document.getElementById("nickname").value.trim() || "匿名";
-  let age = document.getElementById("age").value || "";
-  let gender = document.getElementById("gender").value || "";
+  const saved = JSON.parse(localStorage.getItem("va_profile") || "null");
+
+  let name, age, gender;
 
   if(skip){
-    name = "匿名";
+
+    if(saved){
+      // ✅ 既存ユーザー → 変更しない
+      name = saved.name;
+      age = saved.age;
+      gender = saved.gender;
+
+    } else {
+      // ✅ 初回ユーザー → 匿名で開始
+      name = "匿名";
+      age = "";
+      gender = "";
+    }
+
+  } else {
+    // 通常入力
+    name = document.getElementById("nickname").value.trim() || "匿名";
+    age = document.getElementById("age").value || "";
+    gender = document.getElementById("gender").value || "";
   }
 
   const profile = {name, age, gender};
   localStorage.setItem("va_profile", JSON.stringify(profile));
 
-  // ① モーダル閉じる
-  document.getElementById("profile_modal").style.display = "none";
+  // ① モーダルをソフトに閉じる
+  const modal = document.getElementById("profile_modal");
+  modal.classList.add("hide");
+
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 300);
 
   // ② Welcome先に入れる
-  document.getElementById("welcome").innerText =
+  document.getElementById("welcome").innerHTML =
     getJapanGreetingMessage(name);
 
   // ③ main表示（まだ透明）
-  document.getElementById("room_main").classList.remove("hidden");
+  const main = document.getElementById("room_main");
+  main.classList.remove("hidden");
 
-  // ④ 遅延で背景クリア（ここがミソ）
+  // ④ 遅延で背景クリア（ここがミソ）、その後にフェードイン
   setTimeout(() => {
     document.getElementById("blur_bg").classList.add("clear");
-
-  // ① モーダル フェードアウト
-  document.getElementById("profile_modal").classList.add("hide");
-
-  // ⑤ その後にフェードイン
-    document.getElementById("room_main").classList.add("show");
-
+    main.classList.add("show");
   }, 300);
 
   loadRoomState();
@@ -55,6 +72,8 @@ async function loadRoomState(){
 
   const sessions = json.sessions || [];
   const area = document.getElementById("content_area");
+
+  loadWeather();
 
   // ■ 分岐UI
   if(sessions.length === 0){
@@ -94,9 +113,16 @@ function goHealth(){
 
 function openProfile(){
   started = false;  // ←これ追加 再入力がちゃんと動く
+  
+  const modal = document.getElementById("profile_modal");
+
+  modal.classList.remove("hidden");
+  modal.classList.remove("hide");   // ←これ追加
+
+  modal.style.display = "flex";
+
   document.querySelector(".modal-box h2").innerText = "プロフィール変更";
-  document.getElementById("profile_modal").classList.remove("hide");
-  document.getElementById("profile_modal").style.display = "flex";
+
 
   // 既存データをフォームに戻す
   const profile = JSON.parse(localStorage.getItem("va_profile") || "{}");
@@ -104,6 +130,13 @@ function openProfile(){
   document.getElementById("nickname").value = profile.name || "";
   document.getElementById("age").value = profile.age || "";
   document.getElementById("gender").value = profile.gender || "";
+  
+  // 🔥 ここ追加
+  const skipBtn = document.querySelector(".skip");
+  if(skipBtn){
+    skipBtn.innerText = "変更しない";
+  }
+  
 }
 
 function goLab(){
@@ -172,6 +205,59 @@ async function loadWeather(){
   });
 }
 
+// データのリセット
+function resetAll(){
+
+  const ok = confirm("⚠️ 本当に全データを削除しますか？\nこの操作は元に戻せません。");
+
+  if(!ok) return;
+
+  // プロフィール削除
+  localStorage.removeItem("va_profile");
+
+  // サーバーのセッション削除（API必要）
+  fetch("/api/reset", { method: "POST" });
+
+  // 🔥 リロードせず再描画
+  initRoom();
+}
+
+function initRoom(){
+  window.onload();
+}
+
+// 長押しリセット（誤操作防止）
+let resetTimer = null;
+
+function startResetPress(e){
+
+  const btn = e.currentTarget;
+  btn.classList.add("active");
+
+  resetTimer = setTimeout(() => {
+
+    const ok = confirm("⚠️ 全データ削除しますか？");
+
+    if(!ok){
+      btn.classList.remove("active");
+      return;
+    }
+
+    localStorage.removeItem("va_profile");
+
+    fetch("/api/reset", { method: "POST" });
+
+    location.reload();
+
+  }, 2000); // 2秒長押し
+
+}
+
+function cancelResetPress(e){
+  const btn = e.currentTarget;
+  btn.classList.remove("active");
+  clearTimeout(resetTimer);
+}
 
 
 // 初回判定
@@ -188,6 +274,10 @@ window.onload = function(){
 
     // モーダルをフェードアウト
     const modal = document.getElementById("profile_modal");
+	
+	// ←ここ追加（初期ちらつき防止）
+//    modal.style.opacity = "1";
+	
     modal.classList.add("hide");
 
     setTimeout(() => {
@@ -195,7 +285,7 @@ window.onload = function(){
     }, 300);
 
     // Welcome
-    document.getElementById("welcome").innerText =
+    document.getElementById("welcome").innerHTML =
       getJapanGreetingMessage(name);
 
     // main表示（まだ透明）
@@ -211,11 +301,40 @@ window.onload = function(){
     loadRoomState();
   }else {
 
-    // 🔥 初回演出（ここ）
-    setTimeout(() => {
-      document.getElementById("blur_bg").classList.add("clear");
-    }, 500);
+		const modal = document.getElementById("profile_modal");
 
-  }
+		// 🔥 モーダルを確実に表示
+		modal.classList.remove("hidden");
+		modal.classList.remove("hide");
+		modal.style.display = "flex";
+
+		// 🔥 フォーム初期化
+		document.getElementById("nickname").value = "";
+		document.getElementById("age").value = "";
+		document.getElementById("gender").value = "";
+
+		// 🔥 スキップ文言も戻す
+		const skipBtn = document.querySelector(".skip");
+		if(skipBtn){
+			skipBtn.innerText = "スキップ（匿名で開始）";
+		}
+
+		// 🔥 背景演出
+		setTimeout(() => {
+			document.getElementById("blur_bg").classList.add("clear");
+		}, 500);
+	}
+  
+  const saved = localStorage.getItem("va_profile");
+
+  const skipBtn = document.querySelector(".skip");
+
+  if(skipBtn){
+    if(saved){
+      skipBtn.innerText = "変更しない";
+    } else {
+      skipBtn.innerText = "スキップ（匿名で開始）";
+    }
+}
   
 };
