@@ -157,6 +157,10 @@ h1 {
   align-items: center;
 }
 
+#profile_modal {
+  opacity: 0;
+}
+
 /* モーダル */
 .modal {
   position: fixed;
