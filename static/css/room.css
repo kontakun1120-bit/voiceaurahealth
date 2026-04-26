@@ -1,0 +1,76 @@
+/* 背景ぼかし */
+.blur-bg {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(circle at top, #25345c, #050711);
+  filter: blur(12px);
+  transition: 1s ease;
+}
+
+.blur-bg.clear {
+  filter: blur(0px);
+}
+
+/* Roomメイン */
+.room-main {
+  position: relative;
+  z-index: 2;
+  padding: 40px 20px;
+}
+
+#room_main {
+  opacity: 0;
+  transition: 0.6s ease;
+}
+
+#room_main.show {
+  opacity: 1;
+}
+
+.hidden {
+  display: none;
+}
+
+/* Welcome */
+.welcome-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+#welcome {
+  line-height: 1.7;
+  font-size: 20px;
+  text-align: left;
+}
+
+/* 時間表示 */
+.today-text {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+/* リンク */
+.room-links {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}
+
+.room-links button {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+/* 背景5種類 */
+body.bg1 { background: radial-gradient(circle at top, #25345c, #050711); }
+body.bg2 { background: linear-gradient(#0a3d62, #1e90ff); }
+body.bg3 { background: linear-gradient(#0b6623, #013220); }
+body.bg4 { background: linear-gradient(#2c3e50, #000000); }
+body.bg5 { background: #111; }
+
+
+
