@@ -218,8 +218,8 @@ function resetAll(){
   // サーバーのセッション削除（API必要）
   fetch("/api/reset", { method: "POST" });
 
-  // 🔥 リロードせず再描画
-  initRoom();
+  // リロード
+  location.reload();
 }
 
 function initRoom(){
@@ -259,8 +259,79 @@ function cancelResetPress(e){
   clearTimeout(resetTimer);
 }
 
+// roon設定　開
+function openSettings(){
+  const modal = document.getElementById("settings_modal");
+  modal.classList.remove("hidden");
+  modal.classList.remove("hide");
+  modal.style.display = "flex";
 
-// 初回判定
+  loadSettingsUI();
+}
+
+// roon設定　閉
+function closeSettings(){
+  const modal = document.getElementById("settings_modal");
+  modal.classList.add("hide");
+
+  setTimeout(() => {
+    modal.style.display = "none";
+  }, 300);
+}
+
+// roon設定　セーブ
+function saveSettings(){
+
+  const bg = document.querySelector('input[name="bg"]:checked')?.value;
+  const music = document.querySelector('input[name="music"]:checked')?.value;
+  const history = document.querySelector('input[name="history"]:checked')?.value;
+
+  const settings = { bg, music, history };
+
+  localStorage.setItem("va_settings", JSON.stringify(settings));
+
+  applySettings(settings);
+
+  closeSettings();
+}
+
+// roon設定　ロード
+function loadSettingsUI(){
+
+  const settings = JSON.parse(localStorage.getItem("va_settings") || "{}");
+
+  if(settings.bg){
+    const el = document.querySelector(`input[name="bg"][value="${settings.bg}"]`);
+    if(el) el.checked = true;
+  }
+
+  if(settings.music){
+    const el = document.querySelector(`input[name="music"][value="${settings.music}"]`);
+    if(el) el.checked = true;
+  }
+
+  if(settings.history){
+    const el = document.querySelector(`input[name="history"][value="${settings.history}"]`);
+    if(el) el.checked = true;
+  }
+}
+
+// roon設定　BGM音源
+function applySettings(settings){
+
+  // 一旦クラス全部消す（安全）
+  document.body.classList.remove("bg1","bg2","bg3","bg4","bg5");
+
+  if(settings.bg){
+    document.body.classList.add(settings.bg);
+  }
+
+  // 音楽は後でOK
+
+}
+
+
+// 初回判定（コードの最後に）
 window.onload = function(){
 
   const profile = localStorage.getItem("va_profile");
@@ -326,7 +397,6 @@ window.onload = function(){
 	}
   
   const saved = localStorage.getItem("va_profile");
-
   const skipBtn = document.querySelector(".skip");
 
   if(skipBtn){
@@ -335,6 +405,10 @@ window.onload = function(){
     } else {
       skipBtn.innerText = "スキップ（匿名で開始）";
     }
-}
+	}
+
+	const settings = JSON.parse(localStorage.getItem("va_settings") || "{}");
+	applySettings(settings);
+
   
 };
