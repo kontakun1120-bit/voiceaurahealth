@@ -74,13 +74,6 @@ body {
   opacity: 0.82;
 }
 
-.top-bar {
-  position: fixed;
-  top: 12px;
-  right: 16px;
-  z-index: 10000;
-}
-
 .back-city {
   font-size: 14px;
   padding: 6px 12px;
@@ -115,6 +108,14 @@ body {
 
 .mini-link a {
   color: #8fd3ff;
+}
+
+.top-bar {
+  position: fixed;
+  top: 12px;
+  left: 16px;
+  right: auto;
+  z-index: 10000;
 }
 
 .page {
@@ -267,6 +268,27 @@ button {
 .room-links button {
   background: rgba(255,255,255,0.1);
   color: white;
+}
+
+#welcome {
+  display: block;
+  line-height: 1.6;
+}
+
+.today-text {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  opacity: 0.8;
+}
+
+.weather-box {
+  margin-top: 12px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.08);
+  font-size: 14px;
+  opacity: 0.9;
 }
 
 @media (max-width: 640px) {
