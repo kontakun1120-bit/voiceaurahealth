@@ -21,7 +21,7 @@ function startRoom(skip=false){
 
   // ② Welcome先に入れる
   document.getElementById("welcome").innerText =
-    `${name}さん、今日もお疲れさまでした`;
+    getJapanGreetingMessage(name);
 
   // ③ main表示（まだ透明）
   document.getElementById("room_main").classList.remove("hidden");
@@ -167,7 +167,7 @@ window.onload = function(){
 
     // Welcome
     document.getElementById("welcome").innerText =
-      `${name}さん、今日もお疲れさまでした`;
+      getJapanGreetingMessage(name);
 
     // main表示（まだ透明）
     const main = document.getElementById("room_main");
