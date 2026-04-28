@@ -1,22 +1,96 @@
-/* 背景ぼかし */
+/* =========================
+   ■ レイヤー構造（最重要）
+   ========================= */
+
+/* ① 背景（ベース） */
+body.bg1 { background: radial-gradient(circle at top, #25345c, #050711); }
+body.bg2 { background: linear-gradient(#0a3d62, #1e90ff); }
+body.bg3 { background: linear-gradient(#0b6623, #013220); }
+body.bg4 { background: linear-gradient(#2c3e50, #000000); }
+body.bg5 { background: #111; }
+
+
+/* ② 時間フィルター（色補正・フェード対応） */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+
+  /* ←ここを変数化 */
+  background: rgba(
+    var(--t-r, 0),
+    var(--t-g, 0),
+    var(--t-b, 50),
+    var(--t-a, 0.4)
+  );
+
+  transition: background 1s linear; /* 小刻み更新をなめらかに */
+}
+
+
+/* ③ 背景ぼかし（奥行き） */
 .blur-bg {
   position: fixed;
   inset: 0;
+  z-index: 2; /* ←ここ重要 */
   background: radial-gradient(circle at top, #25345c, #050711);
   filter: blur(12px);
+  opacity: 0.5; /* ←これ重要（強すぎ防止） */
   transition: 1s ease;
+  pointer-events: none;
 }
 
 .blur-bg.clear {
   filter: blur(0px);
+  opacity: 0.3;
 }
 
-/* Roomメイン */
+
+/* ④ Roomメイン UI（最前面） */
 .room-main {
   position: relative;
-  z-index: 2;
+  z-index: 3; /* ←最前面 */
   padding: 40px 20px;
 }
+
+
+/* =========================
+   ■ 設定タブ
+   ========================= */
+.setting-tabs{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+}
+
+.tab-row{
+  display:flex;
+  gap:8px;
+}
+
+.tab{
+  flex:1;
+  padding:10px;
+  border-radius:10px;
+  height:40px;   /* ←固定 */
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  
+  background: rgba(255,255,255,0.1);
+  color:white;
+}
+
+.tab.active{
+  background: rgba(255,255,255,0.25);
+}
+
+
+/* =========================
+   ■ UI表示
+   ========================= */
 
 #room_main {
   opacity: 0;
@@ -31,11 +105,83 @@
   display: none;
 }
 
+@media (max-width:600px){
+
+  .room-header{
+    flex-direction:column;
+  }
+
+  .side-widget{
+    width:100%;
+  }
+}
+
+/* サイドウィジェット */
+.room-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:20px;
+}
+
+/* 左 */
+.welcome-area{
+  flex:1;
+}
+
+/* 右ボックス */
+.side-widget{
+  width:110px;
+  min-width:100px;
+  flex-shrink:0;
+}
+
+/* 中身 */
+.mini-card{
+  background: rgba(255,255,255,0.08);
+  border-radius:12px;
+  padding:10px;
+  text-align:center;
+  backdrop-filter: blur(6px);
+}
+
+.mini-title{
+  font-size:12px;
+  opacity:0.7;
+}
+
+.mini-value{
+  font-size:20px;
+  font-weight:bold;
+  margin-top:6px;
+}
+
+
+/* 氏名設定 */
+.name-line{
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+
+.edit-btn{
+  font-size:16px;
+  cursor:pointer;
+  opacity:0.7;
+  transition:0.2s;
+}
+
+.edit-btn:hover{
+  opacity:1;
+  transform: scale(1.1);
+}
+
+
 /* Welcome */
-.welcome-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.welcome-row{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
 }
 
 #welcome {
@@ -44,6 +190,7 @@
   text-align: left;
 }
 
+
 /* 時間表示 */
 .today-text {
   display: block;
@@ -51,6 +198,7 @@
   font-size: 16px;
   opacity: 0.8;
 }
+
 
 /* リンク */
 .room-links {
@@ -65,12 +213,23 @@
   color: white;
 }
 
-/* 背景5種類 */
-body.bg1 { background: radial-gradient(circle at top, #25345c, #050711); }
-body.bg2 { background: linear-gradient(#0a3d62, #1e90ff); }
-body.bg3 { background: linear-gradient(#0b6623, #013220); }
-body.bg4 { background: linear-gradient(#2c3e50, #000000); }
-body.bg5 { background: #111; }
+/* 音量 */
+.volume-box {
+  position: relative;
+  z-index: 5;
+  margin-top: 20px;
+  padding: 0 20px;
+}
+
+/* =========================
+   ■ カード背景（設定UI用）
+   ========================= */
+/* 背景5種類と連動 */
+.bg-card.bg1 { background: radial-gradient(circle, #25345c, #050711); }
+.bg-card.bg2 { background: linear-gradient(#0a3d62, #1e90ff); }
+.bg-card.bg3 { background: linear-gradient(#0b6623, #013220); }
+.bg-card.bg4 { background: linear-gradient(#2c3e50, #000000); }
+.bg-card.bg5 { background: #111; }
 
 
 
