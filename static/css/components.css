@@ -29,9 +29,45 @@
   padding: 24px;
   border-radius: 20px;
   width: 90%;
-  max-width: 320px;
   max-height: 80vh;
-  overflow-y: auto;
+  overflow: hidden;
+  display:flex;
+  flex-direction:column;
+  max-width: 420px;
+  height: 80vh;        /* ← 固定 */
+}
+/* チェック　overflow-y: auto; */
+
+
+/* 上固定 */
+.modal-header{
+  flex-shrink:0;
+  margin-bottom: 10px;   /* ←追加 */
+}
+
+/* 中だけスクロール */
+.modal-body{
+  flex:1;
+  overflow-y: scroll;   /* ←これが本体 */
+  min-height:0;  /* ←これ超重要 */
+  margin-top:10px;
+  margin: 0;             /* ←リセット */
+  padding-right: 4px;  /* スクロール余白 */
+}
+
+.modal-body::-webkit-scrollbar{
+  width:6px;
+}
+
+.modal-body::-webkit-scrollbar-thumb{
+  background: rgba(255,255,255,0.2);
+  border-radius:10px;
+}
+
+/* 下固定 */
+.modal-footer{
+  flex-shrink:0;
+  margin-top:12px;
 }
 
 .modal-box input,
@@ -43,12 +79,111 @@
   border: none;
 }
 
-.modal-box h2 {
+.modal-box h3 {
   position: sticky;
   top: 0;
   background: rgba(255,255,255,0.12);
-  padding-bottom: 8px;
 }
+
+/* モーダル共通 パタパタ */
+.setting-section {
+  margin-top: 12px;
+}
+
+.setting-title {
+  font-weight: bold;
+  cursor: pointer;
+  padding: 8px 0;
+}
+
+.setting-content {
+  display: none;
+  margin-top: 6px;
+  padding-left: 10px;
+}
+
+.setting-section.open .setting-content {
+  display: block;
+}
+
+.setting-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-shrink:0;
+}
+
+.tab {
+  flex: 1;
+  padding: 8px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.1);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+
+.tab.active {
+  background: rgba(255,255,255,0.3);
+}
+
+.tab-content{
+  opacity:0;
+  transform: translateY(6px);
+  transition: opacity 0.2s;
+  width:100%;
+  box-sizing:border-box;
+  display:none;
+}
+
+.tab-content.active{
+  display:block;
+  opacity:1;
+  transform: translateY(0);
+}
+/* チェック　position:relative; */
+
+
+.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {opacity:0;}
+  to {opacity:1;}
+}
+
+/* ラジオ隠す */
+.bg-option input {
+  display: none;
+}
+
+/* カード */
+.bg-card {
+  padding: 14px;
+  margin-top: 8px;
+  border-radius: 12px;
+  cursor: pointer;
+  background: rgba(255,255,255,0.08);
+  border: 2px solid transparent;
+  transition: 0.2s;
+  width:100%;
+  box-sizing:border-box;
+}
+
+/* ホバー */
+.bg-card:hover {
+  transform: translateY(-2px);
+  background: rgba(255,255,255,0.15);
+}
+
+/* 選択状態 */
+.bg-option input:checked + .bg-card {
+  border: 2px solid #00d4ff;
+  background: rgba(0,212,255,0.15);
+  box-shadow: 0 0 10px rgba(0,212,255,0.4);
+}
+
 
 /* パネル */
 .panel {
@@ -75,6 +210,18 @@
   border-radius: 14px;
   background: rgba(255,255,255,0.08);
 }
+
+/* 音量スライダー */
+.volume-box {
+  margin-top: 16px;
+  font-size: 14px;
+  opacity: 0.8;
+}
+
+#volume {
+  width: 100%;
+}
+
 
 /* リセットボタン（BEM） */
 .reset-btn {
@@ -107,3 +254,4 @@
   color: #ccc;
   cursor: pointer;
 }
+
