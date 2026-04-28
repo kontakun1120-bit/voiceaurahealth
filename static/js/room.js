@@ -185,13 +185,17 @@ function getJapanGreetingMessage(name){
   const min = get("minute");
   const w = get("weekday");
 
-	let greet = "こんばんは";
-
-	if(h >= 5 && h < 11){
+	if(h >= 0 && h < 5){
+		greet = "こんばんは";
+	}
+	else if(h >= 5 && h < 11){
 		greet = "おはようございます";
 	}
 	else if(h >= 11 && h < 17){
 		greet = "こんにちは";
+	}
+	else{
+		greet = "こんばんは";
 	}
 
   return `
