@@ -34,16 +34,24 @@ function startRoom(skip=false){
   localStorage.setItem("va_profile", JSON.stringify(profile));
 
   // ① モーダルをソフトに閉じる
-  const modal = document.getElementById("profile_modal");
-  modal.classList.add("hide");
+	const modal = document.getElementById("profile_modal");
+	if(modal){
+		modal.classList.add("hide");
+		setTimeout(()=>{
+			modal.style.display = "none";
+		},300);
+	}
 
   setTimeout(() => {
     modal.style.display = "none";
   }, 300);
 
-  // ② Welcome先に入れる
-  document.getElementById("welcome").innerHTML =
-    getJapanGreetingMessage(name);
+	// ② Welcome先に入れる
+	const msg = getJapanGreetingMessage(name);
+	const lines = msg.split("<br>");
+
+	document.getElementById("welcome-name").innerHTML = lines[0];
+	document.getElementById("welcome-sub").innerHTML = lines.slice(1).join("<br>");
 
   // ③ main表示（まだ透明）
   const main = document.getElementById("room_main");
@@ -61,32 +69,33 @@ function startRoom(skip=false){
 
 async function loadRoomState(){
 
-  const res = await fetch("/api/sessions");
-  
-  if(!res.ok){
-    console.log("APIエラー");
+  let json;
+
+  try{
+    const res = await fetch("/api/sessions");
+
+    if(!res.ok) throw new Error("API error");
+
+    json = await res.json();
+
+  }catch(e){
+    console.log("通信エラー", e);
     return;
   }
-  
-  const json = await res.json();
 
   const sessions = json.sessions || [];
   const area = document.getElementById("content_area");
 
   loadWeather();
 
-  // ■ 分岐UI
   if(sessions.length === 0){
-
     area.innerHTML = `
       <div class="panel">
         <p>まだ記録がありません</p>
         <button onclick="goMini()">🎙 5秒で測定する</button>
       </div>
     `;
-
-  } else {
-
+  }else{
     const latest = sessions[sessions.length - 1];
 
     area.innerHTML = `
@@ -95,7 +104,6 @@ async function loadRoomState(){
         <p>Energy: ${latest.energy}</p>
         <p>Stress: ${latest.stress}</p>
         <p>Emotion: ${latest.emotion}</p>
-
         <button onclick="goHealth()">詳細を見る</button>
       </div>
     `;
@@ -121,7 +129,10 @@ function openProfile(){
 
   modal.style.display = "flex";
 
-  document.querySelector(".modal-box h2").innerText = "プロフィール変更";
+  const title = document.querySelector(".modal-box h2");
+	if(title){
+		title.innerText = "プロフィール変更";
+	}
 
 
   // 既存データをフォームに戻す
@@ -149,30 +160,46 @@ function goTeam(){
 
 // 挨拶＋日本時間＋改行
 function getJapanGreetingMessage(name){
-  const now = new Date();
 
-  const jp = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Tokyo" })
-  );
+  const jp = new Date();
 
-  const y = jp.getFullYear();
-  const m = jp.getMonth() + 1;
-  const d = jp.getDate();
-  const h = jp.getHours();
-  const min = String(jp.getMinutes()).padStart(2, "0");
+  // ←ここ重要
+  const options = { timeZone: "Asia/Tokyo", hour12: false };
 
-  const weekdays = ["日", "月", "火", "水", "木", "金", "土"];
-  const w = weekdays[jp.getDay()];
+  const parts = new Intl.DateTimeFormat("ja-JP", {
+    ...options,
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    weekday: "short",
+    hour: "numeric",
+    minute: "2-digit"
+  }).formatToParts(jp);
 
-  let greet = "こんにちは";
-  if(h < 11) greet = "おはようございます";
-  else if(h >= 17) greet = "こんばんは";
+  const get = (type) => parts.find(p => p.type === type)?.value;
+
+  const y = get("year");
+  const m = get("month");
+  const d = get("day");
+  const h = parseInt(get("hour"));
+  const min = get("minute");
+  const w = get("weekday");
+
+	let greet = "こんばんは";
+
+	if(h >= 5 && h < 11){
+		greet = "おはようございます";
+	}
+	else if(h >= 11 && h < 17){
+		greet = "こんにちは";
+	}
 
   return `
     ${name}さん。<br>
-    ${greet}。今日もお疲れさまでした。<br>
+    ${greet}。<br>
+    今日もお疲れさまでした。<br>
     <span class="today-text">
-      今日は ${y}年${m}月${d}日（${w}）${h}:${min}
+      現在は ${y}年${m}月${d}日（${w}）${h}:${min}
     </span>
   `;
 }
@@ -222,9 +249,6 @@ function resetAll(){
   location.reload();
 }
 
-function initRoom(){
-  window.onload();
-}
 
 // 長押しリセット（誤操作防止）
 let resetTimer = null;
@@ -259,7 +283,9 @@ function cancelResetPress(e){
   clearTimeout(resetTimer);
 }
 
-// roon設定　開
+// room設定　開
+let bgEventSet = false;
+
 function openSettings(){
   const modal = document.getElementById("settings_modal");
   modal.classList.remove("hidden");
@@ -267,26 +293,51 @@ function openSettings(){
   modal.style.display = "flex";
 
   loadSettingsUI();
+	
+  // タブ初期化
+  switchTab("bg");
+	
+  // 🔥 ここ追加（確実に効く）
+	if(!bgEventSet){
+
+		document.querySelectorAll('input[name="bg"]').forEach(radio => {
+
+			radio.onchange = () => {
+
+				const s = JSON.parse(localStorage.getItem("va_settings") || "{}");
+
+				// 変更チェック（無駄処理防止）
+				if(s.bg === radio.value) return;
+
+				s.bg = radio.value;
+
+				localStorage.setItem("va_settings", JSON.stringify(s));
+
+				applySettings(s);
+			};
+
+		});
+
+		bgEventSet = true;
+	}
 }
 
-// roon設定　閉
+
+// room設定　閉
 function closeSettings(){
   const modal = document.getElementById("settings_modal");
   modal.classList.add("hide");
-
-  setTimeout(() => {
-    modal.style.display = "none";
-  }, 300);
 }
 
-// roon設定　セーブ
+// room設定　セーブ
 function saveSettings(){
 
   const bg = document.querySelector('input[name="bg"]:checked')?.value;
   const music = document.querySelector('input[name="music"]:checked')?.value;
   const history = document.querySelector('input[name="history"]:checked')?.value;
+	const time = document.querySelector('input[name="time"]:checked')?.value;
 
-  const settings = { bg, music, history };
+	const settings = { bg, music, history, time };
 
   localStorage.setItem("va_settings", JSON.stringify(settings));
 
@@ -295,7 +346,7 @@ function saveSettings(){
   closeSettings();
 }
 
-// roon設定　ロード
+// room設定　ロード
 function loadSettingsUI(){
 
   const settings = JSON.parse(localStorage.getItem("va_settings") || "{}");
@@ -309,106 +360,278 @@ function loadSettingsUI(){
     const el = document.querySelector(`input[name="music"][value="${settings.music}"]`);
     if(el) el.checked = true;
   }
+	
+	if(settings.history){
+		const el = document.querySelector(`input[name="history"][value="${settings.history}"]`);
+		if(el) el.checked = true;
+	}
 
-  if(settings.history){
-    const el = document.querySelector(`input[name="history"][value="${settings.history}"]`);
-    if(el) el.checked = true;
+	if(settings.time){
+		const el = document.querySelector(`input[name="time"][value="${settings.time}"]`);
+		if(el) el.checked = true;
+	}
+}
+
+// room中の設定タブ
+function switchTab(type, e){
+
+  // タブボタン
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  if(e) e.target.classList.add("active");
+
+  // コンテンツ
+  document.querySelectorAll(".tab-content").forEach(c => {
+    c.classList.remove("active");
+    c.classList.add("hidden");
+  });
+
+  const target = document.getElementById("tab-" + type);
+
+  target.classList.remove("hidden");
+
+  setTimeout(() => {
+    target.classList.add("active");
+  }, 10);
+}
+
+// 設定の開閉
+function toggleSection(el){
+  const parent = el.parentElement;
+  parent.classList.toggle("open");
+
+  // ▼切替
+  if(parent.classList.contains("open")){
+    el.innerText = el.innerText.replace("▶","▼");
+  }else{
+    el.innerText = el.innerText.replace("▼","▶");
   }
 }
 
-// roon設定　BGM音源
+// roomの背景・サウンド連動
+let currentTimeMode = null;
+
 function applySettings(settings){
 
-  // 一旦クラス全部消す（安全）
+  // 背景
   document.body.classList.remove("bg1","bg2","bg3","bg4","bg5");
 
   if(settings.bg){
     document.body.classList.add(settings.bg);
   }
 
-  // 音楽は後でOK
+  // 🔥 時間フィルター
+  applyTimeFilter(settings.time);
 
+	// 時間決定
+  let mode = settings.time || "auto";
+
+  if(mode === "auto"){
+    const h = new Date().getHours();
+    if(h < 10) mode = "morning";
+    else if(h < 17) mode = "day";
+    else mode = "night";
+  }
+
+	// フェード適用
+  if(mode !== currentTimeMode){
+    fadeToTime(mode);
+    currentTimeMode = mode;
+  }
+
+  // 🔊 音楽制御
+	const audio = document.getElementById("bgm");
+
+	if(audio){
+		if(settings.music === "on"){
+			audio.src = "/static/sound/forest.mp3";
+			audio.volume = settings.volume || 0.3;
+			audio.play().catch(()=>{});
+		}else{
+			audio.pause();
+		}
+	}
 }
 
+// roomの背景の照明を変化
+function applyTimeFilter(mode){
 
-// 初回判定（コードの最後に）
-window.onload = function(){
+  document.body.classList.remove("time-morning","time-day","time-night");
+
+  if(!mode || mode === "auto"){
+    const h = new Date().getHours();
+    if(h < 10) mode = "morning";
+    else if(h < 17) mode = "day";
+    else mode = "night";
+  }
+
+  if(mode === "morning") document.body.classList.add("time-morning");
+  if(mode === "day") document.body.classList.add("time-day");
+  if(mode === "night") document.body.classList.add("time-night");
+}
+
+// roomの背景の照明を変化 （フェード対応）
+function getTargetColor(mode){
+  if(mode === "morning") return {r:255,g:220,b:150,a:0.15};
+  if(mode === "day")     return {r:255,g:255,b:255,a:0.05};
+  return {r:0,g:0,b:50,a:0.4}; // night
+}
+
+let fadeTimer = null;
+function fadeToTime(mode, duration=30000){
+
+  if(fadeTimer){
+    clearInterval(fadeTimer);
+  }
+
+  const target = getTargetColor(mode);
+
+  // 現在値
+  const style = getComputedStyle(document.body);
+  let cr = parseFloat(style.getPropertyValue("--t-r")) || 0;
+  let cg = parseFloat(style.getPropertyValue("--t-g")) || 0;
+  let cb = parseFloat(style.getPropertyValue("--t-b")) || 50;
+  let ca = parseFloat(style.getPropertyValue("--t-a")) || 0.4;
+
+  const step = 30; // ms
+  const steps = duration / step;
+
+  let i = 0;
+
+  fadeTimer = setInterval(()=>{
+    i++;
+
+    const t = i / steps;
+
+    document.body.style.setProperty("--t-r", cr + (target.r - cr) * t);
+    document.body.style.setProperty("--t-g", cg + (target.g - cg) * t);
+    document.body.style.setProperty("--t-b", cb + (target.b - cb) * t);
+    document.body.style.setProperty("--t-a", ca + (target.a - ca) * t);
+
+    if(i >= steps){
+      clearInterval(fadeTimer);
+      fadeTimer = null;
+    }
+
+  }, step);
+}
+
+/////////// 初回判定（コードの最後に)
+// プロフィール
+function initProfile(){
 
   const profile = localStorage.getItem("va_profile");
 
   if(profile){
+    showRoom(JSON.parse(profile));
+  }else{
+    showModal();
+  }
+}
 
-    const p = JSON.parse(profile);
+// プロフィールの子プロセス1/2
+function showRoom(profile){
 
-    // 名前安全化
-    const name = (p.name || "匿名").trim() || "匿名";
+  const name = (profile.name || "匿名").trim() || "匿名";
 
-    // モーダルをフェードアウト
-    const modal = document.getElementById("profile_modal");
-	
-	// ←ここ追加（初期ちらつき防止）
-//    modal.style.opacity = "1";
-	
-    modal.classList.add("hide");
+  // モーダル閉じる
+  const modal = document.getElementById("profile_modal");
+  modal.classList.add("hide");
 
-    setTimeout(() => {
-      modal.style.display = "none";
-    }, 300);
+  setTimeout(()=>{
+    modal.style.display = "none";
+  },300);
 
-    // Welcome
-    document.getElementById("welcome").innerHTML =
-      getJapanGreetingMessage(name);
+  // welcome
+  const msg = getJapanGreetingMessage(name);
+  const lines = msg.split("<br>");
 
-    // main表示（まだ透明）
-    const main = document.getElementById("room_main");
-    main.classList.remove("hidden");
+  document.getElementById("welcome-name").innerHTML = lines[0];
+  document.getElementById("welcome-sub").innerHTML = lines.slice(1).join("<br>");
 
-    // 世界を開く演出
-    setTimeout(() => {
-      document.getElementById("blur_bg").classList.add("clear");
-      main.classList.add("show");
-    }, 100);
+  // 表示
+  const main = document.getElementById("room_main");
+  main.classList.remove("hidden");
 
-    loadRoomState();
-  }else {
+  setTimeout(()=>{
+    document.getElementById("blur_bg").classList.add("clear");
+    main.classList.add("show");
+  },100);
 
-		const modal = document.getElementById("profile_modal");
+  loadRoomState();
+}
 
-		// 🔥 モーダルを確実に表示
-		modal.classList.remove("hidden");
-		modal.classList.remove("hide");
-		modal.style.display = "flex";
+// プロフィールの子プロセス2/2
+function showModal(){
 
-		// 🔥 フォーム初期化
-		document.getElementById("nickname").value = "";
-		document.getElementById("age").value = "";
-		document.getElementById("gender").value = "";
+  const modal = document.getElementById("profile_modal");
 
-		// 🔥 スキップ文言も戻す
-		const skipBtn = document.querySelector(".skip");
-		if(skipBtn){
-			skipBtn.innerText = "スキップ（匿名で開始）";
-		}
+  modal.classList.remove("hidden");
+  modal.classList.remove("hide");
+  modal.style.display = "flex";
 
-		// 🔥 背景演出
-		setTimeout(() => {
-			document.getElementById("blur_bg").classList.add("clear");
-		}, 500);
-	}
-  
-  const saved = localStorage.getItem("va_profile");
+  document.getElementById("nickname").value = "";
+  document.getElementById("age").value = "";
+  document.getElementById("gender").value = "";
+
   const skipBtn = document.querySelector(".skip");
-
   if(skipBtn){
-    if(saved){
-      skipBtn.innerText = "変更しない";
-    } else {
-      skipBtn.innerText = "スキップ（匿名で開始）";
-    }
+    skipBtn.innerText = "スキップ（匿名で開始）";
+  }
+
+  setTimeout(()=>{
+    document.getElementById("blur_bg").classList.add("clear");
+  },500);
+}
+
+// UI
+function initUI(){
+  document.getElementById("blur_bg").classList.add("clear");
+}
+
+// 設定
+function initSettings(){
+
+  const settings = JSON.parse(localStorage.getItem("va_settings") || "{}");
+
+  applySettings(settings);
+
+  // 音量初期化
+  const audio = document.getElementById("bgm");
+  const vol = document.getElementById("volume");
+
+  const savedVol = settings.volume || 0.3;
+
+  if(audio) audio.volume = savedVol;
+  if(vol) vol.value = savedVol;
+}
+
+// イベント
+function initEvents(){
+
+	const vol = document.getElementById("volume");
+
+	if(vol){
+
+		vol.oninput = () => {   // ← addEventListener → oninput
+
+			const audio = document.getElementById("bgm");
+
+			if(audio){
+				audio.volume = vol.value;
+			}
+
+			const s = JSON.parse(localStorage.getItem("va_settings") || "{}");
+			s.volume = vol.value;
+			localStorage.setItem("va_settings", JSON.stringify(s));
+		};
 	}
+}
 
-	const settings = JSON.parse(localStorage.getItem("va_settings") || "{}");
-	applySettings(settings);
+window.onload = function(){
 
-  
+  initProfile();   // ←プロフィール判定
+  initUI();        // ←背景演出
+  initSettings();  // ←設定適用
+  initEvents();    // ←イベント登録
+
 };
